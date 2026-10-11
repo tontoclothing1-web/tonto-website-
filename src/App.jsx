@@ -29,7 +29,7 @@ import OfferModal from './components/OfferModal';
 import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import { PRODUCTS, BRAND_INFO } from './data/products';
-import { MessageSquare, X, ArrowUpRight, PhoneCall, Calendar, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { MessageSquare, X, ArrowUpRight, PhoneCall, Calendar } from 'lucide-react';
 
 export default function App() {
   const [activeView, setActiveView] = useState('home'); 
@@ -581,31 +581,6 @@ export default function App() {
           {isConciergeOpen ? <X size={20} strokeWidth={2.5} /> : <MessageSquare size={22} className="fill-white stroke-none" />}
         </button>
       )}
-
-      {/* Floating Studio Admin Desk Toggle Button (Always visible bottom-left) */}
-      <button
-        onClick={() => handleNavigate(activeView === 'admin' ? 'home' : 'admin')}
-        className={`fixed bottom-6 left-6 z-40 px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all hover:scale-105 active:scale-95 group border backdrop-blur-md ${
-          activeView === 'admin'
-            ? 'bg-white hover:bg-gray-100 text-[#003F25] border-[#003F25]/40 shadow-black/20'
-            : 'bg-[#08150E] hover:bg-[#003F25] text-white border-[#22C55E]/50 shadow-black/40'
-        }`}
-        title={activeView === 'admin' ? 'Return to Live Storefront' : 'Open TONTO Studio Admin Desk'}
-        aria-label="Toggle Studio Admin"
-      >
-        {activeView === 'admin' ? (
-          <>
-            <ArrowLeft size={13} className="text-[#003F25]" />
-            <span>Storefront View</span>
-          </>
-        ) : (
-          <>
-            <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
-            <ShieldCheck size={13} className="text-[#22C55E]" />
-            <span>Studio Admin</span>
-          </>
-        )}
-      </button>
 
       {/* Modals and Drawers */}
       <QuickViewModal
