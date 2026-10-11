@@ -4,6 +4,7 @@ import HeroBanner from './components/HeroBanner';
 import TrendingStyles from './components/TrendingStyles';
 import GraphicBanner from './components/GraphicBanner';
 import CategoryCarousel from './components/CategoryCarousel';
+import TontoOwnMake from './components/TontoOwnMake';
 import LookbookBanner from './components/LookbookBanner';
 import ShoppableLooks from './components/ShoppableLooks';
 import CollectionView from './components/CollectionView';
@@ -322,6 +323,14 @@ export default function App() {
             {/* Section 5: Featured Collections carousel */}
             <CategoryCarousel
               onSelectCategory={(cat) => handleNavigate('collection', cat)}
+            />
+
+            {/* Section 5B: TONTO'S OWN MAKE In-House Atelier Showcase */}
+            <TontoOwnMake
+              onOpenOffer={(mode) => {
+                setOfferModalMode(mode || 'offer');
+                setIsOfferModalOpen(true);
+              }}
             />
 
             {/* Section 6: Full-width lookbook banner */}

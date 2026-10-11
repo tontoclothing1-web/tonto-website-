@@ -19,6 +19,7 @@ export default function Header({
 
   const navLinks = [
     { label: 'FEATURED', view: 'home', targetId: 'trending-section' },
+    { label: "TONTO'S OWN MAKE", view: 'home', targetId: 'tonto-own-make' },
     { label: 'NEW ARRIVALS', view: 'home', targetId: 'categories-section' },
     { label: 'SHOP', view: 'collection', filter: 'All' },
     { label: 'LOOKBOOK', view: 'lookbook' },

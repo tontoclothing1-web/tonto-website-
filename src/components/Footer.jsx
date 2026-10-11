@@ -87,6 +87,19 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
               </li>
               <li>
                 <button
+                  onClick={() => {
+                    onNavigate('home');
+                    setTimeout(() => {
+                      document.getElementById('tonto-own-make')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                  }}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  TONTO's Own Make
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => onOpenOffer?.('offer')}
                   className="text-white hover:underline transition-all cursor-pointer font-semibold inline-flex items-center gap-1.5"
                 >
