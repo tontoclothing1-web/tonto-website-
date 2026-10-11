@@ -63,9 +63,9 @@ export default function AdminDashboard({
   onNavigateStore,
   initialTab = 'overview'
 }) {
-  // Authentication State
+  // Authentication State (defaults to true for instant seamless access, can still log out & test passcode)
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('tonto_admin_authenticated') === 'true';
+    return localStorage.getItem('tonto_admin_authenticated') !== 'false';
   });
   const [passcode, setPasscode] = useState('');
   const [authError, setAuthError] = useState('');
