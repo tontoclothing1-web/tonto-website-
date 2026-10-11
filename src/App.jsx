@@ -380,6 +380,7 @@ export default function App() {
             {/* Section 7: Shoppable looks carousel with prominent center card */}
             <div id="shoppable-section">
               <ShoppableLooks
+                products={products}
                 onSelectProduct={handleOpenProduct}
                 onQuickView={(p) => setQuickViewProduct(p)}
               />
@@ -684,16 +685,18 @@ export default function App() {
         }}
       />
 
-      {/* Mobile App-like Bottom Navigation Bar (Smartphones & Tablets) */}
-      <MobileBottomNav
-        activeView={activeView}
-        onNavigate={handleNavigate}
-        onOpenSearch={() => setIsSearchOpen(true)}
-        onOpenSaved={() => setIsSavedDrawerOpen(true)}
-        onOpenBag={() => setIsBagOpen(true)}
-        savedCount={savedIds.length}
-        bagCount={totalBagCount}
-      />
+      {/* Mobile App-like Bottom Navigation Bar (Smartphones & Tablets) - Storefront only */}
+      {activeView !== 'admin' && (
+        <MobileBottomNav
+          activeView={activeView}
+          onNavigate={handleNavigate}
+          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenSaved={() => setIsSavedDrawerOpen(true)}
+          onOpenBag={() => setIsBagOpen(true)}
+          savedCount={savedIds.length}
+          bagCount={totalBagCount}
+        />
+      )}
 
     </div>
   );

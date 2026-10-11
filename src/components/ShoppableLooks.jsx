@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Plus, ChevronUp, Volume2, VolumeX } from 'lucide-react';
 import { SHOPPABLE_LOOKS, PRODUCTS } from '../data/products';
 
-export default function ShoppableLooks({ onSelectProduct, onQuickView }) {
+export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, onQuickView }) {
   const [activeIndex, setActiveIndex] = useState(2); // Center card active by default (look-3)
   const [isMuted, setIsMuted] = useState(true);
 
@@ -19,7 +19,8 @@ export default function ShoppableLooks({ onSelectProduct, onQuickView }) {
   };
 
   const handleLookClick = (look) => {
-    const product = PRODUCTS.find((p) => p.id === look.productId);
+    const catalog = products && products.length > 0 ? products : PRODUCTS;
+    const product = catalog.find((p) => p.id === look.productId);
     if (product) {
       onQuickView(product);
     }
