@@ -10,7 +10,7 @@ const InstagramIcon = ({ size = 16, className = "" }) => (
 );
 import { BRAND_INFO } from '../data/products';
 
-export default function Footer({ onNavigate, onOpenVisit }) {
+export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
   const [newsletterEmail, setNewsletterEmail] = React.useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = React.useState(false);
 
@@ -85,6 +85,15 @@ export default function Footer({ onNavigate, onOpenVisit }) {
                   The Lookbook Edit
                 </button>
               </li>
+              <li>
+                <button
+                  onClick={() => onOpenOffer?.('offer')}
+                  className="text-white hover:underline transition-all cursor-pointer font-semibold inline-flex items-center gap-1.5"
+                >
+                  <span>15% Welcome Privilege</span>
+                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-xs font-mono">TONTO15</span>
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -94,6 +103,14 @@ export default function Footer({ onNavigate, onOpenVisit }) {
               Studio & Client Care
             </h4>
             <ul className="space-y-2.5 text-[13px] text-white/80">
+              <li>
+                <button
+                  onClick={() => onOpenOffer?.('signin')}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  Sign In / Member Access
+                </button>
+              </li>
               <li>
                 <button
                   onClick={() => onNavigate('visit')}

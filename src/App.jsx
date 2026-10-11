@@ -24,6 +24,7 @@ import VisitUsModal from './components/VisitUsModal';
 import AccountModal from './components/AccountModal';
 import CartDrawer from './components/CartDrawer';
 import RegionModal from './components/RegionModal';
+import OfferModal from './components/OfferModal';
 import Footer from './components/Footer';
 import { PRODUCTS, BRAND_INFO } from './data/products';
 import { MessageSquare, X, ArrowUpRight, PhoneCall, Calendar } from 'lucide-react';
@@ -100,6 +101,19 @@ export default function App() {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [isConciergeOpen, setIsConciergeOpen] = useState(false);
+  const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [offerModalMode, setOfferModalMode] = useState('offer'); // 'offer' | 'signin'
+
+  // Auto-pop offer & sign in modal every time the user opens/visits the main page
+  useEffect(() => {
+    if (activeView === 'home') {
+      const timer = setTimeout(() => {
+        setOfferModalMode('offer');
+        setIsOfferModalOpen(true);
+      }, 750);
+      return () => clearTimeout(timer);
+    }
+  }, [activeView]);
 
   // URL Hash Routing Listener
   useEffect(() => {
@@ -271,7 +285,14 @@ export default function App() {
         onOpenSaved={() => setIsSavedDrawerOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenVisit={() => setIsVisitOpen(true)}
-        onOpenAccount={() => setIsAccountOpen(true)}
+        onOpenAccount={() => {
+          setOfferModalMode('signin');
+          setIsOfferModalOpen(true);
+        }}
+        onOpenOffer={(mode) => {
+          setOfferModalMode(mode || 'offer');
+          setIsOfferModalOpen(true);
+        }}
         onOpenBag={() => setIsBagOpen(true)}
         selectedRegion={selectedRegion}
         onOpenRegion={() => setIsRegionOpen(true)}
@@ -435,6 +456,10 @@ export default function App() {
       <Footer
         onNavigate={handleNavigate}
         onOpenVisit={() => setIsVisitOpen(true)}
+        onOpenOffer={(mode) => {
+          setOfferModalMode(mode || 'offer');
+          setIsOfferModalOpen(true);
+        }}
       />
 
       {/* Concierge Popover Menu */}
@@ -584,6 +609,17 @@ export default function App() {
         onClose={() => setIsRegionOpen(false)}
         selectedRegion={selectedRegion}
         onSelectRegion={setSelectedRegion}
+      />
+
+      {/* Streetwear Showup Offer & Client Sign-In Popup */}
+      <OfferModal
+        isOpen={isOfferModalOpen}
+        initialMode={offerModalMode}
+        onClose={() => setIsOfferModalOpen(false)}
+        onNavigateCollection={(cat) => {
+          setIsOfferModalOpen(false);
+          handleNavigate('collection', cat || 'All');
+        }}
       />
 
     </div>

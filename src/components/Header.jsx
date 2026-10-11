@@ -12,7 +12,8 @@ export default function Header({
   onOpenAccount,
   onOpenBag,
   selectedRegion,
-  onOpenRegion
+  onOpenRegion,
+  onOpenOffer
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -50,6 +51,27 @@ export default function Header({
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-[#E0E5E1] transition-colors duration-200">
+      {/* Top Streetwear Announcement Bar */}
+      <div className="bg-[#003F25] text-white py-1.5 px-4 text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
+          <span>✦ EXCLUSIVE PRIVILEGE: 15% OFF FIRST ORDER</span>
+          <span className="hidden sm:inline text-white/40">•</span>
+          <button
+            onClick={() => onOpenOffer?.('offer')}
+            className="underline underline-offset-2 decoration-white/60 hover:decoration-white font-bold cursor-pointer transition-colors"
+          >
+            CLAIM CODE
+          </button>
+          <span className="text-white/40">|</span>
+          <button
+            onClick={() => onOpenOffer?.('signin')}
+            className="underline underline-offset-2 decoration-white/60 hover:decoration-white font-bold cursor-pointer transition-colors"
+          >
+            SIGN IN
+          </button>
+        </div>
+      </div>
+
       <div className="max-w-[1600px] mx-auto h-[76px] px-5 sm:px-8 flex items-center justify-between">
         
         {/* Left: TONTO Logo */}
@@ -171,6 +193,17 @@ export default function Header({
               </button>
               <button onClick={() => { setMobileMenuOpen(false); onOpenVisit(); }} className="text-[#003F25] underline font-medium">Coimbatore Studio</button>
             </div>
+
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onOpenOffer?.('offer');
+              }}
+              className="mt-3 w-full py-2.5 bg-[#003F25] text-white text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 rounded-xs"
+            >
+              <span>CLAIM 15% OFF / SIGN IN</span>
+              <ArrowUpRight size={14} />
+            </button>
           </nav>
         </div>
       )}
