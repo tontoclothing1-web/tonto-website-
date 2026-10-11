@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Bookmark, Search, ShoppingBag, Menu, X, ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { User, Bookmark, Search, ShoppingBag, Menu, X, ArrowUpRight } from 'lucide-react';
 
 export default function Header({
   activeView,
@@ -70,15 +70,6 @@ export default function Header({
           >
             SIGN IN
           </button>
-          <span className="text-white/40">|</span>
-          <button
-            onClick={() => onNavigate('admin')}
-            className="bg-white/20 hover:bg-white text-white hover:text-[#003F25] px-2 py-0.5 rounded-xs font-bold text-[10px] tracking-wider cursor-pointer transition-colors inline-flex items-center gap-1 shadow-xs"
-            title="Open Studio Admin & Catalog Management Portal"
-          >
-            <ShieldCheck size={11} />
-            <span>ADMIN DESK</span>
-          </button>
         </div>
       </div>
 
@@ -113,16 +104,6 @@ export default function Header({
               )}
             </button>
           ))}
-
-          {/* Prominent Admin Desk Navigation Link */}
-          <button
-            onClick={() => onNavigate('admin')}
-            className="text-[12px] font-extrabold tracking-[0.06em] px-2.5 py-1 bg-[#003F25] hover:bg-[#002e1b] text-white rounded-xs transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
-            title="Studio Desk & Inventory Portal"
-          >
-            <ShieldCheck size={13} />
-            <span>ADMIN</span>
-          </button>
         </nav>
 
         {/* Right: Utility Controls */}
@@ -223,17 +204,6 @@ export default function Header({
             >
               <span>CLAIM 15% OFF / SIGN IN</span>
               <ArrowUpRight size={14} />
-            </button>
-
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onNavigate('admin');
-              }}
-              className="mt-2 w-full py-2.5 bg-[#111111] hover:bg-black text-white text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 rounded-xs border border-white/20"
-            >
-              <ShieldCheck size={14} className="text-[#22C55E]" />
-              <span>STUDIO ADMIN DESK (PORTAL)</span>
             </button>
           </nav>
         </div>

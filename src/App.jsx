@@ -183,7 +183,20 @@ export default function App() {
 
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+
+    // Discrete secret keyboard shortcut for store owner (Ctrl+Shift+A or Cmd+Shift+A)
+    const handleSecretAdminShortcut = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+        e.preventDefault();
+        window.location.hash = window.location.hash === '#/admin' ? '#/' : '#/admin';
+      }
+    };
+    window.addEventListener('keydown', handleSecretAdminShortcut);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('keydown', handleSecretAdminShortcut);
+    };
   }, [products]);
 
   // View Navigation Helper
