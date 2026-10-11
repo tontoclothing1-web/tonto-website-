@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ArrowUpRight, Bookmark, Check, Ruler, ShoppingBag, ChevronDown, ChevronUp, Share2, ZoomIn, X, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Bookmark, Check, Ruler, ShoppingBag, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Share2, ZoomIn, X, Plus, Minus } from 'lucide-react';
 import ProductCard from './ProductCard';
 import SizeGuideModal from './SizeGuideModal';
 
@@ -22,6 +22,38 @@ export default function ProductDetailPage({
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState('measurements'); // 'desc' | 'measurements' | 'shipping'
   const [copiedShare, setCopiedShare] = useState(false);
+
+  // Mobile Touch Swipe references
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const [touchDelta, setTouchDelta] = useState(0);
+
+  const handleTouchStart = (e) => {
+    if (!product.images || product.images.length <= 1) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setTouchDelta(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!product.images || product.images.length <= 1) return;
+    const diffX = e.touches[0].clientX - touchStartX.current;
+    const diffY = e.touches[0].clientY - touchStartY.current;
+    if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+      setTouchDelta(diffX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!product.images || product.images.length <= 1) return;
+    const threshold = 35;
+    if (touchDelta < -threshold) {
+      setSelectedImgIndex((prev) => (prev + 1) % product.images.length);
+    } else if (touchDelta > threshold) {
+      setSelectedImgIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+    }
+    setTouchDelta(0);
+  };
 
   useEffect(() => {
     setSelectedImgIndex(0);
@@ -56,7 +88,7 @@ export default function ProductDetailPage({
   };
 
   return (
-    <div className="w-full bg-white text-[#111827] pb-24">
+    <div className="w-full bg-white text-[#111827] pb-36 lg:pb-24">
       
       {/* Breadcrumb Navigation matching reference */}
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
@@ -123,14 +155,65 @@ export default function ProductDetailPage({
               </div>
             )}
 
-            {/* Main Stage Image */}
-            <div className="flex-1 relative aspect-[3/4.1] bg-[#F7F7F7] overflow-hidden border border-[#E0E5E1] group">
+            {/* Main Stage Image with Touch Swipe */}
+            <div
+              className="flex-1 relative aspect-[3/4.1] bg-[#F7F7F7] overflow-hidden border border-[#E0E5E1] group select-none touch-pan-y"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               <img
                 src={currentImage}
                 alt={product.title}
                 onClick={() => setIsZoomModalOpen(true)}
                 className="w-full h-full object-cover object-center transition-all duration-300 cursor-zoom-in group-hover:scale-[1.02]"
+                draggable="false"
               />
+
+              {/* Prev / Next Tap Chevrons for Multi-image Products */}
+              {product.images && product.images.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedImgIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+                    }}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-[#003F25] flex items-center justify-center shadow-md transition-all active:scale-90"
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedImgIndex((prev) => (prev + 1) % product.images.length);
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-[#003F25] flex items-center justify-center shadow-md transition-all active:scale-90"
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+
+                  {/* Mobile Pagination Dot Indicator */}
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 md:hidden bg-black/30 backdrop-blur-xs px-2.5 py-1 rounded-full pointer-events-none">
+                    {product.images.map((_, idx) => (
+                      <span
+                        key={idx}
+                        className={`h-1.5 rounded-full transition-all duration-200 ${
+                          selectedImgIndex === idx ? 'w-4 bg-white' : 'w-1.5 bg-white/50'
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Counter Badge */}
+                  <div className="absolute top-4 right-16 z-20 px-2 py-0.5 bg-white/85 text-[#003F25] text-[11px] font-bold rounded-xs shadow-xs border border-gray-100">
+                    {selectedImgIndex + 1} / {product.images.length}
+                  </div>
+                </>
+              )}
 
               {/* Bookmark Save Button */}
               <button
@@ -396,6 +479,36 @@ export default function ProductDetailPage({
           </div>
         )}
 
+      </div>
+
+      {/* Sticky Mobile Buy Action Bar (Android & iOS) */}
+      <div className="fixed bottom-[calc(58px+env(safe-area-inset-bottom,0px))] left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#E0E5E1] px-4 py-2.5 flex items-center justify-between gap-3 lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-col min-w-0">
+          <div className="text-[14px] font-extrabold text-[#003F25] leading-tight truncate">
+            {product.price}
+          </div>
+          <div className="text-[10px] text-[#79867D] uppercase font-bold tracking-wider truncate">
+            {selectedSize ? `Size: ${selectedSize}` : 'Unisex Piece'}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => onOpenEnquiry(product, selectedSize)}
+            className="p-2.5 border border-[#003F25] text-[#003F25] hover:bg-gray-50 rounded-xs transition-colors cursor-pointer"
+            title="Ask about piece"
+            aria-label="Enquire about piece"
+          >
+            <ArrowUpRight size={15} />
+          </button>
+          <button
+            onClick={() => onAddToCart(product, selectedSize, quantity)}
+            className="px-5 py-2.5 bg-[#003F25] hover:bg-[#002e1b] text-white text-[12px] font-bold tracking-wider uppercase flex items-center gap-2 rounded-xs shadow-sm transition-colors cursor-pointer active:scale-95"
+          >
+            <ShoppingBag size={14} />
+            <span>Add to Bag</span>
+          </button>
+        </div>
       </div>
 
       {/* Measurement Guidance Modal */}

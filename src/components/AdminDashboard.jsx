@@ -687,7 +687,7 @@ export default function AdminDashboard({
 
   // MAIN ADMIN CONSOLE
   return (
-    <div className="min-h-screen bg-[#F6F8F6] text-[#111111] flex flex-col font-sans select-none text-left">
+    <div className="min-h-screen pb-[calc(2rem+env(safe-area-inset-bottom,0px))] bg-[#F6F8F6] text-[#111111] flex flex-col font-sans select-none text-left">
       
       {/* Toast Notification */}
       {toastMessage && (
@@ -698,7 +698,7 @@ export default function AdminDashboard({
       )}
 
       {/* Top Admin Header Bar */}
-      <header className="sticky top-0 z-40 bg-[#0D1E16] text-white border-b border-[#1A3828] px-5 sm:px-8 py-3.5 shadow-md">
+      <header className="sticky top-0 z-40 bg-[#0D1E16] text-white border-b border-[#1A3828] px-4 sm:px-8 py-3.5 pt-[calc(0.875rem+env(safe-area-inset-top,0px))] shadow-md">
         <div className="max-w-[1600px] mx-auto flex items-center justify-between flex-wrap gap-4">
           
           {/* Left Brand Identifier */}
@@ -1134,9 +1134,15 @@ export default function AdminDashboard({
                 </select>
               </div>
 
+              {/* Mobile Scroll Tip */}
+              <div className="text-[11px] text-[#79867D] md:hidden flex items-center justify-between">
+                <span>← Swipe table horizontally to edit & manage items →</span>
+                <span className="font-bold text-[#003F25]">{filteredProducts.length} items</span>
+              </div>
+
               {/* Products Table */}
               <div className="border border-[#E0E5E1] rounded-xs overflow-x-auto">
-                <table className="w-full text-left text-[12.5px]">
+                <table className="w-full text-left text-[12.5px] min-w-[720px]">
                   <thead className="bg-[#F9FAF9] border-b border-[#E0E5E1] text-[11px] font-bold uppercase tracking-wider text-[#79867D]">
                     <tr>
                       <th className="py-3 px-4">Image</th>
@@ -1628,7 +1634,7 @@ export default function AdminDashboard({
             aria-hidden="true"
           />
 
-          <div className="relative w-full max-w-2xl bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-xs p-6 sm:p-8 my-auto animate-scale-in text-left max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-xs p-4 sm:p-8 my-auto animate-scale-in text-left max-h-[90dvh] overflow-y-auto">
             
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-5">
               <div>

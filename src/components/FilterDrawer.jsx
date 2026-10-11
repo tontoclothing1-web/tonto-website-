@@ -244,7 +244,7 @@ export default function FilterDrawer({
         </div>
 
         {/* Bottom Actions matching preview */}
-        <div className="p-6 border-t border-[#E0E5E1] bg-white flex flex-col gap-2.5">
+        <div className="p-5 sm:p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0E5E1] bg-white flex flex-col gap-2.5">
           <button
             onClick={onClose}
             className="w-full py-3.5 bg-[#003F25] text-white text-[13px] font-bold tracking-wider uppercase hover:bg-[#002e1b] transition-colors cursor-pointer"

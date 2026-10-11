@@ -127,7 +127,7 @@ export default function SavedItemsDrawer({
 
         {/* Footer */}
         {savedProducts.length > 0 && (
-          <div className="p-6 border-t border-[#E0E5E1] bg-white space-y-3">
+          <div className="p-5 sm:p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0E5E1] bg-white space-y-3">
             <button
               onClick={() => {
                 onClose();

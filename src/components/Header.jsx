@@ -53,7 +53,7 @@ export default function Header({
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-[#E0E5E1] transition-colors duration-200">
       {/* Top Streetwear Announcement Bar */}
-      <div className="bg-[#003F25] text-white py-1.5 px-4 text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
+      <div className="bg-[#003F25] text-white py-1.5 px-4 pt-[max(0.375rem,env(safe-area-inset-top,0px))] text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
         <div className="max-w-[1600px] mx-auto flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
           <span>✦ EXCLUSIVE PRIVILEGE: 15% OFF FIRST ORDER</span>
           <span className="hidden sm:inline text-white/40">•</span>

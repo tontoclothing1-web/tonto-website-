@@ -28,6 +28,7 @@ import RegionModal from './components/RegionModal';
 import OfferModal from './components/OfferModal';
 import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
+import MobileBottomNav from './components/MobileBottomNav';
 import { PRODUCTS, BRAND_INFO } from './data/products';
 import { MessageSquare, X, ArrowUpRight, PhoneCall, Calendar } from 'lucide-react';
 
@@ -338,7 +339,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main key={activeView} className={`flex-1 ${activeView === 'admin' ? '' : 'animate-fade-in'}`}>
+      <main key={activeView} className={`flex-1 ${activeView === 'admin' ? '' : 'animate-fade-in pb-16 lg:pb-0'}`}>
         {/* 1. HOMEPAGE VIEW */}
         {activeView === 'home' && (
           <>
@@ -522,7 +523,7 @@ export default function App() {
 
       {/* Concierge Popover Menu - storefront only */}
       {activeView !== 'admin' && isConciergeOpen && (
-        <div className="fixed bottom-22 right-6 z-40 w-72 bg-white border border-[#E0E5E1] shadow-2xl rounded-xs p-4 animate-scale-up text-left">
+        <div className="fixed bottom-36 right-4 lg:bottom-22 lg:right-6 z-40 w-72 bg-white border border-[#E0E5E1] shadow-2xl rounded-xs p-4 animate-scale-up text-left">
           <div className="flex items-center justify-between pb-2 border-b border-[#E0E5E1] mb-3">
             <span className="text-[12px] font-extrabold text-[#003F25] uppercase tracking-wider">
               TONTO Concierge
@@ -587,11 +588,11 @@ export default function App() {
       {activeView !== 'admin' && (
         <button
           onClick={() => setIsConciergeOpen(!isConciergeOpen)}
-          className="fixed bottom-6 right-6 z-40 w-13 h-13 rounded-full bg-[#003F25] text-white flex items-center justify-center shadow-lg hover:bg-[#002e1b] transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#003F25] cursor-pointer"
+          className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-40 w-12 h-12 lg:w-13 lg:h-13 rounded-full bg-[#003F25] text-white flex items-center justify-center shadow-xl hover:bg-[#002e1b] transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#003F25] cursor-pointer"
           aria-label="Direct studio enquiry"
           title="Direct Studio Enquiry"
         >
-          {isConciergeOpen ? <X size={20} strokeWidth={2.5} /> : <MessageSquare size={22} className="fill-white stroke-none" />}
+          {isConciergeOpen ? <X size={19} strokeWidth={2.5} /> : <MessageSquare size={20} className="fill-white stroke-none" />}
         </button>
       )}
 
@@ -681,6 +682,17 @@ export default function App() {
           setIsOfferModalOpen(false);
           handleNavigate('collection', cat || 'All');
         }}
+      />
+
+      {/* Mobile App-like Bottom Navigation Bar (Smartphones & Tablets) */}
+      <MobileBottomNav
+        activeView={activeView}
+        onNavigate={handleNavigate}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenSaved={() => setIsSavedDrawerOpen(true)}
+        onOpenBag={() => setIsBagOpen(true)}
+        savedCount={savedIds.length}
+        bagCount={totalBagCount}
       />
 
     </div>

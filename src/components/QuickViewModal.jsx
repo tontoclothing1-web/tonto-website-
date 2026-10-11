@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, ArrowUpRight, Check, Bookmark } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ArrowUpRight, Check, Bookmark, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function QuickViewModal({
   product,
@@ -13,6 +13,38 @@ export default function QuickViewModal({
 }) {
   const [selectedImgIndex, setSelectedImgIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
+
+  // Touch Swipe for mobile
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const [touchDelta, setTouchDelta] = useState(0);
+
+  const handleTouchStart = (e) => {
+    if (!product?.images || product.images.length <= 1) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    setTouchDelta(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!product?.images || product.images.length <= 1) return;
+    const diffX = e.touches[0].clientX - touchStartX.current;
+    const diffY = e.touches[0].clientY - touchStartY.current;
+    if (Math.abs(diffX) > 10 && Math.abs(diffX) > Math.abs(diffY)) {
+      setTouchDelta(diffX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!product?.images || product.images.length <= 1) return;
+    const threshold = 35;
+    if (touchDelta < -threshold) {
+      setSelectedImgIndex((prev) => (prev + 1) % product.images.length);
+    } else if (touchDelta > threshold) {
+      setSelectedImgIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+    }
+    setTouchDelta(0);
+  };
 
   useEffect(() => {
     setSelectedImgIndex(0);
@@ -63,18 +95,64 @@ export default function QuickViewModal({
         </button>
 
         {/* Left: Product Image & Gallery */}
-        <div className="w-full md:w-1/2 bg-[#F9F9F9] relative flex flex-col justify-between">
-          <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5]">
+        <div className="w-full md:w-1/2 bg-[#F9F9F9] relative flex flex-col justify-between select-none">
+          <div
+            className="relative aspect-[3/4] w-full overflow-hidden bg-[#F5F5F5] touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <img
               src={currentImage}
               alt={product.title}
               className="w-full h-full object-cover object-center transition-all duration-300"
+              draggable="false"
             />
+
+            {/* Prev / Next navigation for multiple images */}
+            {product.images && product.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImgIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
+                  }}
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-[#003F25] flex items-center justify-center shadow-md active:scale-90"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedImgIndex((prev) => (prev + 1) % product.images.length);
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-[#003F25] flex items-center justify-center shadow-md active:scale-90"
+                  aria-label="Next image"
+                >
+                  <ChevronRight size={18} />
+                </button>
+
+                {/* Mobile Dots */}
+                <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 md:hidden bg-black/30 backdrop-blur-xs px-2 py-0.5 rounded-full pointer-events-none">
+                  {product.images.map((_, idx) => (
+                    <span
+                      key={idx}
+                      className={`h-1.5 rounded-full transition-all duration-200 ${
+                        selectedImgIndex === idx ? 'w-3.5 bg-white' : 'w-1.5 bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
 
             {/* Save Bookmark button on top-left of image */}
             <button
               onClick={() => onToggleSave(product)}
-              className={`absolute top-3 left-3 p-2 rounded-sm transition-colors ${
+              className={`absolute top-3 left-3 z-20 p-2 rounded-sm transition-colors ${
                 isSaved ? 'bg-[#003F25] text-white' : 'bg-white/80 text-[#003F25] hover:bg-white'
               }`}
               title={isSaved ? "Saved" : "Save item"}
@@ -85,12 +163,12 @@ export default function QuickViewModal({
 
           {/* Alternate Image Thumbnails if available */}
           {product.images && product.images.length > 1 && (
-            <div className="flex gap-2 p-3 bg-white border-t border-[#E0E5E1]">
+            <div className="flex gap-2 p-3 bg-white border-t border-[#E0E5E1] overflow-x-auto no-scrollbar">
               {product.images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImgIndex(i)}
-                  className={`w-12 h-14 border overflow-hidden transition-all ${
+                  className={`w-12 h-14 border shrink-0 overflow-hidden transition-all ${
                     selectedImgIndex === i ? 'border-[#003F25] ring-1 ring-[#003F25]' : 'border-gray-200 opacity-60 hover:opacity-100'
                   }`}
                 >

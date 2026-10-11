@@ -106,7 +106,7 @@ export default function CheckoutPage({
   };
 
   return (
-    <div className="w-full bg-white text-[#111827] pb-24">
+    <div className="w-full bg-white text-[#111827] pb-32 lg:pb-24">
       
       {/* Breadcrumb Navigation */}
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">

@@ -167,7 +167,7 @@ export default function CartDrawer({
 
         {/* Bottom Checkout & Actions */}
         {cartItems.length > 0 && (
-          <div className="p-6 border-t border-[#E0E5E1] bg-white space-y-3">
+          <div className="p-5 sm:p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0E5E1] bg-white space-y-3">
             <div className="flex justify-between items-center text-[13px] font-bold text-[#003F25] pb-2 border-b border-gray-100">
               <span>Total Pieces</span>
               <span>{totalQuantity} Items</span>
