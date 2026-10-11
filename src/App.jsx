@@ -620,6 +620,7 @@ export default function App() {
         onClose={() => setIsSearchOpen(false)}
         onQuickView={(p) => setQuickViewProduct(p)}
         onOpenProduct={handleOpenProduct}
+        products={products}
       />
 
       <VisitUsModal

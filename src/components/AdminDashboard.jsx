@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -35,12 +35,30 @@ import {
   Unlock,
   CheckCircle2,
   Layers,
-  ArrowLeft
+  ArrowLeft,
+  Upload,
+  Image as ImageIcon
 } from 'lucide-react';
 import { BRAND_INFO, CATEGORIES } from '../data/products';
 
+// High-resolution presets from the store repository
+const ASSET_LIBRARY_PRESETS = [
+  { label: 'Waffle Longsleeve Black (Front)', url: '/assets/products/tonto-studios-waffle-black-front.jpg' },
+  { label: 'Waffle Longsleeve Black (Back)', url: '/assets/products/tonto-studios-waffle-black-back.jpg' },
+  { label: 'Waffle Thermal White / Aqua', url: '/assets/products/tonto-waffle-white-front.jpg' },
+  { label: 'Chain Graffiti Denim Detail', url: '/assets/products/chain-print-denim-detail.jpg' },
+  { label: 'Extra Wide Washed Denim', url: '/assets/products/extra-wide-denim.jpg' },
+  { label: 'Black Denim Shirt & Flared Jeans', url: '/assets/products/black-denim-shirt-flared-jeans.jpg' },
+  { label: 'Oversized Graphic Tee Black', url: '/assets/products/oversized-graphic-tee-black.jpg' },
+  { label: 'Sportswear Sweatshirt Navy', url: '/assets/products/sportswear-sweatshirt-navy-flat1.jpg' },
+  { label: 'Relaxed Fit Trousers Cream', url: '/assets/products/relaxed-fit-trousers-cream.jpg' },
+  { label: 'Waffle Tees Hanging Rack', url: '/assets/products/tonto-waffle-tees-hanging.jpg' },
+  { label: 'TONTO Custom Hardware & Tags', url: '/assets/branding/tonto-tags.jpg' },
+  { label: 'Editorial Seated Camo Campaign', url: '/assets/editorial/editorial-seated-camo.jpg' }
+];
+
 export default function AdminDashboard({
-  products,
+  products = [],
   onUpdateProducts,
   onNavigateStore,
   initialTab = 'overview'
@@ -67,17 +85,18 @@ export default function AdminDashboard({
   const [productFormData, setProductFormData] = useState({
     title: '',
     category: 'Tees',
-    colour: 'black',
+    colour: 'vintage black',
     fit: 'Relaxed drop-shoulder',
     price: 'Price on enquiry',
     availability: 'In stock - Coimbatore studio',
-    isTrending: false,
+    isTrending: true,
     variants: 'S, M, L, XL',
-    measurements: 'Chest: 46in | Length: 28in',
-    description: '',
+    measurements: 'Chest: 48in | Length: 29in | Sleeve: 26in',
+    description: 'Heavyweight textured knit crafted in small studio batches. Boxy, relaxed unisex drape.',
     images: ['/assets/products/tonto-studios-waffle-black-front.jpg']
   });
   const [imageUrlInput, setImageUrlInput] = useState('');
+  const fileInputRef = useRef(null);
 
   // Toast Notification
   const [toastMessage, setToastMessage] = useState(null);
@@ -95,7 +114,6 @@ export default function AdminDashboard({
     } catch (e) {
       console.error(e);
     }
-    // Default seed enquiries
     return [
       {
         id: 'ENQ-1001',
@@ -232,10 +250,11 @@ export default function AdminDashboard({
     localStorage.setItem('tonto_admin_settings', JSON.stringify(storeSettings));
   }, [storeSettings]);
 
-  // Handle Admin Passcode Login
+  // Authentication Handlers
   const handleLogin = (e) => {
     e.preventDefault();
-    if (passcode.trim().toLowerCase() === 'tonto' || passcode.trim() === 'tonto2026' || passcode.trim() === 'admin') {
+    const clean = passcode.trim().toLowerCase();
+    if (clean === 'tonto' || clean === 'tonto2026' || clean === 'admin') {
       setIsAuthenticated(true);
       localStorage.setItem('tonto_admin_authenticated', 'true');
       setAuthError('');
@@ -258,7 +277,7 @@ export default function AdminDashboard({
     showToast('Logged out of Admin Desk');
   };
 
-  // Product CRUD Handlers
+  // PRODUCT CRUD HANDLERS
   const handleOpenAddProduct = () => {
     setEditingProduct(null);
     setProductFormData({
@@ -270,8 +289,8 @@ export default function AdminDashboard({
       availability: 'In stock - Coimbatore studio',
       isTrending: true,
       variants: 'S, M, L, XL',
-      measurements: 'Chest: 48in | Length: 29in',
-      description: 'Heavyweight streetwear piece crafted for everyday wear.',
+      measurements: 'Chest: 48in | Length: 29in | Sleeve: 26in',
+      description: 'Heavyweight textured knit crafted in small studio batches. Boxy, relaxed unisex drape.',
       images: ['/assets/products/tonto-studios-waffle-black-front.jpg']
     });
     setImageUrlInput('');
@@ -288,68 +307,171 @@ export default function AdminDashboard({
       price: prod.price || 'Price on enquiry',
       availability: prod.availability || 'In stock - Coimbatore studio',
       isTrending: !!prod.isTrending,
-      variants: Array.isArray(prod.variants) ? prod.variants.join(', ') : (prod.variants || 'S, M, L, XL'),
+      variants: Array.isArray(prod.variants)
+        ? prod.variants.join(', ')
+        : (typeof prod.variants === 'string' ? prod.variants : 'S, M, L, XL'),
       measurements: prod.measurements || '',
       description: prod.description || '',
-      images: prod.images && prod.images.length > 0 ? [...prod.images] : ['/assets/products/extra-wide-denim.jpg']
+      images: Array.isArray(prod.images) && prod.images.length > 0
+        ? [...prod.images]
+        : (prod.image ? [prod.image] : ['/assets/products/extra-wide-denim.jpg'])
     });
     setImageUrlInput('');
     setIsProductModalOpen(true);
   };
 
-  const handleSaveProduct = (e) => {
-    e.preventDefault();
-    if (!productFormData.title.trim()) {
-      alert('Product title is required.');
+  // Image Upload handler (File Reader to Data URL)
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file (PNG, JPG, WebP).');
       return;
     }
 
-    const variantsArray = productFormData.variants
-      .split(',')
-      .map((v) => v.trim())
-      .filter(Boolean);
+    const reader = new FileReader();
+    reader.onload = (uploadEvent) => {
+      const dataUrl = uploadEvent.target?.result;
+      if (dataUrl) {
+        setProductFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, dataUrl]
+        }));
+        showToast('Image uploaded successfully from device');
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
-    const slug = productFormData.title
+  const handleAddPresetImage = (url) => {
+    if (productFormData.images.includes(url)) {
+      showToast('Image already added to this piece');
+      return;
+    }
+    setProductFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, url]
+    }));
+    showToast('Added photo from studio gallery');
+  };
+
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) return;
+    const url = imageUrlInput.trim();
+    if (productFormData.images.includes(url)) {
+      showToast('Image already in list');
+      return;
+    }
+    setProductFormData((prev) => ({
+      ...prev,
+      images: [...prev.images, url]
+    }));
+    setImageUrlInput('');
+  };
+
+  const handleRemoveImage = (index) => {
+    setProductFormData((prev) => {
+      const nextImages = prev.images.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        images: nextImages.length > 0 ? nextImages : ['/assets/products/extra-wide-denim.jpg']
+      };
+    });
+  };
+
+  // Product Save / Submit
+  const handleSaveProduct = (e) => {
+    e.preventDefault();
+    if (!productFormData.title || !productFormData.title.trim()) {
+      alert('Please enter a product title.');
+      return;
+    }
+
+    // Auto-include any URL typed in the input box if the user forgot to click "Add"
+    let finalImages = [...productFormData.images];
+    if (imageUrlInput.trim() && !finalImages.includes(imageUrlInput.trim())) {
+      finalImages.push(imageUrlInput.trim());
+    }
+    if (finalImages.length === 0) {
+      finalImages = ['/assets/products/extra-wide-denim.jpg'];
+    }
+
+    // Parse variants safely
+    let variantsArray = ['S', 'M', 'L', 'XL'];
+    if (typeof productFormData.variants === 'string') {
+      variantsArray = productFormData.variants
+        .split(/[,/]+/)
+        .map((v) => v.trim())
+        .filter(Boolean);
+    } else if (Array.isArray(productFormData.variants)) {
+      variantsArray = productFormData.variants;
+    }
+    if (variantsArray.length === 0) variantsArray = ['Standard'];
+
+    const cleanTitle = productFormData.title.trim();
+    const slug = cleanTitle
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '');
 
     if (editingProduct) {
-      // Update existing
+      // Edit existing product
       const updatedList = products.map((p) => {
         if (p.id === editingProduct.id) {
           return {
             ...p,
             ...productFormData,
+            title: cleanTitle,
+            images: finalImages,
             variants: variantsArray,
             slug: p.slug || slug
           };
         }
         return p;
       });
-      onUpdateProducts(updatedList);
-      showToast(`Updated "${productFormData.title}" successfully`);
+      if (onUpdateProducts) onUpdateProducts(updatedList);
+      showToast(`Updated "${cleanTitle}" successfully`);
     } else {
-      // Create new
+      // Create brand new product
       const newProduct = {
         id: `tonto-${Date.now()}`,
         slug: slug || `prod-${Date.now()}`,
-        ...productFormData,
-        variants: variantsArray,
+        title: cleanTitle,
+        category: productFormData.category || 'Tees',
+        colour: productFormData.colour || 'vintage black',
+        fit: productFormData.fit || 'Relaxed drop-shoulder',
+        price: productFormData.price || 'Price on enquiry',
+        availability: productFormData.availability || 'In stock - Coimbatore studio',
+        isTrending: !!productFormData.isTrending,
+        images: finalImages,
+        alt: `${cleanTitle} in ${productFormData.colour || 'vintage black'}`,
+        description: productFormData.description || 'Heavyweight streetwear piece crafted for everyday wear.',
         verifiedBrand: 'unisex / TONTO',
+        variants: variantsArray,
+        measurements: productFormData.measurements || 'Standard fit',
         createdDate: new Date().toISOString().split('T')[0]
       };
-      onUpdateProducts([newProduct, ...products]);
-      showToast(`Added new piece "${productFormData.title}" to catalog`);
+
+      if (onUpdateProducts) {
+        onUpdateProducts([newProduct, ...products]);
+      }
+      showToast(`Added new piece "${cleanTitle}" to catalog!`);
     }
 
+    // Close modal, reset search & filters, and ensure user is on products tab to see the piece
     setIsProductModalOpen(false);
+    setActiveTab('products');
+    setSearchQuery('');
+    setSelectedCategoryFilter('All');
+    setSelectedStockFilter('All');
   };
 
   const handleDeleteProduct = (productId, productTitle) => {
     if (window.confirm(`Are you sure you want to delete "${productTitle}" from the store catalog?`)) {
       const updated = products.filter((p) => p.id !== productId);
-      onUpdateProducts(updated);
+      if (onUpdateProducts) onUpdateProducts(updated);
       showToast(`Deleted "${productTitle}"`);
     }
   };
@@ -361,7 +483,7 @@ export default function AdminDashboard({
       }
       return p;
     });
-    onUpdateProducts(updated);
+    if (onUpdateProducts) onUpdateProducts(updated);
     showToast('Updated trending status');
   };
 
@@ -379,25 +501,8 @@ export default function AdminDashboard({
       }
       return p;
     });
-    onUpdateProducts(updated);
-    showToast(`Stock updated to: ${nextStatus}`);
-  };
-
-  // Add / Remove Images in Product Form
-  const handleAddImageUrl = () => {
-    if (!imageUrlInput.trim()) return;
-    setProductFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, imageUrlInput.trim()]
-    }));
-    setImageUrlInput('');
-  };
-
-  const handleRemoveImage = (index) => {
-    setProductFormData((prev) => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index)
-    }));
+    if (onUpdateProducts) onUpdateProducts(updated);
+    showToast(`Stock updated: ${nextStatus}`);
   };
 
   // Enquiry Status Update
@@ -405,7 +510,7 @@ export default function AdminDashboard({
     setEnquiries((prev) =>
       prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
     );
-    showToast(`Enquiry ${id} marked as ${newStatus}`);
+    showToast(`Enquiry ${id} updated to ${newStatus}`);
   };
 
   // Appointment Status Update
@@ -443,7 +548,7 @@ export default function AdminDashboard({
   const handleResetCatalog = () => {
     if (
       window.confirm(
-        'Warning: This will reload the original default TONTO catalog and overwrite custom additions. Proceed?'
+        'Warning: This will reload the default TONTO catalog and remove custom additions. Proceed?'
       )
     ) {
       localStorage.removeItem('tonto_admin_products');
@@ -451,29 +556,34 @@ export default function AdminDashboard({
     }
   };
 
-  // Filtered Products List
+  // Filtered Products List with safe null checks
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
+      const title = p.title || '';
+      const colour = p.colour || '';
+      const category = p.category || '';
+      const availability = p.availability || '';
+
       const matchesSearch =
         searchQuery === '' ||
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.colour?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchQuery.toLowerCase());
+        title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        colour.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        category.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesCat =
-        selectedCategoryFilter === 'All' || p.category === selectedCategoryFilter;
+        selectedCategoryFilter === 'All' || category === selectedCategoryFilter;
 
       const matchesStock =
         selectedStockFilter === 'All' ||
-        (selectedStockFilter === 'In Stock' && p.availability?.includes('In stock')) ||
-        (selectedStockFilter === 'Low Stock' && p.availability?.includes('Low stock')) ||
-        (selectedStockFilter === 'Sold Out' && p.availability?.includes('Sold out'));
+        (selectedStockFilter === 'In Stock' && availability.includes('In stock')) ||
+        (selectedStockFilter === 'Low Stock' && availability.includes('Low stock')) ||
+        (selectedStockFilter === 'Sold Out' && availability.includes('Sold out'));
 
       return matchesSearch && matchesCat && matchesStock;
     });
   }, [products, searchQuery, selectedCategoryFilter, selectedStockFilter]);
 
-  // If Not Authenticated, show login gate
+  // LOGIN SCREEN
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#0A1A12] flex items-center justify-center p-4 sm:p-6 text-white select-none">
@@ -559,6 +669,7 @@ export default function AdminDashboard({
     );
   }
 
+  // MAIN ADMIN CONSOLE
   return (
     <div className="min-h-screen bg-[#F6F8F6] text-[#111111] flex flex-col font-sans select-none text-left">
       
@@ -836,7 +947,7 @@ export default function AdminDashboard({
                     </h3>
                     <button
                       onClick={() => setActiveTab('enquiries')}
-                      className="text-[11.5px] text-[#003F25] font-semibold hover:underline"
+                      className="text-[11.5px] text-[#003F25] font-semibold hover:underline cursor-pointer"
                     >
                       View All &rarr;
                     </button>
@@ -878,7 +989,7 @@ export default function AdminDashboard({
                     </h3>
                     <button
                       onClick={() => setActiveTab('appointments')}
-                      className="text-[11.5px] text-[#003F25] font-semibold hover:underline"
+                      className="text-[11.5px] text-[#003F25] font-semibold hover:underline cursor-pointer"
                     >
                       Manage &rarr;
                     </button>
@@ -949,6 +1060,7 @@ export default function AdminDashboard({
                 </div>
 
                 <button
+                  type="button"
                   onClick={handleOpenAddProduct}
                   className="px-4 py-2.5 bg-[#003F25] hover:bg-[#002e1b] text-white font-bold text-[12px] uppercase tracking-wider rounded-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm transition-colors"
                 >
@@ -983,7 +1095,7 @@ export default function AdminDashboard({
                 <select
                   value={selectedCategoryFilter}
                   onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                  className="px-3 py-2 bg-[#F9FAF9] border border-gray-300 rounded-xs text-[12.5px] font-semibold uppercase text-gray-700 outline-none"
+                  className="px-3 py-2 bg-[#F9FAF9] border border-gray-300 rounded-xs text-[12.5px] font-semibold uppercase text-gray-700 outline-none cursor-pointer"
                 >
                   <option value="All">All Categories ({products.length})</option>
                   {['Tees', 'Denim', 'Sweats', 'Bottoms', 'Shirts', 'Accessories'].map((cat) => (
@@ -997,7 +1109,7 @@ export default function AdminDashboard({
                 <select
                   value={selectedStockFilter}
                   onChange={(e) => setSelectedStockFilter(e.target.value)}
-                  className="px-3 py-2 bg-[#F9FAF9] border border-gray-300 rounded-xs text-[12.5px] font-semibold uppercase text-gray-700 outline-none"
+                  className="px-3 py-2 bg-[#F9FAF9] border border-gray-300 rounded-xs text-[12.5px] font-semibold uppercase text-gray-700 outline-none cursor-pointer"
                 >
                   <option value="All">All Stock Levels</option>
                   <option value="In Stock">In Stock Only</option>
@@ -1031,7 +1143,7 @@ export default function AdminDashboard({
                               <div className="w-12 h-14 bg-gray-100 rounded-xs overflow-hidden border border-gray-200">
                                 <img
                                   src={img}
-                                  alt={p.title}
+                                  alt={p.title || 'Product'}
                                   className="w-full h-full object-cover"
                                 />
                               </div>
@@ -1040,7 +1152,7 @@ export default function AdminDashboard({
                             {/* Title & Info */}
                             <td className="py-3 px-4 max-w-xs">
                               <span className="font-bold text-[#111111] uppercase block truncate font-['Futura_PT_Book',sans-serif]">
-                                {p.title}
+                                {p.title || 'Untitled Piece'}
                               </span>
                               <span className="text-[11px] text-gray-500 lowercase block">
                                 {p.colour || 'vintage black'} • {Array.isArray(p.variants) ? p.variants.join('/') : p.variants}
@@ -1050,18 +1162,19 @@ export default function AdminDashboard({
                             {/* Category */}
                             <td className="py-3 px-4">
                               <span className="px-2 py-0.5 bg-gray-100 rounded text-[11px] font-medium text-gray-700 uppercase">
-                                {p.category}
+                                {p.category || 'Tees'}
                               </span>
                             </td>
 
                             {/* Price */}
                             <td className="py-3 px-4 font-semibold text-[#111111]">
-                              {p.price}
+                              {p.price || 'Price on enquiry'}
                             </td>
 
                             {/* Stock Toggle Button */}
                             <td className="py-3 px-4">
                               <button
+                                type="button"
                                 onClick={() => handleQuickStockToggle(p.id, p.availability)}
                                 className={`px-2.5 py-1 rounded-xs text-[10.5px] font-bold uppercase transition-all cursor-pointer ${
                                   p.availability?.includes('In stock')
@@ -1079,6 +1192,7 @@ export default function AdminDashboard({
                             {/* Trending Toggle */}
                             <td className="py-3 px-4 text-center">
                               <button
+                                type="button"
                                 onClick={() => handleToggleTrending(p.id)}
                                 className={`w-6 h-6 rounded-full inline-flex items-center justify-center transition-colors cursor-pointer ${
                                   p.isTrending
@@ -1095,6 +1209,7 @@ export default function AdminDashboard({
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end gap-1.5">
                                 <button
+                                  type="button"
                                   onClick={() => handleOpenEditProduct(p)}
                                   className="p-1.5 text-gray-600 hover:text-[#003F25] hover:bg-gray-100 rounded-xs transition-colors cursor-pointer"
                                   title="Edit Product"
@@ -1102,6 +1217,7 @@ export default function AdminDashboard({
                                   <Edit2 size={15} />
                                 </button>
                                 <button
+                                  type="button"
                                   onClick={() => handleDeleteProduct(p.id, p.title)}
                                   className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xs transition-colors cursor-pointer"
                                   title="Delete Product"
@@ -1127,6 +1243,7 @@ export default function AdminDashboard({
               <div className="flex items-center justify-between text-xs text-gray-500 pt-2">
                 <span>Showing {filteredProducts.length} of {products.length} products</span>
                 <button
+                  type="button"
                   onClick={handleResetCatalog}
                   className="text-gray-400 hover:text-red-600 underline cursor-pointer"
                 >
@@ -1197,6 +1314,7 @@ export default function AdminDashboard({
                       </select>
 
                       <button
+                        type="button"
                         onClick={() => {
                           const cleanPhone = enq.contact.replace(/[^0-9]/g, '');
                           window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=Hi%20${enq.clientName},%20following%20up%20on%20your%20TONTO%20Clothing%20enquiry%20regarding%20the%20${encodeURIComponent(enq.productTitle)}.`, '_blank');
@@ -1267,6 +1385,7 @@ export default function AdminDashboard({
                       </select>
 
                       <button
+                        type="button"
                         onClick={() => {
                           const cleanPhone = apt.phone.replace(/[^0-9]/g, '');
                           window.open(`https://api.whatsapp.com/send?phone=${cleanPhone}&text=Hi%20${apt.name},%20confirming%20your%20TONTO%20Studio%20fitting%20appointment%20on%20${apt.date}%20at%20${apt.time}.`, '_blank');
@@ -1297,6 +1416,7 @@ export default function AdminDashboard({
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={handleCopySubscribers}
                     className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-[11.5px] font-bold uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
@@ -1305,6 +1425,7 @@ export default function AdminDashboard({
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleExportSubscribersCSV}
                     className="px-3.5 py-2 bg-[#003F25] hover:bg-[#002e1b] text-white text-[11.5px] font-bold uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
                   >
@@ -1376,6 +1497,7 @@ export default function AdminDashboard({
                     <div className="pt-3 border-t border-gray-200 text-xs text-[#79867D] flex items-center justify-between">
                       <span>Redeemed {promo.uses} times</span>
                       <button
+                        type="button"
                         onClick={() => {
                           setPromos(promos.map((p, i) => i === idx ? { ...p, active: !p.active } : p));
                           showToast(`Toggled promo code ${promo.code}`);
@@ -1468,6 +1590,7 @@ export default function AdminDashboard({
                   Danger Zone
                 </h3>
                 <button
+                  type="button"
                   onClick={handleResetCatalog}
                   className="px-4 py-2 border border-red-300 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-xs transition-colors cursor-pointer"
                 >
@@ -1492,10 +1615,16 @@ export default function AdminDashboard({
           <div className="relative w-full max-w-2xl bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-xs p-6 sm:p-8 my-auto animate-scale-up text-left max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-5">
-              <h3 className="text-xl font-bold uppercase tracking-tight text-[#111111] font-['Futura_PT_Book',sans-serif]">
-                {editingProduct ? 'EDIT PRODUCT PIECE' : 'ADD NEW CATALOG PIECE'}
-              </h3>
+              <div>
+                <h3 className="text-xl font-bold uppercase tracking-tight text-[#111111] font-['Futura_PT_Book',sans-serif]">
+                  {editingProduct ? 'EDIT PRODUCT PIECE' : 'ADD NEW CATALOG PIECE'}
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Fill in the details below. This piece will immediately appear live on the storefront.
+                </p>
+              </div>
               <button
+                type="button"
                 onClick={() => setIsProductModalOpen(false)}
                 className="p-1 text-gray-400 hover:text-black cursor-pointer"
               >
@@ -1515,7 +1644,7 @@ export default function AdminDashboard({
                   value={productFormData.title}
                   onChange={(e) => setProductFormData({ ...productFormData, title: e.target.value })}
                   placeholder="e.g. TONTO STUDIOS WAFFLE LONGSLEEVE"
-                  className="w-full px-3.5 py-2.5 border border-gray-300 focus:border-[#003F25] rounded-xs outline-none"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 focus:border-[#003F25] rounded-xs outline-none font-medium"
                 />
               </div>
 
@@ -1527,7 +1656,7 @@ export default function AdminDashboard({
                   <select
                     value={productFormData.category}
                     onChange={(e) => setProductFormData({ ...productFormData, category: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none bg-white font-medium"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none bg-white font-medium cursor-pointer"
                   >
                     {['Tees', 'Denim', 'Sweats', 'Bottoms', 'Shirts', 'Accessories'].map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -1559,7 +1688,7 @@ export default function AdminDashboard({
                     value={productFormData.price}
                     onChange={(e) => setProductFormData({ ...productFormData, price: e.target.value })}
                     placeholder="Price on enquiry OR ₹2,499"
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none font-medium"
                   />
                 </div>
 
@@ -1570,7 +1699,7 @@ export default function AdminDashboard({
                   <select
                     value={productFormData.availability}
                     onChange={(e) => setProductFormData({ ...productFormData, availability: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none bg-white font-medium"
+                    className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none bg-white font-medium cursor-pointer"
                   >
                     <option value="In stock - Coimbatore studio">In stock - Coimbatore studio</option>
                     <option value="Low stock">Low stock</option>
@@ -1582,7 +1711,7 @@ export default function AdminDashboard({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                    Fit & Cut
+                    Fit & Silhouette
                   </label>
                   <input
                     type="text"
@@ -1595,7 +1724,7 @@ export default function AdminDashboard({
 
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1">
-                    Available Sizes (comma-separated)
+                    Available Sizes (comma or slash separated)
                   </label>
                   <input
                     type="text"
@@ -1616,7 +1745,7 @@ export default function AdminDashboard({
                   value={productFormData.measurements}
                   onChange={(e) => setProductFormData({ ...productFormData, measurements: e.target.value })}
                   placeholder="Chest: 48in | Length: 29in | Sleeve: 26in"
-                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none"
+                  className="w-full px-3.5 py-2.5 border border-gray-300 rounded-xs outline-none font-mono text-xs"
                 />
               </div>
 
@@ -1633,50 +1762,102 @@ export default function AdminDashboard({
                 />
               </div>
 
-              {/* Product Images Management */}
-              <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700 mb-1.5">
-                  Product Images (Swipable Carousel)
-                </label>
+              {/* Product Images Management with Upload & Presets */}
+              <div className="pt-1">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-700">
+                    Product Photos (Swipable on Storefront)
+                  </label>
+                  <span className="text-[11px] text-gray-400">
+                    {productFormData.images.length} photo(s) selected
+                  </span>
+                </div>
                 
-                {/* Image Thumbnails List */}
-                <div className="flex flex-wrap gap-2.5 mb-2.5">
+                {/* Image Thumbnails Strip */}
+                <div className="flex flex-wrap gap-2.5 mb-3 p-3 bg-gray-50 border border-gray-200 rounded-xs">
                   {productFormData.images.map((imgUrl, idx) => (
-                    <div key={idx} className="relative w-16 h-20 bg-gray-100 rounded-xs overflow-hidden border border-gray-300 group">
+                    <div key={idx} className="relative w-16 h-20 bg-gray-200 rounded-xs overflow-hidden border border-gray-300 group shadow-2xs">
                       <img src={imgUrl} alt="preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(idx)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-0.5 opacity-80 hover:opacity-100 cursor-pointer"
-                        title="Remove image"
-                      >
-                        <X size={12} />
-                      </button>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveImage(idx)}
+                          className="bg-red-600 text-white rounded-full p-1 hover:bg-red-700 cursor-pointer"
+                          title="Remove image"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                      <span className="absolute bottom-0 left-0 bg-black/70 text-white text-[9px] px-1 font-mono">
+                        #{idx + 1}
+                      </span>
                     </div>
                   ))}
                 </div>
 
-                {/* Add Image URL Input */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={imageUrlInput}
-                    onChange={(e) => setImageUrlInput(e.target.value)}
-                    placeholder="Enter image URL (e.g. /assets/products/extra-wide-denim.jpg)"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-xs text-xs outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddImageUrl}
-                    className="px-3 py-2 bg-gray-800 text-white text-xs font-bold uppercase rounded-xs hover:bg-black cursor-pointer"
-                  >
-                    Add Image
-                  </button>
+                {/* Upload & Preset Options */}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* File Upload from Device */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="admin-product-file-upload"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-3.5 py-2 bg-white border border-gray-300 hover:border-[#003F25] text-[#111111] text-xs font-bold uppercase rounded-xs flex items-center gap-1.5 cursor-pointer shadow-2xs transition-colors"
+                    >
+                      <Upload size={14} className="text-[#003F25]" />
+                      <span>Upload from Device</span>
+                    </button>
+
+                    {/* Presets dropdown */}
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleAddPresetImage(e.target.value);
+                          e.target.value = '';
+                        }
+                      }}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-xs text-xs font-semibold text-gray-700 outline-none cursor-pointer"
+                      defaultValue=""
+                    >
+                      <option value="" disabled>+ Choose from Studio Library...</option>
+                      {ASSET_LIBRARY_PRESETS.map((preset, pIdx) => (
+                        <option key={pIdx} value={preset.url}>
+                          {preset.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Manual URL Input */}
+                  <div className="flex gap-2 pt-1">
+                    <input
+                      type="text"
+                      value={imageUrlInput}
+                      onChange={(e) => setImageUrlInput(e.target.value)}
+                      placeholder="Or paste an image URL here..."
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-xs text-xs outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageUrl}
+                      className="px-3 py-2 bg-gray-800 text-white text-xs font-bold uppercase rounded-xs hover:bg-black cursor-pointer"
+                    >
+                      Add URL
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Trending Checkbox */}
-              <div className="flex items-center gap-2 pt-2">
+              <div className="flex items-center gap-2 pt-2 pb-1">
                 <input
                   type="checkbox"
                   id="trending-check"
@@ -1685,7 +1866,7 @@ export default function AdminDashboard({
                   className="w-4 h-4 accent-[#003F25] cursor-pointer"
                 />
                 <label htmlFor="trending-check" className="text-xs font-semibold text-gray-800 cursor-pointer">
-                  Feature in "Trending Styles" on Homepage
+                  Feature in "Trending Styles" row on Homepage
                 </label>
               </div>
 
@@ -1701,9 +1882,9 @@ export default function AdminDashboard({
 
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#003F25] hover:bg-[#002e1b] text-white text-xs font-bold uppercase tracking-wider rounded-xs cursor-pointer shadow-sm"
+                  className="px-7 py-2.5 bg-[#003F25] hover:bg-[#002e1b] text-white text-xs font-bold uppercase tracking-wider rounded-xs cursor-pointer shadow-sm transition-colors"
                 >
-                  {editingProduct ? 'Save Changes' : 'Create Piece'}
+                  {editingProduct ? 'Save Changes' : 'Create & Publish Piece'}
                 </button>
               </div>
 

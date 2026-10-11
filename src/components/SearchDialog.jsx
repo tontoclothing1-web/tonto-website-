@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, ArrowUpRight } from 'lucide-react';
 import { PRODUCTS } from '../data/products';
 
-export default function SearchDialog({ isOpen, onClose, onQuickView, onOpenProduct }) {
+export default function SearchDialog({ isOpen, onClose, onQuickView, onOpenProduct, products = PRODUCTS }) {
   const [query, setQuery] = useState('');
   const inputRef = useRef(null);
 
@@ -26,18 +26,25 @@ export default function SearchDialog({ isOpen, onClose, onQuickView, onOpenProdu
 
   if (!isOpen) return null;
 
+  const catalog = (products && products.length > 0) ? products : PRODUCTS;
+
   const results = query.trim()
-    ? PRODUCTS.filter((p) => {
+    ? catalog.filter((p) => {
         const q = query.toLowerCase();
+        const title = (p.title || '').toLowerCase();
+        const category = (p.category || '').toLowerCase();
+        const colour = (p.colour || '').toLowerCase();
+        const fit = (p.fit || '').toLowerCase();
+        const description = (p.description || '').toLowerCase();
         return (
-          p.title.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.colour.toLowerCase().includes(q) ||
-          p.fit.toLowerCase().includes(q) ||
-          p.description.toLowerCase().includes(q)
+          title.includes(q) ||
+          category.includes(q) ||
+          colour.includes(q) ||
+          fit.includes(q) ||
+          description.includes(q)
         );
       })
-    : PRODUCTS.slice(0, 4); // Suggested initial items
+    : catalog.slice(0, 4); // Suggested initial items
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 p-4 overflow-y-auto">
