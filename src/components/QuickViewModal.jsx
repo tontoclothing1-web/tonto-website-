@@ -132,30 +132,38 @@ export default function QuickViewModal({
                 <span className="text-[#79867D]">Fit</span>
                 <span className="font-semibold text-[#003F25]">{product.fit}</span>
               </div>
-              {product.variants && (
-                <div className="flex justify-between items-center">
-                  <span className="text-[#79867D]">Select Size</span>
-                  <div className="flex gap-1.5">
-                    {product.variants.map((sz) => {
-                      const isSel = selectedSize === sz;
-                      return (
-                        <button
-                          key={sz}
-                          type="button"
-                          onClick={() => setSelectedSize(sz)}
-                          className={`px-2.5 py-1 text-[11px] font-bold border transition-colors cursor-pointer ${
-                            isSel
-                              ? 'bg-[#003F25] text-white border-[#003F25]'
-                              : 'bg-white text-gray-700 border-gray-200 hover:border-[#003F25]'
-                          }`}
-                        >
-                          {sz}
-                        </button>
-                      );
-                    })}
+              {(() => {
+                const variantsList = Array.isArray(product?.variants)
+                  ? product.variants
+                  : (typeof product?.variants === 'string'
+                    ? product.variants.split(/[,/]+/).map((v) => v.trim()).filter(Boolean)
+                    : []);
+                if (variantsList.length === 0) return null;
+                return (
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#79867D]">Select Size</span>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {variantsList.map((sz) => {
+                        const isSel = selectedSize === sz;
+                        return (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => setSelectedSize(sz)}
+                            className={`px-2.5 py-1 text-[11px] font-bold border transition-colors cursor-pointer ${
+                              isSel
+                                ? 'bg-[#003F25] text-white border-[#003F25]'
+                                : 'bg-white text-gray-700 border-gray-200 hover:border-[#003F25]'
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
               {product.measurements && (
                 <div className="flex flex-col pt-1">
                   <span className="text-[11px] text-[#79867D] uppercase tracking-wider mb-0.5">Measurements</span>

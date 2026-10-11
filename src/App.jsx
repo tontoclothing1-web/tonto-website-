@@ -149,7 +149,7 @@ export default function App() {
         const cat = searchParams.get('category') || 'All';
         setCollectionCategory(cat);
       } else if (path.startsWith('#/product/')) {
-        const id = path.replace('#/product/', '');
+        const id = decodeURIComponent(path.replace('#/product/', ''));
         const found = products.find((p) => p.id === id || p.slug === id);
         if (found) {
           setSelectedProduct(found);

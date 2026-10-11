@@ -205,42 +205,50 @@ export default function ProductDetailPage({
             </div>
 
             {/* Size Variant Selector */}
-            {product.variants && (
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[12px] font-bold text-[#003F25] uppercase tracking-wider">
-                    Select Size
-                  </span>
-                  <button
-                    onClick={() => setIsSizeGuideOpen(true)}
-                    className="text-[11px] text-[#79867D] hover:text-[#003F25] underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <Ruler size={13} />
-                    <span>Size & Measurement Guide</span>
-                  </button>
-                </div>
+            {(() => {
+              const variantsList = Array.isArray(product?.variants)
+                ? product.variants
+                : (typeof product?.variants === 'string'
+                  ? product.variants.split(/[,/]+/).map((v) => v.trim()).filter(Boolean)
+                  : []);
+              if (variantsList.length === 0) return null;
+              return (
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[12px] font-bold text-[#003F25] uppercase tracking-wider">
+                      Select Size
+                    </span>
+                    <button
+                      onClick={() => setIsSizeGuideOpen(true)}
+                      className="text-[11px] text-[#79867D] hover:text-[#003F25] underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Ruler size={13} />
+                      <span>Size & Measurement Guide</span>
+                    </button>
+                  </div>
 
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                  {product.variants.map((sz) => {
-                    const isSel = selectedSize === sz;
-                    return (
-                      <button
-                        key={sz}
-                        type="button"
-                        onClick={() => setSelectedSize(sz)}
-                        className={`py-3 text-[13px] font-bold border transition-all cursor-pointer ${
-                          isSel
-                            ? 'bg-[#003F25] text-white border-[#003F25] shadow-xs'
-                            : 'bg-white text-[#1F2937] border-gray-200 hover:border-[#003F25]'
-                        }`}
-                      >
-                        {sz}
-                      </button>
-                    );
-                  })}
+                  <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                    {variantsList.map((sz) => {
+                      const isSel = selectedSize === sz;
+                      return (
+                        <button
+                          key={sz}
+                          type="button"
+                          onClick={() => setSelectedSize(sz)}
+                          className={`py-3 text-[13px] font-bold border transition-all cursor-pointer ${
+                            isSel
+                              ? 'bg-[#003F25] text-white border-[#003F25] shadow-xs'
+                              : 'bg-white text-[#1F2937] border-gray-200 hover:border-[#003F25]'
+                          }`}
+                        >
+                          {sz}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Quantity Selector & Primary Action Buttons */}
             <div className="space-y-3 mb-8">

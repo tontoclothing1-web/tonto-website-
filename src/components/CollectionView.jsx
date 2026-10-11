@@ -68,30 +68,30 @@ export default function CollectionView({
     if (selectedCategory && selectedCategory !== 'All') {
       const catLower = selectedCategory.toLowerCase();
       if (catLower === 'new arrivals') {
-        result = result.filter((p) => p.isTrending || p.id.includes('waffle') || p.id.includes('denim') || p.id.includes('shirt'));
+        result = result.filter((p) => p.isTrending || (p.id || '').includes('waffle') || (p.id || '').includes('denim') || (p.id || '').includes('shirt'));
       } else if (catLower === 'tops') {
         result = result.filter((p) => {
-          const c = p.category.toLowerCase();
+          const c = (p.category || '').toLowerCase();
           return c === 'tops' || c === 'tees' || c === 'shirts';
         });
       } else if (catLower === 'outerwear') {
         result = result.filter((p) => {
-          const c = p.category.toLowerCase();
-          return c === 'outerwear' || c === 'layers' || p.id.includes('sweatshirt') || p.id.includes('jacket');
+          const c = (p.category || '').toLowerCase();
+          return c === 'outerwear' || c === 'layers' || (p.id || '').includes('sweatshirt') || (p.id || '').includes('jacket');
         });
       } else if (catLower === 'sweatpants' || catLower === 'bottoms') {
         result = result.filter((p) => {
-          const c = p.category.toLowerCase();
-          return c === 'sweatpants' || c === 'bottoms' || p.id.includes('trousers') || p.id.includes('wide');
+          const c = (p.category || '').toLowerCase();
+          return c === 'sweatpants' || c === 'bottoms' || (p.id || '').includes('trousers') || (p.id || '').includes('wide');
         });
       } else if (catLower === 'accessories') {
         result = result.filter((p) => {
-          const c = p.category.toLowerCase();
-          return c === 'accessories' || p.id.includes('belt') || p.id.includes('tag');
+          const c = (p.category || '').toLowerCase();
+          return c === 'accessories' || (p.id || '').includes('belt') || (p.id || '').includes('tag');
         });
       } else {
         result = result.filter(
-          (p) => p.category.toLowerCase() === catLower
+          (p) => (p.category || '').toLowerCase() === catLower
         );
       }
     }
@@ -99,7 +99,7 @@ export default function CollectionView({
     // Color filter
     if (selectedColor && selectedColor !== 'All') {
       result = result.filter(
-        (p) => p.colour.toLowerCase().includes(selectedColor.toLowerCase())
+        (p) => (p.colour || '').toLowerCase().includes(selectedColor.toLowerCase())
       );
     }
 
@@ -107,22 +107,25 @@ export default function CollectionView({
     if (selectedSize && selectedSize !== 'All') {
       result = result.filter((p) => {
         if (!p.variants) return false;
-        return p.variants.some((v) => v.toLowerCase() === selectedSize.toLowerCase());
+        if (Array.isArray(p.variants)) {
+          return p.variants.some((v) => (v || '').toLowerCase() === selectedSize.toLowerCase());
+        }
+        return String(p.variants).toLowerCase().includes(selectedSize.toLowerCase());
       });
     }
 
     // Availability filter
     if (selectedAvailability === 'coimbatore') {
       result = result.filter((p) =>
-        p.availability && p.availability.toLowerCase().includes('coimbatore')
+        (p.availability || '').toLowerCase().includes('coimbatore')
       );
     }
 
     // Sort
     if (selectedSort === 'newest') {
-      result.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+      result.sort((a, b) => new Date(b.createdDate || 0) - new Date(a.createdDate || 0));
     } else if (selectedSort === 'alpha') {
-      result.sort((a, b) => a.title.localeCompare(b.title));
+      result.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
     }
 
     return result;
