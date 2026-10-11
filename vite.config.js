@@ -10,6 +10,9 @@ export default defineConfig({
   ],
   server: {
     port: 3000,
-    open: false
+    open: false,
+    watch: {
+      ignored: ['**/public/assets/videos/**', '**/*.mp4', '**/*.zip', '**/.git/**']
+    }
   }
 });

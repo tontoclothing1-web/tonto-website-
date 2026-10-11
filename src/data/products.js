@@ -598,6 +598,7 @@ export const SHOPPABLE_LOOKS = [
   {
     id: "look-3",
     image: "/assets/editorial/editorial-seated-camo.jpg",
+    video: "/assets/videos/look-preview.mp4",
     title: "Chain-Graffiti Baggy Denim",
     price: "Price on enquiry",
     thumbnail: "/assets/products/chain-print-denim-detail.jpg",
