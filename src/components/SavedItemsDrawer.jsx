@@ -31,10 +31,10 @@ export default function SavedItemsDrawer({
   const savedProducts = PRODUCTS.filter((p) => savedIds.includes(p.id));
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-[100] flex justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/45 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 bg-black/45 backdrop-blur-xs transition-opacity z-0"
         onClick={onClose}
         aria-hidden="true"
       />

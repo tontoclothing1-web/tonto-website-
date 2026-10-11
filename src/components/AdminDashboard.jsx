@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   LayoutDashboard,
   Package,
@@ -97,6 +98,21 @@ export default function AdminDashboard({
   });
   const [imageUrlInput, setImageUrlInput] = useState('');
   const fileInputRef = useRef(null);
+
+  // Prevent background scroll when product modal is open
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsProductModalOpen(false);
+    };
+    if (isProductModalOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isProductModalOpen]);
 
   // Toast Notification
   const [toastMessage, setToastMessage] = useState(null);
@@ -1603,16 +1619,16 @@ export default function AdminDashboard({
         </main>
       </div>
 
-      {/* PRODUCT ADD / EDIT MODAL */}
-      {isProductModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+      {/* PRODUCT ADD / EDIT MODAL (Portaled directly to document.body) */}
+      {isProductModalOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity z-0"
             onClick={() => setIsProductModalOpen(false)}
             aria-hidden="true"
           />
 
-          <div className="relative w-full max-w-2xl bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-xs p-6 sm:p-8 my-auto animate-scale-up text-left max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-xs p-6 sm:p-8 my-auto animate-scale-in text-left max-h-[90vh] overflow-y-auto">
             
             <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-5">
               <div>
@@ -1891,7 +1907,8 @@ export default function AdminDashboard({
             </form>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

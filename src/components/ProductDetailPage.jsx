@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ArrowLeft, ArrowUpRight, Bookmark, Check, Ruler, ShoppingBag, ChevronDown, ChevronUp, Share2, ZoomIn, X, Plus, Minus } from 'lucide-react';
 import ProductCard from './ProductCard';
 import SizeGuideModal from './SizeGuideModal';
@@ -397,10 +398,10 @@ export default function ProductDetailPage({
       />
 
       {/* Image Zoom Lightbox Modal */}
-      {isZoomModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8">
+      {isZoomModalOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8">
           <div
-            className="fixed inset-0 bg-black/85 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/85 backdrop-blur-xs transition-opacity z-0"
             onClick={() => setIsZoomModalOpen(false)}
           />
           <div className="relative max-w-5xl max-h-[90vh] bg-white p-2 shadow-2xl z-10 flex flex-col items-center animate-scale-in">
@@ -423,7 +424,8 @@ export default function ProductDetailPage({
               {product.title} • {product.colour}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

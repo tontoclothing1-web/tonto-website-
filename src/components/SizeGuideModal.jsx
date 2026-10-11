@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Ruler } from 'lucide-react';
 
 export default function SizeGuideModal({ isOpen, onClose, category = 'Denim' }) {
@@ -18,11 +19,11 @@ export default function SizeGuideModal({ isOpen, onClose, category = 'Denim' }) 
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity z-0"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -149,6 +150,7 @@ export default function SizeGuideModal({ isOpen, onClose, category = 'Denim' }) 
           <strong className="text-[#003F25]">Studio Note:</strong> Individual thrift and surplus items can vary by 0.5–1 inch due to specialized wash treatments. For custom flat measurements of any piece, use the "Ask about this piece" button.
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

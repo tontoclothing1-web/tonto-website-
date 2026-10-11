@@ -325,7 +325,7 @@ export default function App() {
       )}
 
       {/* Main Content Area */}
-      <main key={activeView} className="flex-1 animate-fade-in">
+      <main key={activeView} className={`flex-1 ${activeView === 'admin' ? '' : 'animate-fade-in'}`}>
         {/* 1. HOMEPAGE VIEW */}
         {activeView === 'home' && (
           <>
@@ -585,7 +585,7 @@ export default function App() {
       {/* Floating Studio Admin Desk Toggle Button (Always visible bottom-left) */}
       <button
         onClick={() => handleNavigate(activeView === 'admin' ? 'home' : 'admin')}
-        className={`fixed bottom-6 left-6 z-50 px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all hover:scale-105 active:scale-95 group border backdrop-blur-md ${
+        className={`fixed bottom-6 left-6 z-40 px-3.5 py-2.5 rounded-full shadow-2xl flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all hover:scale-105 active:scale-95 group border backdrop-blur-md ${
           activeView === 'admin'
             ? 'bg-white hover:bg-gray-100 text-[#003F25] border-[#003F25]/40 shadow-black/20'
             : 'bg-[#08150E] hover:bg-[#003F25] text-white border-[#22C55E]/50 shadow-black/40'

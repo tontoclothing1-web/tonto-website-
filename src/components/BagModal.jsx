@@ -19,14 +19,14 @@ export default function BagModal({ isOpen, onClose, onOpenSaved }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity z-0"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
-        className="relative w-full max-w-md bg-white border border-[#E0E5E1] shadow-2xl z-10 p-6 sm:p-8 rounded-xs text-left animate-scale-up"
+        className="relative w-full max-w-md bg-white border border-[#E0E5E1] shadow-2xl z-10 p-6 sm:p-8 rounded-xs text-left animate-scale-in"
         role="dialog"
       >
         <button

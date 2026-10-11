@@ -67,17 +67,17 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, init
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
       {/* Dimmed backdrop */}
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-[4px] transition-opacity duration-300 animate-fade-in"
+        className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity duration-300 z-0 animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Main Dialog Modal */}
       <div
-        className="relative w-full max-w-[840px] bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-sm overflow-hidden flex flex-col md:flex-row my-auto animate-scale-up text-left"
+        className="relative w-full max-w-[840px] bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-sm overflow-hidden flex flex-col md:flex-row my-auto animate-scale-in text-left"
         role="dialog"
         aria-modal="true"
       >

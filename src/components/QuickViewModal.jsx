@@ -38,10 +38,10 @@ export default function QuickViewModal({
   const currentImage = product.images?.[selectedImgIndex] || product.images?.[0];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       {/* Dimmed & lightly blurred backdrop */}
       <div
-        className="fixed inset-0 bg-black/55 backdrop-blur-[3px] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/55 backdrop-blur-xs transition-opacity duration-300 z-0"
         onClick={onClose}
         aria-hidden="true"
       />

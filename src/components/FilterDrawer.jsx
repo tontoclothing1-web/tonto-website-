@@ -65,10 +65,10 @@ export default function FilterDrawer({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex">
+    <div className="fixed inset-0 z-[100] flex">
       {/* Backdrop with dimming & subtle blur */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300"
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 z-0"
         onClick={onClose}
         aria-hidden="true"
       />

@@ -47,16 +47,16 @@ export default function SearchDialog({ isOpen, onClose, onQuickView, onOpenProdu
     : catalog.slice(0, 4); // Suggested initial items
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-16 sm:pt-24 p-4 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-[2px] transition-opacity"
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity z-0"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Search Modal */}
-      <div className="relative w-full max-w-xl bg-white border border-[#E0E5E1] shadow-2xl z-10 p-6 rounded-xs text-left animate-scale-up">
+      <div className="relative w-full max-w-xl bg-white border border-[#E0E5E1] shadow-2xl z-10 p-6 rounded-xs text-left animate-scale-in">
         
         {/* Search Input Bar */}
         <div className="relative flex items-center border-b border-[#003F25] pb-3">
