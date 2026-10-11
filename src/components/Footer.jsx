@@ -175,6 +175,16 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
                   <ArrowUpRight size={13} />
                 </a>
               </li>
+              <li className="pt-2">
+                <button
+                  onClick={() => onNavigate('admin')}
+                  className="text-white/40 hover:text-white text-[11px] font-mono transition-colors cursor-pointer inline-flex items-center gap-1"
+                  title="Studio Desk Management Portal"
+                >
+                  <span>Studio Desk (Admin Portal)</span>
+                  <ArrowUpRight size={11} />
+                </button>
+              </li>
             </ul>
           </div>
 

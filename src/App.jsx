@@ -26,16 +26,35 @@ import AccountModal from './components/AccountModal';
 import CartDrawer from './components/CartDrawer';
 import RegionModal from './components/RegionModal';
 import OfferModal from './components/OfferModal';
+import AdminDashboard from './components/AdminDashboard';
 import Footer from './components/Footer';
 import { PRODUCTS, BRAND_INFO } from './data/products';
 import { MessageSquare, X, ArrowUpRight, PhoneCall, Calendar } from 'lucide-react';
 
 export default function App() {
   const [activeView, setActiveView] = useState('home'); 
-  // 'home' | 'collection' | 'product' | 'cart' | 'checkout' | 'account' | 'saved' | 'lookbook' | 'visit' | 'policy' | '404'
+  // 'home' | 'collection' | 'product' | 'cart' | 'checkout' | 'account' | 'saved' | 'lookbook' | 'visit' | 'policy' | 'admin' | '404'
   const [collectionCategory, setCollectionCategory] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [policyTab, setPolicyTab] = useState('shipping');
+
+  // Dynamic Catalog State persisted with localStorage
+  const [products, setProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('tonto_admin_products');
+      return saved ? JSON.parse(saved) : PRODUCTS;
+    } catch {
+      return PRODUCTS;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tonto_admin_products', JSON.stringify(products));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [products]);
   
   // Selected Region / Currency
   const [selectedRegion, setSelectedRegion] = useState({
@@ -131,7 +150,7 @@ export default function App() {
         setCollectionCategory(cat);
       } else if (path.startsWith('#/product/')) {
         const id = path.replace('#/product/', '');
-        const found = PRODUCTS.find((p) => p.id === id || p.slug === id);
+        const found = products.find((p) => p.id === id || p.slug === id);
         if (found) {
           setSelectedProduct(found);
           setActiveView('product');
@@ -150,6 +169,8 @@ export default function App() {
         setActiveView('lookbook');
       } else if (path === '#/visit') {
         setActiveView('visit');
+      } else if (path === '#/admin') {
+        setActiveView('admin');
       } else if (path.startsWith('#/policy')) {
         setActiveView('policy');
         const parts = path.split('/');
@@ -163,7 +184,7 @@ export default function App() {
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  }, [products]);
 
   // View Navigation Helper
   const handleNavigate = (view, param = '') => {
@@ -186,6 +207,8 @@ export default function App() {
       window.location.hash = '#/lookbook';
     } else if (view === 'visit') {
       window.location.hash = '#/visit';
+    } else if (view === 'admin') {
+      window.location.hash = '#/admin';
     } else if (view === 'policy') {
       window.location.hash = `#/policy/${param || 'shipping'}`;
     } else {
@@ -277,27 +300,29 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white text-[#111827] flex flex-col font-sans selection:bg-[#003F25] selection:text-white relative">
       
-      {/* Slim White Sticky Header (76px) */}
-      <Header
-        activeView={activeView}
-        onNavigate={handleNavigate}
-        savedCount={savedIds.length}
-        bagCount={totalBagCount}
-        onOpenSaved={() => setIsSavedDrawerOpen(true)}
-        onOpenSearch={() => setIsSearchOpen(true)}
-        onOpenVisit={() => setIsVisitOpen(true)}
-        onOpenAccount={() => {
-          setOfferModalMode('signin');
-          setIsOfferModalOpen(true);
-        }}
-        onOpenOffer={(mode) => {
-          setOfferModalMode(mode || 'offer');
-          setIsOfferModalOpen(true);
-        }}
-        onOpenBag={() => setIsBagOpen(true)}
-        selectedRegion={selectedRegion}
-        onOpenRegion={() => setIsRegionOpen(true)}
-      />
+      {/* Slim White Sticky Header (76px) - only for storefront */}
+      {activeView !== 'admin' && (
+        <Header
+          activeView={activeView}
+          onNavigate={handleNavigate}
+          savedCount={savedIds.length}
+          bagCount={totalBagCount}
+          onOpenSaved={() => setIsSavedDrawerOpen(true)}
+          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenVisit={() => setIsVisitOpen(true)}
+          onOpenAccount={() => {
+            setOfferModalMode('signin');
+            setIsOfferModalOpen(true);
+          }}
+          onOpenOffer={(mode) => {
+            setOfferModalMode(mode || 'offer');
+            setIsOfferModalOpen(true);
+          }}
+          onOpenBag={() => setIsBagOpen(true)}
+          selectedRegion={selectedRegion}
+          onOpenRegion={() => setIsRegionOpen(true)}
+        />
+      )}
 
       {/* Main Content Area */}
       <main key={activeView} className="flex-1 animate-fade-in">
@@ -309,7 +334,7 @@ export default function App() {
 
             {/* Section 3: Trending Styles (5 products desktop row) */}
             <TrendingStyles
-              products={PRODUCTS}
+              products={products}
               savedIds={savedIds}
               onToggleSave={handleToggleSave}
               onQuickView={(p) => setQuickViewProduct(p)}
@@ -351,7 +376,7 @@ export default function App() {
         {/* 2. COLLECTION PAGE VIEW */}
         {activeView === 'collection' && (
           <CollectionView
-            products={PRODUCTS}
+            products={products}
             initialCategory={collectionCategory}
             savedIds={savedIds}
             onToggleSave={handleToggleSave}
@@ -364,8 +389,8 @@ export default function App() {
         {/* 3. PRODUCT DETAIL PAGE VIEW */}
         {activeView === 'product' && (
           <ProductDetailPage
-            product={selectedProduct || PRODUCTS[0]}
-            allProducts={PRODUCTS}
+            product={selectedProduct || products[0]}
+            allProducts={products}
             onBack={() => handleNavigate('collection')}
             onNavigateCategory={(cat) => handleNavigate('collection', cat)}
             onQuickView={(p) => setQuickViewProduct(p)}
@@ -459,20 +484,31 @@ export default function App() {
             onOpenSearch={() => setIsSearchOpen(true)}
           />
         )}
+
+        {/* 12. FULL TONTO ADMIN DASHBOARD */}
+        {activeView === 'admin' && (
+          <AdminDashboard
+            products={products}
+            onUpdateProducts={setProducts}
+            onNavigateStore={() => handleNavigate('home')}
+          />
+        )}
       </main>
 
-      {/* Footer */}
-      <Footer
-        onNavigate={handleNavigate}
-        onOpenVisit={() => setIsVisitOpen(true)}
-        onOpenOffer={(mode) => {
-          setOfferModalMode(mode || 'offer');
-          setIsOfferModalOpen(true);
-        }}
-      />
+      {/* Footer - only on storefront views */}
+      {activeView !== 'admin' && (
+        <Footer
+          onNavigate={handleNavigate}
+          onOpenVisit={() => setIsVisitOpen(true)}
+          onOpenOffer={(mode) => {
+            setOfferModalMode(mode || 'offer');
+            setIsOfferModalOpen(true);
+          }}
+        />
+      )}
 
-      {/* Concierge Popover Menu */}
-      {isConciergeOpen && (
+      {/* Concierge Popover Menu - storefront only */}
+      {activeView !== 'admin' && isConciergeOpen && (
         <div className="fixed bottom-22 right-6 z-40 w-72 bg-white border border-[#E0E5E1] shadow-2xl rounded-xs p-4 animate-scale-up text-left">
           <div className="flex items-center justify-between pb-2 border-b border-[#E0E5E1] mb-3">
             <span className="text-[12px] font-extrabold text-[#003F25] uppercase tracking-wider">
@@ -490,7 +526,7 @@ export default function App() {
             <button
               onClick={() => {
                 setIsConciergeOpen(false);
-                handleOpenEnquiry(PRODUCTS[0]);
+                handleOpenEnquiry(products[0]);
               }}
               className="w-full text-left p-2 hover:bg-[#F9FAF9] rounded-xs font-semibold text-[#003F25] flex items-center justify-between transition-colors cursor-pointer"
             >
@@ -534,15 +570,17 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating Chat / Direct Enquiry Button */}
-      <button
-        onClick={() => setIsConciergeOpen(!isConciergeOpen)}
-        className="fixed bottom-6 right-6 z-40 w-13 h-13 rounded-full bg-[#003F25] text-white flex items-center justify-center shadow-lg hover:bg-[#002e1b] transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#003F25] cursor-pointer"
-        aria-label="Direct studio enquiry"
-        title="Direct Studio Enquiry"
-      >
-        {isConciergeOpen ? <X size={20} strokeWidth={2.5} /> : <MessageSquare size={22} className="fill-white stroke-none" />}
-      </button>
+      {/* Floating Chat / Direct Enquiry Button - storefront only */}
+      {activeView !== 'admin' && (
+        <button
+          onClick={() => setIsConciergeOpen(!isConciergeOpen)}
+          className="fixed bottom-6 right-6 z-40 w-13 h-13 rounded-full bg-[#003F25] text-white flex items-center justify-center shadow-lg hover:bg-[#002e1b] transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#003F25] cursor-pointer"
+          aria-label="Direct studio enquiry"
+          title="Direct Studio Enquiry"
+        >
+          {isConciergeOpen ? <X size={20} strokeWidth={2.5} /> : <MessageSquare size={22} className="fill-white stroke-none" />}
+        </button>
+      )}
 
       {/* Modals and Drawers */}
       <QuickViewModal

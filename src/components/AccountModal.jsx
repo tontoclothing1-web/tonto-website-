@@ -117,6 +117,16 @@ export default function AccountModal({ isOpen, onClose, onOpenSaved, onNavigateA
             <Bookmark size={14} />
             <span>View Saved Shortlist</span>
           </button>
+
+          <button
+            onClick={() => {
+              onClose();
+              window.location.hash = '#/admin';
+            }}
+            className="w-full pt-1 text-center text-[11px] text-gray-400 hover:text-[#003F25] transition-colors cursor-pointer"
+          >
+            Studio Director & Admin Desk &rarr;
+          </button>
         </div>
       </div>
     </div>
