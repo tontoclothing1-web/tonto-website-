@@ -29,7 +29,7 @@ export const decodeToken = (req) => {
   const token = extractToken(req);
   if (!token) throw ApiError.unauthorized('Not authorized — missing Bearer token');
   try {
-    const decoded = jwt.verify(token, authConfig.jwtSecret);
+    const decoded = jwt.verify(token, authConfig.jwtSecret, { algorithms: ['HS256'] });
     const id = decoded.id || decoded._id || decoded.sub || null;
     if (!id) throw ApiError.unauthorized('Not authorized — malformed token');
     return { id: String(id), email: decoded.email || null, role: decoded.role || 'customer' };

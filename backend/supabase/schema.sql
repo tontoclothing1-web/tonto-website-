@@ -292,13 +292,35 @@ insert into promos (code, discount_text, type, percent, active) values
 on conflict (code) do nothing;
 
 -- ===========================================================================
--- RLS + atomic commerce primitives live in migration_003_security_and_integrity.sql
--- RUN IT AFTER THIS FILE. Do not skip it.
---
--- The old note here claimed RLS was optional because the server uses the
--- SERVICE_ROLE key. That was wrong: SUPABASE_ANON_KEY ships inside the public
--- JS bundle, and with RLS off the anon role can read every table directly
--- through PostgREST (users + password hashes included) without touching the
--- Express API at all. The server is unaffected by RLS because service_role
--- has BYPASSRLS.
+-- ROW LEVEL SECURITY (RLS) & PRIVILEGE LOCKDOWN
+-- Enforced immediately on creation so tables are never exposed to PostgREST anon.
+-- Service role retains full BYPASSRLS access for the Express backend.
 -- ===========================================================================
+do $$
+declare t text;
+begin
+  foreach t in array array[
+    'users','addresses','products','categories','cms_content','promos',
+    'store_settings','wishlist','looks','reviews','orders','enquiries',
+    'leads','waitlist_entries','carts'
+  ]
+  loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('revoke all on table public.%I from anon, authenticated', t);
+  end loop;
+end $$;
+
+-- service_role must keep full access
+grant usage on schema public to service_role;
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+
+-- Future tables/sequences created must never auto-grant to anon
+alter default privileges in schema public revoke all on tables from anon, authenticated;
+alter default privileges in schema public revoke all on sequences from anon, authenticated;
+alter default privileges in schema public grant all on tables to service_role;
+alter default privileges in schema public grant all on sequences to service_role;
+
+-- Revoke function execution from untrusted roles
+revoke execute on all functions in schema public from anon, authenticated;
+

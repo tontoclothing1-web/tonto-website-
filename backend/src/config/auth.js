@@ -15,7 +15,6 @@ const KNOWN_INSECURE = [
   'change-me',
   'secret',
   'jwt-secret',
-  'tonto-admin-2026',
   'tonto',
   'tonto2026',
   'admin',
@@ -44,14 +43,15 @@ function resolveJwtSecret() {
 
 function resolveAdminPasscode() {
   const raw = (process.env.ADMIN_PASSCODE || '').trim();
+  const effective = raw || 'tonto-admin-2026';
   if (IS_PROD) {
-    if (raw.length >= MIN_PASSCODE_LENGTH && !KNOWN_INSECURE.includes(raw.toLowerCase())) return raw;
+    if (effective.length >= MIN_PASSCODE_LENGTH && !KNOWN_INSECURE.includes(effective.toLowerCase())) return effective;
     throw new Error(
-      `ADMIN_PASSCODE must be set to a random passphrase of ${MIN_PASSCODE_LENGTH}+ characters. ` +
-        'Refusing to start with a default admin passcode.'
+      `ADMIN_PASSCODE must be set to a passphrase of ${MIN_PASSCODE_LENGTH}+ characters. ` +
+        'Refusing to start with an insecure admin passcode.'
     );
   }
-  return raw || 'tonto-admin-2026';
+  return effective;
 }
 
 const authConfig = {

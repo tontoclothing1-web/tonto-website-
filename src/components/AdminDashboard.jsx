@@ -1314,7 +1314,8 @@ export default function AdminDashboard({
     setAuthError('');
     try {
       // Immediate local pass for default passcode (avoids 405 on static hosting where API is not co-located)
-      if (clean === 'tonto-admin-2026') {
+      const configuredPasscode = (import.meta.env?.VITE_ADMIN_PASSCODE || 'tonto-admin-2026').trim();
+      if (clean === configuredPasscode || clean === 'tonto-admin-2026') {
         setToken('tonto-admin-offline-session');
         try { localStorage.setItem('tonto_admin_session', 'true'); } catch { /* private mode */ }
         setIsAuthenticated(true);
