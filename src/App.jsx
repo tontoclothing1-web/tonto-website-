@@ -10,35 +10,35 @@ import DropWaitlistBanner from './components/DropWaitlistBanner';
 import ShoppableLooks from './components/ShoppableLooks';
 import Footer from './components/Footer';
 
-// Code-split route pages
-const CollectionView = React.lazy(() => import('./components/CollectionView'));
-const FeaturedPage = React.lazy(() => import('./components/FeaturedPage'));
-const NewArrivalsPage = React.lazy(() => import('./components/NewArrivalsPage'));
-const ProductDetailPage = React.lazy(() => import('./components/ProductDetailPage'));
-const LookbookView = React.lazy(() => import('./components/LookbookView'));
-const CartPage = React.lazy(() => import('./components/CartPage'));
-const CheckoutPage = React.lazy(() => import('./components/CheckoutPage'));
-const AccountPage = React.lazy(() => import('./components/AccountPage'));
-const SavedItemsPage = React.lazy(() => import('./components/SavedItemsPage'));
-const VisitUsPage = React.lazy(() => import('./components/VisitUsPage'));
-const AboutUsPage = React.lazy(() => import('./components/AboutUsPage'));
-const PolicyPage = React.lazy(() => import('./components/PolicyPage'));
-const NotFoundPage = React.lazy(() => import('./components/NotFoundPage'));
-const CompleteLookPage = React.lazy(() => import('./components/CompleteLookPage'));
+// Eagerly imported storefront routes for instant 0ms response
+import CollectionView from './components/CollectionView';
+import FeaturedPage from './components/FeaturedPage';
+import NewArrivalsPage from './components/NewArrivalsPage';
+import ProductDetailPage from './components/ProductDetailPage';
+import LookbookView from './components/LookbookView';
+import CartPage from './components/CartPage';
+import CheckoutPage from './components/CheckoutPage';
+import AccountPage from './components/AccountPage';
+import SavedItemsPage from './components/SavedItemsPage';
+import VisitUsPage from './components/VisitUsPage';
+import AboutUsPage from './components/AboutUsPage';
+import PolicyPage from './components/PolicyPage';
+import NotFoundPage from './components/NotFoundPage';
+import CompleteLookPage from './components/CompleteLookPage';
+
+// Only AdminDashboard is kept lazy to keep the primary shopper bundle lean
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 
-// Core high-frequency interactive modals (eagerly imported for instant 0ms response)
+// All interactive modals eagerly imported for 0ms immediate reaction
 import QuickViewModal from './components/QuickViewModal';
 import CartDrawer from './components/CartDrawer';
 import SavedItemsDrawer from './components/SavedItemsDrawer';
 import SearchDialog from './components/SearchDialog';
 import OfferModal from './components/OfferModal';
 import EnquiryModal from './components/EnquiryModal';
-
-// Code-split lower-frequency modals
-const VisitUsModal = React.lazy(() => import('./components/VisitUsModal'));
-const AccountModal = React.lazy(() => import('./components/AccountModal'));
-const RegionModal = React.lazy(() => import('./components/RegionModal'));
+import VisitUsModal from './components/VisitUsModal';
+import AccountModal from './components/AccountModal';
+import RegionModal from './components/RegionModal';
 
 function ViewFallback() {
   return (
@@ -415,7 +415,7 @@ export default function App() {
       // Direct /admin in URL pathname or hash
       if (pathname === '/admin' || pathname.endsWith('/admin') || hash === '#/admin' || hash === '#admin') {
         setActiveView('admin');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         return;
       }
 
@@ -482,7 +482,7 @@ export default function App() {
       } else {
         setActiveView('404');
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     };
 
     handleRouting();
@@ -514,49 +514,104 @@ export default function App() {
     };
   }, [products]);
 
-  // View Navigation Helper
+  // Idle prefetch of AdminDashboard so even the back office opens in 0ms
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(() => {
+          import('./components/AdminDashboard');
+        });
+      } else {
+        setTimeout(() => {
+          import('./components/AdminDashboard');
+        }, 1500);
+      }
+    }
+  }, []);
+
+  // View Navigation Helper — synchronous immediate state update + instant scroll reset
   const handleNavigate = (view, param = '') => {
     // If currently on /admin URL path and navigating back to storefront, clean up pathname
     if (typeof window !== 'undefined' && (window.location.pathname === '/admin' || window.location.pathname.endsWith('/admin'))) {
       window.history.pushState(null, '', '/');
     }
 
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
     if (view === 'home') {
-      window.location.hash = '#/';
+      setActiveView('home');
+      if (window.location.hash !== '#/') window.location.hash = '#/';
     } else if (view === 'featured') {
-      window.location.hash = '#/featured';
+      setActiveView('featured');
+      if (window.location.hash !== '#/featured') window.location.hash = '#/featured';
     } else if (view === 'new-arrivals' || view === 'newarrivals') {
-      window.location.hash = '#/new-arrivals';
+      setActiveView('new-arrivals');
+      if (window.location.hash !== '#/new-arrivals') window.location.hash = '#/new-arrivals';
     } else if (view === 'collection') {
-      window.location.hash = param && param !== 'All' ? `#/collection?category=${encodeURIComponent(param)}` : '#/collection';
+      const cat = param || 'All';
+      setCollectionCategory(cat);
+      setActiveView('collection');
+      const targetHash = cat && cat !== 'All' ? `#/collection?category=${encodeURIComponent(cat)}` : '#/collection';
+      if (window.location.hash !== targetHash) window.location.hash = targetHash;
     } else if (view === 'product') {
       const id = typeof param === 'string' ? param : param?.id;
-      window.location.hash = `#/product/${id}`;
+      const found = products.find((p) => p.id === id || p.slug === id);
+      if (found) setSelectedProduct(found);
+      setActiveView('product');
+      const targetHash = `#/product/${id}`;
+      if (window.location.hash !== targetHash) window.location.hash = targetHash;
     } else if (view === 'cart') {
-      window.location.hash = '#/cart';
+      setActiveView('cart');
+      if (window.location.hash !== '#/cart') window.location.hash = '#/cart';
     } else if (view === 'checkout') {
-      window.location.hash = '#/checkout';
+      setActiveView('checkout');
+      if (window.location.hash !== '#/checkout') window.location.hash = '#/checkout';
     } else if (view === 'account') {
-      window.location.hash = '#/account';
+      setActiveView('account');
+      if (window.location.hash !== '#/account') window.location.hash = '#/account';
     } else if (view === 'saved') {
-      window.location.hash = '#/saved';
+      setActiveView('saved');
+      if (window.location.hash !== '#/saved') window.location.hash = '#/saved';
     } else if (view === 'lookbook' || view === 'tonto-made') {
-      window.location.hash = '#/tonto-made';
+      setActiveView('lookbook');
+      if (window.location.hash !== '#/tonto-made') window.location.hash = '#/tonto-made';
     } else if (view === 'look-detail') {
       const id = typeof param === 'string' ? param : (param?.id || 'look-3');
-      window.location.hash = `#/look/${id}`;
+      const allLooks = cmsContent?.shoppableLooks && cmsContent.shoppableLooks.length > 0 
+        ? cmsContent.shoppableLooks 
+        : SHOPPABLE_LOOKS;
+      const defaultLook = SHOPPABLE_LOOKS.find((sl) => sl.id === id) || {};
+      const foundLook = allLooks.find((l) => l.id === id) || SHOPPABLE_LOOKS.find((l) => l.id === id);
+      if (foundLook) {
+        setSelectedLook({
+          ...defaultLook,
+          ...foundLook,
+          items: (foundLook.items && foundLook.items.length > 0) ? foundLook.items : (defaultLook.items || []),
+          costumePrice: foundLook.costumePrice || defaultLook.costumePrice || '₹6,490',
+          costumeNumericPrice: foundLook.costumeNumericPrice || defaultLook.costumeNumericPrice || 6490
+        });
+      }
+      setActiveView('look-detail');
+      const targetHash = `#/look/${id}`;
+      if (window.location.hash !== targetHash) window.location.hash = targetHash;
     } else if (view === 'about') {
-      window.location.hash = '#/about';
+      setActiveView('about');
+      if (window.location.hash !== '#/about') window.location.hash = '#/about';
     } else if (view === 'visit') {
-      window.location.hash = '#/visit';
+      setActiveView('visit');
+      if (window.location.hash !== '#/visit') window.location.hash = '#/visit';
     } else if (view === 'admin') {
       window.history.pushState(null, '', '/admin');
       window.location.hash = '#/admin';
       setActiveView('admin');
     } else if (view === 'policy') {
-      window.location.hash = `#/policy/${param || 'shipping'}`;
+      setPolicyTab(param || 'shipping');
+      setActiveView('policy');
+      const targetHash = `#/policy/${param || 'shipping'}`;
+      if (window.location.hash !== targetHash) window.location.hash = targetHash;
     } else {
-      window.location.hash = '#/';
+      setActiveView('home');
+      if (window.location.hash !== '#/') window.location.hash = '#/';
     }
   };
 
@@ -690,7 +745,6 @@ export default function App() {
 
       {/* Main Content Area */}
       <main key={activeView} className={`flex-1 ${activeView === 'admin' ? '' : 'animate-fade-in'}`}>
-        <React.Suspense fallback={<ViewFallback />}>
         {/* 1. HOMEPAGE VIEW */}
         {activeView === 'home' && (
           <>
@@ -945,20 +999,21 @@ export default function App() {
 
         {/* 12. FULL TONTO ADMIN DASHBOARD */}
         {activeView === 'admin' && (
-          <AdminDashboard
-            products={products}
-            onUpdateProducts={setProducts}
-            storeSettings={storeSettings}
-            onUpdateStoreSettings={setStoreSettings}
-            cmsContent={cmsContent}
-            onUpdateCmsContent={setCmsContent}
-            onNavigateStore={() => handleNavigate('home')}
-            onNavigateStoreProduct={(prod) => {
-              handleOpenProduct(prod);
-            }}
-          />
+          <React.Suspense fallback={<ViewFallback />}>
+            <AdminDashboard
+              products={products}
+              onUpdateProducts={setProducts}
+              storeSettings={storeSettings}
+              onUpdateStoreSettings={setStoreSettings}
+              cmsContent={cmsContent}
+              onUpdateCmsContent={setCmsContent}
+              onNavigateStore={() => handleNavigate('home')}
+              onNavigateStoreProduct={(prod) => {
+                handleOpenProduct(prod);
+              }}
+            />
+          </React.Suspense>
         )}
-        </React.Suspense>
       </main>
 
       {/* Footer - only on storefront views */}
@@ -1058,9 +1113,8 @@ export default function App() {
 
 
 
-      {/* Modals and Drawers - Loaded on demand */}
-      <React.Suspense fallback={null}>
-        {quickViewProduct && (
+      {/* Modals and Drawers - Eagerly available for 0ms response */}
+      {quickViewProduct && (
           <QuickViewModal
             product={quickViewProduct}
             isOpen={!!quickViewProduct}
@@ -1171,7 +1225,6 @@ export default function App() {
             }}
           />
         )}
-      </React.Suspense>
 
 
     </div>

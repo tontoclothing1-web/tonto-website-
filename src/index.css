@@ -173,7 +173,7 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.25s ease-out forwards;
+  animation: fadeIn 0.1s ease-out forwards;
 }
 
 /* Line mask reveal */
