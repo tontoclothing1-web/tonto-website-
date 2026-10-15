@@ -82,7 +82,7 @@ import {
   CreditCard
 } from 'lucide-react';
 import { BRAND_INFO, CATEGORIES, SHOPPABLE_LOOKS, PRODUCTS } from '../data/products';
-import { DEFAULT_CMS_CONTENT, GALLERY_PRESETS } from '../data/defaultCms';
+import { DEFAULT_CMS_CONTENT, GALLERY_PRESETS, mergeCmsWithDefaults } from '../data/defaultCms';
 
 // High-resolution presets from the store repository
 const ASSET_LIBRARY_PRESETS = [
@@ -224,15 +224,8 @@ export default function AdminDashboard({
     showToast(message);
   };
 
-  /** Merge a CMS payload onto the factory defaults without losing a section. */
-  const withCmsDefaults = (base = {}) => ({
-    ...DEFAULT_CMS_CONTENT,
-    ...base,
-    offerModal: {
-      ...DEFAULT_CMS_CONTENT.offerModal,
-      ...(base.offerModal || {})
-    }
-  });
+  /** Deep-merge a CMS payload onto the factory defaults without losing sections or banner properties. */
+  const withCmsDefaults = (base = {}) => mergeCmsWithDefaults(base);
 
   // Live CMS Media State — the store database is the book, this desk's localStorage
   // is the browser copy the storefront also reads.
@@ -303,7 +296,18 @@ export default function AdminDashboard({
         onSuccess(url);
         showToast('Picture uploaded to the store media library.');
       } catch (err) {
-        showToast(err.status ? `Upload rejected: ${err.message}` : `Upload failed: ${err.message}`);
+        if (!err.status || err.status === 404 || err.status === 405) {
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (typeof reader.result === 'string') {
+              onSuccess(reader.result);
+              showToast('Picture loaded for local preview.');
+            }
+          };
+          reader.readAsDataURL(file);
+        } else {
+          showToast(err.status ? `Upload rejected: ${err.message}` : `Upload failed: ${err.message}`);
+        }
       }
     };
     input.click();
@@ -335,6 +339,9 @@ export default function AdminDashboard({
         setCms(withCmsDefaults(saved));
       }
       showToast('Media CMS saved! Storefront updated live.');
+      try {
+        window.dispatchEvent(new Event('tonto-data-updated'));
+      } catch {}
       return true;
     } catch (err) {
       if (err.status && err.status !== 404 && err.status !== 405 && err.status !== 503) {
@@ -342,6 +349,9 @@ export default function AdminDashboard({
       } else {
         setCmsSource('device');
         showToast('Media CMS saved! Storefront updated live.');
+        try {
+          window.dispatchEvent(new Event('tonto-data-updated'));
+        } catch {}
       }
       return false;
     } finally {
@@ -355,6 +365,7 @@ export default function AdminDashboard({
     setCms(next);
     try {
       localStorage.setItem('tonto_admin_cms', JSON.stringify(next));
+      window.dispatchEvent(new Event('tonto-data-updated'));
     } catch (err) {
       console.error(err);
     }
@@ -4542,9 +4553,9 @@ export default function AdminDashboard({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {(cms.categoryCarousel || cms.categories || DEFAULT_CMS_CONTENT.categories).map((cat, idx) => {
+                    {(cms.categoryCarousel?.length ? cms.categoryCarousel : cms.categories?.length ? cms.categories : DEFAULT_CMS_CONTENT.categories).map((cat, idx) => {
                       const updateCatField = (field, val) => {
-                        const currentList = [...(cms.categoryCarousel || cms.categories || DEFAULT_CMS_CONTENT.categories)];
+                        const currentList = [...(cms.categoryCarousel?.length ? cms.categoryCarousel : cms.categories?.length ? cms.categories : DEFAULT_CMS_CONTENT.categories)];
                         currentList[idx] = { ...currentList[idx], [field]: val };
                         const updated = {
                           ...cms,

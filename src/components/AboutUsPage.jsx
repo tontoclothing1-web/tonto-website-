@@ -158,10 +158,10 @@ export default function AboutUsPage({
           ATELIER MANIFESTO • COIMBATORE, INDIA
         </span>
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-[0.04em] text-black uppercase mb-3">
-          ABOUT TONTO
+          {aboutMedia?.headline || 'ABOUT TONTO'}
         </h1>
         <p className="text-[14px] sm:text-[15px] text-[#666666] max-w-xl mx-auto leading-relaxed">
-          Same Stories, Different People. Crafting substantial, heavyweight streetwear with brutalist drape and generational Indian textile mastery.
+          {aboutMedia?.description || 'Same Stories, Different People. Crafting substantial, heavyweight streetwear with brutalist drape and generational Indian textile mastery.'}
         </p>
       </div>
 
@@ -173,7 +173,7 @@ export default function AboutUsPage({
           <div className="lg:col-span-5">
             <div className="relative aspect-[4/5] bg-[#F5F5F5] overflow-hidden border border-[#E0E5E1] shadow-xs">
               <img
-                src="/assets/editorial/editorial-brutalist-full.jpg"
+                src={aboutMedia?.heroImage || '/assets/editorial/editorial-brutalist-full.jpg'}
                 alt="TONTO Clothing Atelier in Coimbatore"
                 className="w-full h-full object-cover"
                 loading="eager"

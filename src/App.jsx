@@ -48,27 +48,12 @@ function ViewFallback() {
   );
 }
 import { PRODUCTS, BRAND_INFO, SHOPPABLE_LOOKS } from './data/products';
-import { DEFAULT_CMS_CONTENT } from './data/defaultCms';
+import { DEFAULT_CMS_CONTENT, mergeCmsWithDefaults } from './data/defaultCms';
 import { store, wishlist, cart as cartApi } from './lib/api';
 import { MessageSquare, X, ArrowUpRight, PhoneCall, Calendar, MapPin } from 'lucide-react';
 
-// The CMS row comes back with every section present, and any section the owner
-// has never edited comes back empty. Merge section by section so a blank
-// `offerModal` on the server cannot erase the copy this build ships with.
 function mergeCms(base, remote) {
-  const out = { ...base };
-  for (const [key, value] of Object.entries(remote || {})) {
-    if (value === null || value === undefined) continue;
-    const isEmpty =
-      (Array.isArray(value) && value.length === 0) ||
-      (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0);
-    if (isEmpty) continue;
-    out[key] =
-      typeof value === 'object' && !Array.isArray(value) && typeof base[key] === 'object' && base[key]
-        ? { ...base[key], ...value }
-        : value;
-  }
-  return out;
+  return mergeCmsWithDefaults({ ...base, ...remote });
 }
 
 export default function App() {
@@ -126,7 +111,7 @@ export default function App() {
           setStoreSettings((prev) => ({ ...prev, ...res.settings }));
         }
         if (res.cms && Object.keys(res.cms).length) {
-          setCmsContent((prev) => mergeCms(prev, res.cms));
+          setCmsContent((prev) => mergeCmsWithDefaults({ ...prev, ...res.cms }));
         }
       } catch (err) {
         // Offline / backend not configured yet — the cached catalogue stands.
@@ -167,15 +152,7 @@ export default function App() {
     try {
       const saved = localStorage.getItem('tonto_admin_cms');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...DEFAULT_CMS_CONTENT,
-          ...parsed,
-          offerModal: {
-            ...DEFAULT_CMS_CONTENT.offerModal,
-            ...(parsed.offerModal || {})
-          }
-        };
+        return mergeCmsWithDefaults(JSON.parse(saved));
       }
     } catch (e) {
       console.error(e);
@@ -203,15 +180,7 @@ export default function App() {
 
         const savedCms = localStorage.getItem('tonto_admin_cms');
         if (savedCms) {
-          const parsed = JSON.parse(savedCms);
-          setCmsContent({
-            ...DEFAULT_CMS_CONTENT,
-            ...parsed,
-            offerModal: {
-              ...DEFAULT_CMS_CONTENT.offerModal,
-              ...(parsed.offerModal || {})
-            }
-          });
+          setCmsContent(mergeCmsWithDefaults(JSON.parse(savedCms)));
         }
       } catch (err) {
         console.error('Storefront sync error:', err);
@@ -749,7 +718,7 @@ export default function App() {
 
             {/* Section 5: Featured Collections carousel */}
             <CategoryCarousel
-              customCategories={cmsContent?.categoryCarousel || cmsContent?.categories}
+              customCategories={cmsContent?.categoryCarousel?.length ? cmsContent.categoryCarousel : cmsContent?.categories}
               onSelectCategory={(cat) => handleNavigate('collection', cat)}
             />
 
