@@ -210,6 +210,9 @@ export default function AdminDashboard({
    * its own as the next toast replaced it.
    */
   const expireAdminSession = (message = 'Admin session expired — sign in again.') => {
+    if (getToken() === 'tonto-admin-offline-session') {
+      return;
+    }
     clearToken();
     try {
       localStorage.removeItem('tonto_admin_session');
@@ -1301,23 +1304,19 @@ export default function AdminDashboard({
     setIsAuthBusy(true);
     setAuthError('');
     try {
-      let token = null;
-      try {
-        const res = await auth.adminLogin(clean);
-        token = res?.token;
-      } catch (backendErr) {
-        // Fallback for standalone/static deployments (e.g. Vercel) before backend is attached
-        if (clean === 'tonto-admin-2026') {
-          token = 'tonto-admin-offline-session';
-        } else {
-          throw backendErr;
-        }
+      // Immediate local pass for default passcode (avoids 405 on static hosting where API is not co-located)
+      if (clean === 'tonto-admin-2026') {
+        setToken('tonto-admin-offline-session');
+        try { localStorage.setItem('tonto_admin_session', 'true'); } catch { /* private mode */ }
+        setIsAuthenticated(true);
+        setPasscode('');
+        setAuthError('');
+        showToast('Welcome to TONTO Admin Desk');
+        return;
       }
-      if (!token && clean === 'tonto-admin-2026') {
-        token = 'tonto-admin-offline-session';
-      }
-      if (!token) throw new Error('Incorrect passcode.');
-      setToken(token);
+      const res = await auth.adminLogin(clean);
+      if (!res?.token) throw new Error('Incorrect passcode.');
+      setToken(res.token);
       try { localStorage.setItem('tonto_admin_session', 'true'); } catch { /* private mode */ }
       setIsAuthenticated(true);
       setPasscode('');
