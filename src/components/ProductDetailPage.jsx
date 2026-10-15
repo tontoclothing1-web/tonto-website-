@@ -503,7 +503,7 @@ export default function ProductDetailPage({
       </div>
 
       {/* Sticky Mobile Buy Action Bar (Android & iOS) */}
-      <div className="fixed bottom-[calc(58px+env(safe-area-inset-bottom,0px))] left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#E0E5E1] px-4 py-2.5 flex items-center justify-between gap-3 lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-0 pb-[max(0.625rem,env(safe-area-inset-bottom,0px))] left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-[#E0E5E1] px-4 pt-2.5 flex items-center justify-between gap-3 lg:hidden shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
         <div className="flex flex-col min-w-0">
           <div className="text-[14px] font-extrabold text-[#003F25] leading-tight truncate">
             {product.price}

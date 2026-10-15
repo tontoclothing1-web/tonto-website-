@@ -57,6 +57,17 @@ async function call(path, { method = 'POST', body, headers = {} } = {}) {
     return { ok: false, offline: true, error: `Cannot reach the store API: ${err.message}` };
   }
 
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('text/html') || res.status === 405 || res.status === 404) {
+    noteFailure();
+    return {
+      ok: false,
+      offline: true,
+      rejected: false,
+      error: 'Store API not reachable on this host — saved locally on this device.',
+    };
+  }
+
   let payload = null;
   try {
     payload = await res.json();
@@ -65,8 +76,8 @@ async function call(path, { method = 'POST', body, headers = {} } = {}) {
   }
 
   if (!res.ok) {
-    // A 4xx means the backend is alive and said "no" — that is a real answer,
-    // not an outage, so it must not trip the cooldown.
+    // A 4xx (400, 422, etc.) from an actual JSON API means the backend is alive
+    // and gave a specific business rejection.
     if (res.status < 500) noteSuccess();
     else noteFailure();
     return {

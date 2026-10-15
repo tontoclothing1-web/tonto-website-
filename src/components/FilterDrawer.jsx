@@ -46,6 +46,8 @@ export default function FilterDrawer({
   const sortOptions = [
     { label: 'Featured', value: 'featured' },
     { label: 'Newest first', value: 'newest' },
+    { label: 'Price: Low to High', value: 'price-low' },
+    { label: 'Price: High to Low', value: 'price-high' },
     { label: 'Title: A to Z', value: 'alpha' }
   ];
 

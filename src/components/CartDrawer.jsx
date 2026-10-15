@@ -48,7 +48,8 @@ export default function CartDrawer({
   };
 
   const handleWhatsAppCheckout = () => {
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(orderSummaryText)}`, '_blank');
+    const cleanWa = (BRAND_INFO?.whatsapp || '918248321214').replace(/[^0-9]/g, '');
+    window.open(`https://api.whatsapp.com/send?phone=${cleanWa}&text=${encodeURIComponent(orderSummaryText)}`, '_blank');
   };
 
   return (

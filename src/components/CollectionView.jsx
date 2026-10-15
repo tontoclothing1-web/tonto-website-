@@ -135,10 +135,22 @@ export default function CollectionView({
       result.sort((a, b) => new Date(b.createdDate || 0) - new Date(a.createdDate || 0));
     } else if (selectedSort === 'alpha') {
       result.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+    } else if (selectedSort === 'price-low') {
+      result.sort((a, b) => {
+        const pa = Number(a.numericPrice) || parseInt(String(a.price || '').replace(/\D/g, ''), 10) || 0;
+        const pb = Number(b.numericPrice) || parseInt(String(b.price || '').replace(/\D/g, ''), 10) || 0;
+        return pa - pb;
+      });
+    } else if (selectedSort === 'price-high') {
+      result.sort((a, b) => {
+        const pa = Number(a.numericPrice) || parseInt(String(a.price || '').replace(/\D/g, ''), 10) || 0;
+        const pb = Number(b.numericPrice) || parseInt(String(b.price || '').replace(/\D/g, ''), 10) || 0;
+        return pb - pa;
+      });
     }
 
     return result;
-  }, [products, selectedCategory, selectedSort, selectedColor, selectedSize, selectedAvailability]);
+  }, [catalog, selectedCategory, selectedSort, selectedColor, selectedSize, selectedAvailability]);
 
   const handleClearFilters = () => {
     setSelectedCategory('All');

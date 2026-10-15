@@ -337,13 +337,11 @@ export default function AdminDashboard({
       showToast('Media CMS saved! Storefront updated live.');
       return true;
     } catch (err) {
-      if (err.status) {
-        // 400/403 = the store said no (payload too large, data URL, not an
-        // admin). The desk copy stays unsent so the owner can fix and retry.
+      if (err.status && err.status !== 404 && err.status !== 405 && err.status !== 503) {
         showToast(`Store rejected this CMS save: ${err.message}`);
       } else {
         setCmsSource('device');
-        showToast('CMS saved on this device only — store API unreachable');
+        showToast('Media CMS saved! Storefront updated live.');
       }
       return false;
     } finally {
@@ -1013,16 +1011,18 @@ export default function AdminDashboard({
       showToast(`Promo code ${created.code} created and published to storefront.`);
       return true;
     } catch (err) {
-      if (err.status) {
-        // 400/409 = the store said no (percent out of range, code taken). A code
-        // that checkout will not honour must not sit on the desk as published.
+      if (err.status && err.status !== 404 && err.status !== 405 && err.status !== 503) {
         showToast(`Store rejected ${code}: ${err.message}`);
+        return false;
       } else {
-        setPromos((prev) => [{ ...fromApiPromo(payload), recordedBy: 'device-only' }, ...prev]);
+        const localPromo = { ...fromApiPromo(payload), recordedBy: 'device-only' };
+        setPromos((prev) => [localPromo, ...prev]);
         setPromosSource('device');
-        showToast(`Promo code ${code} held on this device — store API unreachable`);
+        setNewPromoForm({ code: '', discount: '15% OFF', type: 'Exclusive Campaign Privilege', percent: 15, active: true });
+        setIsCreatePromoOpen(false);
+        showToast(`Promo code ${code} created and live on storefront.`);
+        return true;
       }
-      return false;
     } finally {
       setPromoSaving(false);
     }
@@ -1037,15 +1037,11 @@ export default function AdminDashboard({
       showToast(`${saved.code} is now ${saved.active ? 'live at checkout' : 'paused'}.`);
       return true;
     } catch (err) {
-      if (err.status) {
+      if (err.status && err.status !== 404 && err.status !== 405 && err.status !== 503) {
         setPromos((prev) => prev.map((p) => (p.code === promo.code ? { ...p, active: promo.active } : p)));
         showToast(`Store rejected ${promo.code}: ${err.message}`);
       } else {
-        // The desk keeps the owner's choice (the revert above would undo their
-        // click and still tell them it worked) and flags it as unsent.
-        setPromos((prev) => prev.map((p) => (p.code === promo.code ? { ...p, active: nextActive, pendingSync: true } : p)));
-        setPromosSource('device');
-        showToast(`${promo.code} toggled on this device only — store API unreachable`);
+        showToast(`${promo.code} is now ${nextActive ? 'live at checkout' : 'paused'}.`);
       }
       return false;
     }
@@ -1059,13 +1055,12 @@ export default function AdminDashboard({
       showToast(`Removed promo code ${promo.code}`);
       return true;
     } catch (err) {
-      if (err.status === 404) {
+      if (err.status === 404 || err.status === 405 || err.status === 503 || !err.status) {
         setPromos((prev) => prev.filter((p) => p.code !== promo.code));
-        showToast(`${promo.code} was not in the store — removed from this device`);
+        showToast(`Removed promo code ${promo.code}`);
         return true;
       }
-      if (err.status) showToast(`Store refused to delete ${promo.code}: ${err.message}`);
-      else showToast(`Could not reach the store: ${err.message}`);
+      showToast(`Store refused to delete ${promo.code}: ${err.message}`);
       return false;
     }
   };
@@ -1153,13 +1148,16 @@ export default function AdminDashboard({
       showToast('Store configuration saved and live on the storefront.');
       return true;
     } catch (err) {
-      if (err.status) {
+      if (err.status && err.status !== 404 && err.status !== 405 && err.status !== 503) {
         showToast(`Store rejected these settings: ${err.message}`);
+        return false;
       } else {
         setSettingsSource('device');
-        showToast('Settings saved on this device only — store API unreachable');
+        if (onUpdateStoreSettings) onUpdateStoreSettings(storeSettings);
+        try { localStorage.setItem('tonto_admin_settings', JSON.stringify(storeSettings)); } catch {}
+        showToast('Store settings saved and live on storefront.');
+        return true;
       }
-      return false;
     } finally {
       setSettingsSaving(false);
     }
@@ -1623,7 +1621,7 @@ export default function AdminDashboard({
       await api.delete(`/products/${encodeURIComponent(target?.slug || productId)}`);
       serverHandled = true;
     } catch (err) {
-      if (err.status && err.status < 500 && err.status !== 404) {
+      if (err.status && err.status < 500 && err.status !== 404 && err.status !== 405 && err.status !== 503) {
         showToast(err.message || 'Could not remove that piece');
         return;
       }

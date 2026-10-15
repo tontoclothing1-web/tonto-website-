@@ -20,7 +20,8 @@ export default function CartPage({
     `\n\nOrigin: Coimbatore, Tamil Nadu, India\nPlease confirm price, delivery timeline, and payment instructions.`;
 
   const handleWhatsAppCheckout = () => {
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(orderSummaryText)}`, '_blank');
+    const cleanWa = '918248321214';
+    window.open(`https://api.whatsapp.com/send?phone=${cleanWa}&text=${encodeURIComponent(orderSummaryText)}`, '_blank');
   };
 
   return (

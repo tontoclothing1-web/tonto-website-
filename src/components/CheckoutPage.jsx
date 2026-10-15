@@ -499,7 +499,10 @@ export default function CheckoutPage({
                 Retry Order Submission
               </button>
               <button
-                onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent('Hi TONTO, I had an issue on checkout reserving my pieces. Could you assist?')}`, '_blank')}
+                onClick={() => {
+                  const cleanWa = (storeSettings?.whatsappPhone || '918248321214').replace(/[^0-9]/g, '');
+                  window.open(`https://api.whatsapp.com/send?phone=${cleanWa}&text=${encodeURIComponent('Hi TONTO, I had an issue on checkout reserving my pieces. Could you assist?')}`, '_blank');
+                }}
                 className="w-full py-2.5 border border-[#003F25] text-[#003F25] text-[12px] font-bold uppercase tracking-wider hover:bg-white transition-colors cursor-pointer"
               >
                 Complete via WhatsApp Concierge
@@ -595,7 +598,10 @@ export default function CheckoutPage({
             {/* Actions */}
             <div className="space-y-3">
               <button
-                onClick={() => window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(getOrderWhatsAppText())}`, '_blank')}
+                onClick={() => {
+                  const cleanWa = (storeSettings?.whatsappPhone || '918248321214').replace(/[^0-9]/g, '');
+                  window.open(`https://api.whatsapp.com/send?phone=${cleanWa}&text=${encodeURIComponent(getOrderWhatsAppText())}`, '_blank');
+                }}
                 className="w-full py-4 bg-[#128C7E] hover:bg-[#075E54] text-white text-[13px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
                 <Send size={16} />

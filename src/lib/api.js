@@ -71,7 +71,7 @@ export async function request(path, { method = 'GET', body, auth = true, query }
   const headers = { 'Content-Type': 'application/json' };
   if (auth) {
     const token = getToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (token && token !== 'tonto-admin-offline-session') headers.Authorization = `Bearer ${token}`;
   }
   let res;
   try {
@@ -82,6 +82,13 @@ export async function request(path, { method = 'GET', body, auth = true, query }
     });
   } catch (err) {
     throw new Error(`Network error reaching ${url}: ${err.message}`);
+  }
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('text/html')) {
+    const err = new Error(`API endpoint not reachable (${res.status})`);
+    err.status = res.status === 200 ? 503 : res.status;
+    err.payload = null;
+    throw err;
   }
   let payload = null;
   try {
