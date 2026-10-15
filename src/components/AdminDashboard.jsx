@@ -2300,13 +2300,6 @@ export default function AdminDashboard({
             </button>
 
           </nav>
-
-          {/* Store Summary Pill */}
-          <div className="hidden md:block mt-8 pt-4 border-t border-gray-100 text-[11.5px] text-[#79867D]">
-            <p className="font-semibold text-[#111111]">Coimbatore Showroom</p>
-            <p className="mt-0.5">Avinashi Road, Peelamedu</p>
-            <p className="text-[10.5px] text-gray-400 mt-2">Active Session: Director</p>
-          </div>
         </aside>
 
         {/* Dynamic Panel Content */}
