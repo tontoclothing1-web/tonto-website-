@@ -236,7 +236,7 @@ export default function FilterDrawer({
                 {selectedAvailability === 'coimbatore' && <Check size={12} strokeWidth={3} />}
               </div>
               <span onClick={() => onSelectAvailability(selectedAvailability === 'coimbatore' ? 'All' : 'coimbatore')}>
-                In stock at Coimbatore studio
+                In stock in Coimbatore
               </span>
             </label>
           </div>

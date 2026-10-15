@@ -2,13 +2,15 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CATEGORIES } from '../data/products';
 
-export default function CategoryCarousel({ onSelectCategory }) {
+export default function CategoryCarousel({ onSelectCategory, customCategories }) {
   const scrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeftPos, setScrollLeftPos] = useState(0);
+
+  const displayCategories = customCategories && customCategories.length > 0 ? customCategories : CATEGORIES;
 
   const checkScrollBounds = () => {
     if (!scrollRef.current) return;
@@ -97,7 +99,7 @@ export default function CategoryCarousel({ onSelectCategory }) {
           }`}
           style={{ scrollSnapType: 'x mandatory' }}
         >
-          {CATEGORIES.map((cat) => (
+          {displayCategories.map((cat) => (
             <div
               key={cat.id}
               data-card="true"
@@ -112,6 +114,7 @@ export default function CategoryCarousel({ onSelectCategory }) {
                   alt={cat.title}
                   className="w-full h-full object-cover object-center transition-transform duration-400 ease-out group-hover:scale-[1.04]"
                   loading="lazy"
+                  decoding="async"
                   draggable={false}
                 />
 

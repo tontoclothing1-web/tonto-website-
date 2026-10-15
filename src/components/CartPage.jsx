@@ -132,7 +132,7 @@ export default function CartPage({
                       <span className="text-[13px] font-semibold text-[#003F25]">
                         {item.price || 'Price on enquiry'}
                       </span>
-                      <p className="text-[11px] text-[#79867D]">Studio verified</p>
+                      <p className="text-[11px] text-[#79867D]">Condition verified</p>
                     </div>
 
                   </div>
@@ -196,7 +196,7 @@ export default function CartPage({
                     <span>Calculated at checkout</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Studio Dispatch</span>
+                    <span>Dispatch Hub</span>
                     <span>Coimbatore, TN</span>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ export default function CartPage({
                 </div>
 
                 <p className="text-[11px] text-[#79867D] text-center">
-                  All thrift and surplus items are single pieces or limited run. Reserving items through checkout locks the studio hold.
+                  All thrift and surplus items are single pieces or limited run. Reserving items through checkout locks the piece hold.
                 </p>
               </div>
             </div>

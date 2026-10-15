@@ -5,6 +5,7 @@ import { PRODUCTS } from '../data/products';
 export default function SavedItemsDrawer({
   isOpen,
   onClose,
+  products,
   savedIds,
   onRemoveSaved,
   onQuickView,
@@ -28,7 +29,9 @@ export default function SavedItemsDrawer({
 
   if (!isOpen) return null;
 
-  const savedProducts = PRODUCTS.filter((p) => savedIds.includes(p.id));
+  // Live catalogue first; the shipped constant is only the offline fallback.
+  const catalog = products && products.length > 0 ? products : PRODUCTS;
+  const savedProducts = catalog.filter((p) => savedIds.includes(p.id));
 
   return (
     <div className="fixed inset-0 z-[100] flex justify-end">
@@ -43,13 +46,13 @@ export default function SavedItemsDrawer({
       <div className="relative w-full max-w-[380px] sm:max-w-[420px] h-full bg-white shadow-2xl z-10 flex flex-col justify-between text-left animate-slide-left">
         
         {/* Top Bar */}
-        <div className="p-6 border-b border-[#E0E5E1] flex items-center justify-between">
-          <h2 className="text-[14px] font-extrabold tracking-[0.08em] text-[#003F25] uppercase">
+        <div className="p-4 sm:p-6 border-b border-[#E0E5E1] flex items-center justify-between">
+          <h2 className="text-[13px] sm:text-[14px] font-extrabold tracking-[0.08em] text-[#003F25] uppercase">
             SAVED PIECES ({savedProducts.length})
           </h2>
           <button
             onClick={onClose}
-            className="p-1 text-[#003F25] hover:opacity-70 transition-opacity focus:outline-none"
+            className="p-1 text-[#003F25] hover:opacity-70 transition-opacity focus:outline-none cursor-pointer"
             aria-label="Close saved items drawer"
           >
             <X size={18} strokeWidth={2} />
@@ -57,7 +60,7 @@ export default function SavedItemsDrawer({
         </div>
 
         {/* List of Saved Items */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {savedProducts.length > 0 ? (
             savedProducts.map((p) => (
               <div
@@ -129,17 +132,20 @@ export default function SavedItemsDrawer({
         {savedProducts.length > 0 && (
           <div className="p-5 sm:p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] border-t border-[#E0E5E1] bg-white space-y-3">
             <button
+              type="button"
               onClick={() => {
-                onClose();
+                onClose?.();
+                const firstImg = savedProducts[0]?.images?.[0] || savedProducts[0]?.image || '/assets/products/extra-wide-denim.jpg';
                 const combined = {
                   id: 'saved-shortlist',
-                  title: `Shortlist of ${savedProducts.length} Pieces: ${savedProducts.map(p => p.title).join(' | ')}`,
-                  colour: savedProducts.map(p => p.colour).join(', '),
+                  title: `Shortlist of ${savedProducts.length} Pieces: ${savedProducts.map(p => p.title || 'Piece').join(' | ')}`,
+                  colour: savedProducts.map(p => p.colour || 'Standard').join(', '),
                   fit: 'Multiple',
                   price: 'Price on enquiry',
-                  images: [savedProducts[0]?.images?.[0]]
+                  images: [firstImg],
+                  variants: ['Standard']
                 };
-                onEnquire(combined);
+                onEnquire?.(combined);
               }}
               className="w-full py-3.5 bg-[#003F25] text-white text-[13px] font-bold tracking-wider uppercase hover:bg-[#002e1b] transition-colors cursor-pointer"
             >

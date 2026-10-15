@@ -45,7 +45,7 @@ export default function PolicyPage({
       <div className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-10">
         
         <h1 className="text-2xl sm:text-4xl font-extrabold text-[#003F25] uppercase tracking-tight mb-2">
-          Client Care & Studio Standards
+          Client Care & Brand Standards
         </h1>
         <p className="text-[13px] text-[#79867D] mb-8">
           Verified guidelines for TONTO Clothing. Coimbatore, Tamil Nadu, India.
@@ -109,10 +109,10 @@ export default function PolicyPage({
 
               <div>
                 <h3 className="text-[14px] font-bold text-[#003F25] uppercase mb-2">
-                  Coimbatore Studio Pickup
+                  Coimbatore Showroom Pickup
                 </h3>
                 <p>
-                  Customers in and around Coimbatore can select <strong>Studio Pickup</strong> at checkout to try on pieces directly in our showroom before taking them home. No courier charge applies to studio pickups.
+                  Customers in and around Coimbatore can select <strong>Showroom Pickup</strong> at checkout to try on pieces directly in our showroom before taking them home. No courier charge applies to showroom pickups.
                 </p>
               </div>
             </div>
@@ -141,10 +141,10 @@ export default function PolicyPage({
 
               <div>
                 <h3 className="text-[14px] font-bold text-[#003F25] uppercase mb-2">
-                  Studio Exchange Assistance
+                  Exchange Assistance
                 </h3>
                 <p>
-                  In the event of an sizing discrepancy, please contact our studio within 48 hours of delivery. We will assist you with an exchange for another archive piece or studio credit.
+                  In the event of an sizing discrepancy, please contact our team within 48 hours of delivery. We will assist you with an exchange for another archive piece or store credit.
                 </p>
               </div>
             </div>

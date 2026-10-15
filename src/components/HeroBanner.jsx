@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
-export default function HeroBanner({ onShopNow }) {
+export default function HeroBanner({ onShopNow, heroMedia }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -10,12 +10,17 @@ export default function HeroBanner({ onShopNow }) {
     return () => clearTimeout(timer);
   }, []);
 
+  const heroImage = heroMedia?.image || '/assets/hero-banner-clean-orig.jpg';
+  const tagline = heroMedia?.tagline || 'THRIFT / IMPORTED / SURPLUS';
+  const headline = heroMedia?.headline || 'MADE TO BE DIFFERENT';
+  const buttonText = heroMedia?.buttonText || 'shop now';
+
   return (
-    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none" style={{ minHeight: '620px', height: 'calc(100vh - 76px)', maxHeight: '780px' }}>
+    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none min-h-[460px] sm:min-h-[560px] md:min-h-[620px] h-[calc(100svh-76px)] max-h-[780px]">
       {/* Background Campaign Image with subtle settle scale */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
-          src="/assets/hero-banner-clean.jpg"
+          src={heroImage}
           alt="TONTO Campaign - Unisex Streetwear Collection"
           className={`w-full h-full object-cover object-[center_12%] transition-opacity duration-700 ${
             mounted ? 'opacity-100' : 'opacity-90'
@@ -47,22 +52,33 @@ export default function HeroBanner({ onShopNow }) {
                 mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
               }`}
             >
-              THRIFT / IMPORTED / SURPLUS
+              {tagline}
             </span>
           </div>
 
-          {/* Heading: MADE TO BE DIFFERENT */}
+          {/* Heading */}
           <div className="overflow-hidden mb-5">
             <h1
-              className={`text-4xl sm:text-5xl md:text-6xl lg:text-[68px] font-extrabold tracking-[-0.02em] leading-[0.96] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] font-['Futura_PT_Book',sans-serif] transition-all duration-700 delay-200 ease-out ${
+              className={`text-[32px] sm:text-5xl md:text-6xl lg:text-[68px] font-extrabold tracking-[-0.02em] leading-[0.96] text-white uppercase drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] font-['Futura_PT_Book',sans-serif] transition-all duration-700 delay-200 ease-out ${
                 mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
               }`}
             >
-              MADE TO BE<br />DIFFERENT
+              {headline.includes('\n') ? (
+                headline.split('\n').map((line, i) => (
+                  <React.Fragment key={i}>
+                    {line}
+                    <br />
+                  </React.Fragment>
+                ))
+              ) : headline === 'MADE TO BE DIFFERENT' ? (
+                <>MADE TO BE<br />DIFFERENT</>
+              ) : (
+                headline
+              )}
             </h1>
           </div>
 
-          {/* Underlined "shop now" Link with subtle hover arrow translation */}
+          {/* Action Link */}
           <div className="overflow-hidden">
             <button
               onClick={onShopNow}
@@ -70,8 +86,8 @@ export default function HeroBanner({ onShopNow }) {
                 mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
               }`}
             >
-              <span className="relative pb-0.5 border-b border-white transition-colors group-hover:border-white/70 lowercase">
-                shop now
+              <span className="relative pb-0.5 border-b border-white transition-colors group-hover:border-white/70">
+                {buttonText}
               </span>
               <ArrowUpRight
                 size={16}

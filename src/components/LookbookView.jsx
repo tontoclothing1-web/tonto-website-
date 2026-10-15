@@ -1,8 +1,8 @@
 import React from 'react';
-import { ArrowLeft, ArrowUpRight, Plus, Eye } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Plus, Eye, Sparkles, ShoppingBag } from 'lucide-react';
 import { SHOPPABLE_LOOKS, PRODUCTS } from '../data/products';
 
-export default function LookbookView({ onNavigateHome, onQuickView, onNavigateProduct }) {
+export default function LookbookView({ onNavigateHome, onQuickView, onNavigateProduct, onOpenLook }) {
   const handleShopLook = (look) => {
     const product = PRODUCTS.find((p) => p.id === look.productId);
     if (product) {
@@ -24,7 +24,7 @@ export default function LookbookView({ onNavigateHome, onQuickView, onNavigatePr
             <span>home</span>
           </button>
           <span className="text-[#D1D5DB]">/</span>
-          <span className="text-[#003F25] font-semibold">lookbook</span>
+          <span className="text-[#003F25] font-semibold">tonto made</span>
         </div>
       </div>
 
@@ -32,7 +32,7 @@ export default function LookbookView({ onNavigateHome, onQuickView, onNavigatePr
       <div className="relative w-full h-[360px] sm:h-[460px] overflow-hidden bg-[#0A1A12] select-none">
         <img
           src="/assets/lookbook-banner-hd.jpg"
-          alt="TONTO Lookbook Campaign"
+          alt="TONTO Made Campaign"
           className="w-full h-full object-cover object-[center_35%]"
           loading="eager"
         />
@@ -40,13 +40,13 @@ export default function LookbookView({ onNavigateHome, onQuickView, onNavigatePr
 
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <span className="text-[12px] font-bold tracking-[0.25em] text-white/90 uppercase mb-2">
-            EDITORIAL VOL. 01
+            EDITORIAL VOL. 01 • IN-HOUSE ATELIER
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white uppercase mb-3 drop-shadow-sm">
-            THE TONTO EDIT
+            TONTO MADE
           </h1>
           <p className="text-[13px] text-white/80 max-w-md">
-            Washed denim silhouettes, oversized graphic cuts, and curated layering pieces. Coimbatore, Tamil Nadu.
+            In-house atelier silhouettes, heavyweight custom-milled textiles, and distinct garment washes. Coimbatore, Tamil Nadu.
           </p>
         </div>
       </div>
@@ -67,7 +67,10 @@ export default function LookbookView({ onNavigateHome, onQuickView, onNavigatePr
               >
                 {/* Look Editorial Photo (7 cols) */}
                 <div className={`lg:col-span-7 ${isReversed ? 'lg:order-2' : 'lg:order-1'}`}>
-                  <div className="relative aspect-[3/4] sm:aspect-[4/5] bg-gray-100 overflow-hidden border border-[#E0E5E1] group shadow-sm">
+                  <div 
+                    onClick={() => onOpenLook && onOpenLook(look)}
+                    className="relative aspect-[3/4] sm:aspect-[4/5] bg-gray-100 overflow-hidden border border-[#E0E5E1] group shadow-sm cursor-pointer"
+                  >
                     <img
                       src={look.image}
                       alt={look.title}
@@ -80,11 +83,31 @@ export default function LookbookView({ onNavigateHome, onQuickView, onNavigatePr
                       LOOK 0{idx + 1}
                     </div>
 
+                    {/* Costume Price Overlay */}
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-[#003F25]/90 backdrop-blur-xs text-white text-[11px] font-bold uppercase tracking-wider">
+                      {look.costumePrice || 'BUY LOOK'}
+                    </div>
+
+                    {/* Hover Click to view complete look overlay */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                      <span className="px-5 py-2.5 bg-white text-[#003F25] text-[11.5px] font-extrabold uppercase tracking-widest shadow-xl flex items-center gap-2">
+                        <Sparkles size={14} />
+                        <span>BUY EXACT LOOK ({look.costumePrice || 'VIEW PIECES'})</span>
+                      </span>
+                    </div>
+
                     {/* Interactive Hotspot */}
                     <button
-                      onClick={() => handleShopLook(look)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onOpenLook) {
+                          onOpenLook(look);
+                        } else {
+                          handleShopLook(look);
+                        }
+                      }}
                       className="absolute bottom-4 right-4 p-3 bg-[#003F25] text-white rounded-full shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5"
-                      title="Quick View Piece"
+                      title="View Complete Look"
                     >
                       <Plus size={16} strokeWidth={2.5} />
                     </button>
@@ -147,8 +170,24 @@ export default function LookbookView({ onNavigateHome, onQuickView, onNavigatePr
                     </div>
                   )}
 
-                  <div className="pt-2 text-[12px] text-[#79867D]">
-                    Available for fitting at Coimbatore Studio Showroom.
+                  {/* Single Button to Buy Exact Look with whole costume price */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => onOpenLook && onOpenLook(look)}
+                      className="w-full py-3.5 bg-[#003F25] hover:bg-[#002e1b] text-white text-[12.5px] font-extrabold uppercase tracking-widest transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm rounded-xs"
+                    >
+                      <Sparkles size={14} />
+                      <span>BUY EXACT LOOK • {look.costumePrice || 'VIEW ALL PIECES'}</span>
+                      <ArrowUpRight size={14} />
+                    </button>
+                    <p className="text-[11px] text-[#79867D] text-center mt-1.5">
+                      Costume page with all individual piece prices & 1-click bundle checkout
+                    </p>
+                  </div>
+
+                  <div className="pt-1 text-[12px] text-[#79867D]">
+                    Available for fitting at Coimbatore Showroom.
                   </div>
                 </div>
 

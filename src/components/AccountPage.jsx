@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
-import { ArrowLeft, User, Package, MapPin, Bell, LogOut, Check, AlertCircle, ArrowUpRight, Shield, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, User, Package, MapPin, Bell, LogOut, Check, AlertCircle, ArrowUpRight, Shield, RefreshCw, XCircle, Truck } from 'lucide-react';
 import { BRAND_INFO, PRODUCTS } from '../data/products';
+import { auth, orders as ordersApi, account as accountApi, setToken, getToken, clearToken } from '../lib/api';
+import { fromApiOrder, deliveryLabel, isCancellableStatus } from '../lib/orderView';
+import { readList, mirrorMerge } from '../lib/capture';
+
+const EMPTY_PROFILE = { name: '', email: '', phone: '', topSize: 'M', bottomWaist: '32' };
 
 export default function AccountPage({
   onNavigateHome,
   onNavigateCollection,
-  onOpenProduct
+  onOpenProduct,
+  onNavigateAdmin
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'profile' | 'addresses' | 'notifications'
   const [authMode, setAuthMode] = useState('signin'); // 'signin' | 'register' | 'recovery'
   
@@ -19,97 +26,258 @@ export default function AccountPage({
   const [authMessage, setAuthMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // User Profile Data (demo state)
-  const [userProfile, setUserProfile] = useState({
-    name: 'Karthik Raja',
-    email: 'karthik@example.com',
-    phone: '+91 94432 10987',
-    topSize: 'L',
-    bottomWaist: '32'
-  });
+  // Signed-in shopper, filled from GET /api/account — no invented defaults, a
+  // customer portal that shows somebody else's name is worse than an empty one.
+  const [userProfile, setUserProfile] = useState(EMPTY_PROFILE);
+  const [profileNote, setProfileNote] = useState(null);
+  const [savingProfile, setSavingProfile] = useState(false);
 
-  // Saved Addresses
-  const [addresses, setAddresses] = useState([
-    {
-      id: 'addr-1',
-      label: 'Primary Delivery',
-      recipient: 'Karthik Raja',
-      phone: '+91 94432 10987',
-      address: '142 Avinashi Road, Peelamedu',
-      city: 'Coimbatore',
-      state: 'Tamil Nadu',
-      postalCode: '641004',
-      isDefault: true
-    }
-  ]);
+  // Saved Addresses (GET /api/account/addresses)
+  const [addresses, setAddresses] = useState([]);
 
-  // Order History (Test fixtures clearly labeled)
-  const [orders] = useState([
-    {
-      id: 'TONTO-TN-84920',
-      date: '22 Sep 2026',
-      status: 'Dispatched from Coimbatore Studio',
-      statusColor: 'text-[#003F25]',
-      trackingNumber: 'TN-EXP-940294',
-      items: [
-        {
-          id: 'extra-wide-denim',
-          title: 'EXTRA WIDE DENIM',
-          colour: 'washed blue',
-          size: '32',
-          price: 'Price on enquiry',
-          image: '/assets/products/extra-wide-denim.jpg'
-        }
-      ]
-    },
-    {
-      id: 'TONTO-TN-71824',
-      date: '10 Aug 2026',
-      status: 'Delivered',
-      statusColor: 'text-gray-600',
-      trackingNumber: 'TN-EXP-819284',
-      items: [
-        {
-          id: 'camo-military-overshirt',
-          title: 'CAMO MILITARY OVERSHIRT',
-          colour: 'camo',
-          size: 'L',
-          price: 'Price on enquiry',
-          image: '/assets/products/camo-military-overshirt.jpg'
-        }
-      ]
+  // Orders come from GET /api/orders/my. `ordersSource` is 'api' when the server
+  // answered and 'device' when we fell back to this browser's own holds.
+  const [orders, setOrders] = useState([]);
+  const [ordersSource, setOrdersSource] = useState('api');
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  // Orders: GET /api/orders/my — matched on user_id OR the email on the order,
+  // so a hold placed as a guest before signing in still shows up here.
+  const loadOrders = React.useCallback(async () => {
+    setOrdersLoading(true);
+    try {
+      const res = await ordersApi.mine();
+      setOrders((Array.isArray(res?.data) ? res.data : []).map((o) => fromApiOrder(o)));
+      setOrdersSource('api');
+    } catch (err) {
+      // Unreachable backend: show the holds this device filed and label them as
+      // such instead of an empty "you have no orders" screen.
+      console.warn('[account] orders from device only:', err.message);
+      setOrders(readList('tonto_admin_orders'));
+      setOrdersSource('device');
+    } finally {
+      setOrdersLoading(false);
     }
-  ]);
+  }, []);
+
+  // Profile + saved addresses (GET /api/account).
+  const loadAccount = React.useCallback(async () => {
+    try {
+      const res = await accountApi.profile();
+      const me = res?.data || {};
+      setUserProfile({
+        name: me.name || '',
+        email: me.email || '',
+        phone: me.phone || '',
+        topSize: me.topSize || 'M',
+        bottomWaist: me.bottomWaist || '32'
+      });
+      setAddresses(Array.isArray(me.addresses) ? me.addresses : []);
+    } catch (err) {
+      console.warn('[account] profile unavailable:', err.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    loadOrders();
+    loadAccount();
+  }, [isAuthenticated, loadOrders, loadAccount]);
+
+  // Live-refresh when another screen writes a hold (Checkout submit, admin desk).
+  // Only trusted while we are on the device fallback — the server is the truth
+  // otherwise, and localStorage must not overwrite it.
+  useEffect(() => {
+    const handleSync = () => {
+      if (ordersSource !== 'device') return;
+      setOrders(readList('tonto_admin_orders'));
+    };
+
+    window.addEventListener('tonto-data-updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('tonto-data-updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, [ordersSource]);
+
+  /** Offline fallback: mark the device copy cancelled and give the stock back. */
+  const cancelOnDevice = (targetId) => {
+    let cancelledItems = [];
+    mirrorMerge('tonto_admin_orders', (list) =>
+      list.map((ord) => {
+        if (ord.id === targetId || ord.orderId === targetId) {
+          cancelledItems = ord.items || [];
+          return {
+            ...ord,
+            status: 'Cancelled',
+            paymentStatus: 'Cancelled / Released',
+            notes: `${ord.notes || ''} [Cancelled by customer on this device]`
+          };
+        }
+        return ord;
+      })
+    );
+
+    if (cancelledItems.length > 0) {
+      mirrorMerge('tonto_products', (prodList) =>
+        prodList.map((prod) => {
+          const match = cancelledItems.find((i) => i.id === prod.id || i.productId === prod.id);
+          if (!match) return prod;
+          const prevStock = typeof prod.stock === 'number' ? prod.stock : 5;
+          const newStock = prevStock + (match.quantity || 1);
+          return { ...prod, stock: newStock, inStock: newStock > 0 };
+        })
+      );
+    }
+
+    setOrders(readList('tonto_admin_orders'));
+  };
+
+  // Customer Order Cancellation
+  const handleCancelOrder = async (targetId) => {
+    if (!window.confirm(`Are you sure you want to cancel order hold #${targetId}? This will release the garment reservation.`)) {
+      return;
+    }
+
+    try {
+      await ordersApi.cancel(targetId);
+      await loadOrders();
+      window.alert(`Order #${targetId} has been cancelled and the pieces released back to the showroom.`);
+    } catch (err) {
+      const networked = !err.status || err.status >= 500;
+      if (networked && ordersSource === 'device') {
+        cancelOnDevice(targetId);
+        window.alert(`Order #${targetId} was cancelled on this device. The shop will see it once the store API is reachable.`);
+        return;
+      }
+      window.alert(err.status === 403
+        ? 'This order belongs to another customer.'
+        : err.message || 'Could not cancel that hold.');
+    }
+  };
 
   // Notifications toggles
   const [notifications, setNotifications] = useState({
     denimDrops: true,
     surplusFinds: true,
     vintageGraphics: false,
-    studioAppointments: true
+    showroomAppointments: true
   });
 
-  const handleAuthSubmit = (e) => {
+  // Rehydrate the session from the stored JWT. A token is only accepted once
+  // GET /api/auth/me confirms it still belongs to a live account.
+  useEffect(() => {
+    let cancelled = false;
+    const resume = async () => {
+      if (!getToken()) {
+        setSessionChecked(true);
+        return;
+      }
+      try {
+        const res = await auth.me();
+        if (!cancelled && res?.user) {
+          setIsAuthenticated(true);
+          setUserProfile((prev) => ({
+            ...prev,
+            name: res.user.name || '',
+            email: res.user.email || '',
+            phone: res.user.phone || '',
+            topSize: res.user.topSize || prev.topSize,
+            bottomWaist: res.user.bottomWaist || prev.bottomWaist
+          }));
+        } else {
+          clearToken();
+        }
+      } catch {
+        clearToken();
+      }
+      if (!cancelled) setSessionChecked(true);
+    };
+    resume();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleSignOut = () => {
+    setIsAuthenticated(false);
+    clearToken();
+    setUserProfile(EMPTY_PROFILE);
+    setAddresses([]);
+    setOrders([]);
+    setAuthMessage(null);
+  };
+
+  const handleAuthSubmit = async (e) => {
     e.preventDefault();
-    if (!authEmail.trim() || !authEmail.includes('@')) {
+    const email = authEmail.trim().toLowerCase();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
       setAuthMessage({ type: 'error', text: 'Please enter a valid email address.' });
       return;
     }
-    
+    if (authMode !== 'recovery' && authPassword.length < 6) {
+      setAuthMessage({ type: 'error', text: 'Password must be at least 6 characters.' });
+      return;
+    }
+
     setIsLoading(true);
     setAuthMessage(null);
 
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
       if (authMode === 'recovery') {
-        setAuthMessage({ type: 'success', text: 'Password reset instructions have been sent to your email.' });
+        await auth.forgotPassword(email);
+        setAuthMessage({
+          type: 'success',
+          text: 'If that address has an account, reset instructions are on their way.'
+        });
       } else {
+        const payload = authMode === 'register'
+          ? { name: authName.trim() || email.split('@')[0], email, password: authPassword, phone: authPhone.trim() }
+          : { email, password: authPassword };
+        const res = authMode === 'register' ? await auth.register(payload) : await auth.login(payload);
+        if (!res?.token) throw Object.assign(new Error('The store did not return a session.'), { status: 500 });
+        setToken(res.token);
         setIsAuthenticated(true);
-        if (authName) {
-          setUserProfile(prev => ({ ...prev, name: authName, email: authEmail, phone: authPhone || prev.phone }));
-        }
+        setAuthPassword('');
+        setUserProfile((prev) => ({
+          ...prev,
+          name: res.user?.name || payload.name || '',
+          email: res.user?.email || email,
+          phone: res.user?.phone || prev.phone,
+          topSize: res.user?.topSize || prev.topSize,
+          bottomWaist: res.user?.bottomWaist || prev.bottomWaist
+        }));
       }
-    }, 600);
+    } catch (err) {
+      setAuthMessage({
+        type: 'error',
+        text: err.status === 429
+          ? 'Too many attempts — please wait a minute and try again.'
+          : err.message || 'Could not sign you in.'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // PUT /api/auth/profile + /api/account/sizes — the fit preferences a shopper
+  // saves here are what the showroom sees when they text about a piece.
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    setProfileNote(null);
+    try {
+      await auth.updateProfile({ name: userProfile.name, phone: userProfile.phone });
+      await accountApi.updateSizes({ topSize: userProfile.topSize, bottomWaist: userProfile.bottomWaist });
+      setProfileNote({ type: 'success', text: 'Profile saved to your TONTO account.' });
+    } catch (err) {
+      setProfileNote({
+        type: 'error',
+        text: err.status >= 500 || !err.status
+          ? 'Could not reach the store — your changes were not saved.'
+          : err.message || 'Could not save your profile.'
+      });
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   return (
@@ -131,7 +299,7 @@ export default function AccountPage({
 
         {isAuthenticated && (
           <button
-            onClick={() => setIsAuthenticated(false)}
+            onClick={handleSignOut}
             className="text-[12px] text-[#79867D] hover:text-[#003F25] flex items-center gap-1 cursor-pointer transition-colors"
           >
             <LogOut size={13} />
@@ -142,7 +310,12 @@ export default function AccountPage({
 
       <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-10">
         
-        {!isAuthenticated ? (
+        {!sessionChecked ? (
+          <div className="max-w-md mx-auto py-16 text-center text-[12px] uppercase tracking-widest text-[#79867D] flex items-center justify-center gap-2">
+            <RefreshCw size={14} className="animate-spin" />
+            <span>Restoring your session&hellip;</span>
+          </div>
+        ) : !isAuthenticated ? (
           /* AUTHENTICATION FORMS: SIGN IN / REGISTER / RECOVERY */
           <div className="max-w-md mx-auto border border-[#E0E5E1] p-6 sm:p-8 bg-white shadow-xs">
             
@@ -264,20 +437,8 @@ export default function AccountPage({
               </button>
             )}
 
-            {/* Quick Demo Login Option */}
-            <div className="mt-8 pt-6 border-t border-[#E0E5E1] text-center">
-              <span className="text-[11px] text-[#79867D] block mb-2">Development / Client Preview:</span>
-              <button
-                type="button"
-                onClick={() => setIsAuthenticated(true)}
-                className="w-full py-2.5 border border-dashed border-[#003F25] text-[#003F25] text-[11px] font-bold uppercase tracking-wider hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                Preview Verified Customer Dashboard
-              </button>
-              <p className="text-[10px] text-[#79867D] mt-2">
-                Pure client-side authentication mode. No passwords or sensitive credentials are saved in browser storage.
-              </p>
-            </div>
+            {/* Security note: the customer portal has one way in — a real
+                account on POST /api/auth/login. No preview bypass. */}
 
           </div>
         ) : (
@@ -297,51 +458,51 @@ export default function AccountPage({
                   </div>
                 </div>
 
-                <nav className="mt-4 space-y-1 text-[13px] font-semibold text-[#4B5563]">
+                <nav className="mt-4 flex md:flex-col gap-1.5 overflow-x-auto no-scrollbar md:space-y-1 text-[12px] sm:text-[13px] font-semibold pb-1 md:pb-0">
                   <button
                     onClick={() => setActiveTab('orders')}
-                    className={`w-full text-left p-2.5 rounded-xs flex items-center gap-2.5 transition-colors cursor-pointer ${
-                      activeTab === 'orders' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25]'
+                    className={`shrink-0 md:w-full text-left px-3 py-2 sm:p-2.5 rounded-xs flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+                      activeTab === 'orders' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25] bg-gray-50 md:bg-transparent'
                     }`}
                   >
-                    <Package size={16} />
+                    <Package size={15} />
                     <span>Order Holds ({orders.length})</span>
                   </button>
 
                   <button
                     onClick={() => setActiveTab('profile')}
-                    className={`w-full text-left p-2.5 rounded-xs flex items-center gap-2.5 transition-colors cursor-pointer ${
-                      activeTab === 'profile' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25]'
+                    className={`shrink-0 md:w-full text-left px-3 py-2 sm:p-2.5 rounded-xs flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+                      activeTab === 'profile' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25] bg-gray-50 md:bg-transparent'
                     }`}
                   >
-                    <User size={16} />
+                    <User size={15} />
                     <span>Profile & Fit Preferences</span>
                   </button>
 
                   <button
                     onClick={() => setActiveTab('addresses')}
-                    className={`w-full text-left p-2.5 rounded-xs flex items-center gap-2.5 transition-colors cursor-pointer ${
-                      activeTab === 'addresses' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25]'
+                    className={`shrink-0 md:w-full text-left px-3 py-2 sm:p-2.5 rounded-xs flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+                      activeTab === 'addresses' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25] bg-gray-50 md:bg-transparent'
                     }`}
                   >
-                    <MapPin size={16} />
+                    <MapPin size={15} />
                     <span>Saved Addresses</span>
                   </button>
 
                   <button
                     onClick={() => setActiveTab('notifications')}
-                    className={`w-full text-left p-2.5 rounded-xs flex items-center gap-2.5 transition-colors cursor-pointer ${
-                      activeTab === 'notifications' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25]'
+                    className={`shrink-0 md:w-full text-left px-3 py-2 sm:p-2.5 rounded-xs flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap ${
+                      activeTab === 'notifications' ? 'bg-[#003F25] text-white' : 'hover:bg-gray-100 text-[#003F25] bg-gray-50 md:bg-transparent'
                     }`}
                   >
-                    <Bell size={16} />
+                    <Bell size={15} />
                     <span>Drop Alerts & Sourcing</span>
                   </button>
                 </nav>
               </div>
 
               <button
-                onClick={() => setIsAuthenticated(false)}
+                onClick={handleSignOut}
                 className="w-full py-2.5 text-center text-[12px] text-[#79867D] hover:text-red-600 underline cursor-pointer"
               >
                 Log Out of Account
@@ -354,57 +515,159 @@ export default function AccountPage({
               {/* TAB: ORDERS */}
               {activeTab === 'orders' && (
                 <div>
-                  <h2 className="text-xl font-extrabold text-[#003F25] uppercase tracking-tight mb-2">
-                    Studio Order Holds & History
-                  </h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
+                    <h2 className="text-xl font-extrabold text-[#003F25] uppercase tracking-tight">
+                      Order Holds & Fulfillment
+                    </h2>
+                    <span className="text-[12px] font-bold text-[#79867D]">
+                      {ordersLoading
+                        ? 'Loading\u2026'
+                        : `${orders.length} ${orders.length === 1 ? 'Record' : 'Records'} ${ordersSource === 'api' ? 'On File With The Showroom' : 'Saved On This Device'}`}
+                    </span>
+                  </div>
                   <p className="text-[13px] text-[#79867D] mb-6">
-                    Archive reservations and orders dispatched from the Coimbatore showroom.
+                    Real-time status of garment reservations, domestic courier tracking, and atelier pickups.
                   </p>
 
-                  <div className="space-y-4">
-                    {orders.map((ord) => (
-                      <div key={ord.id} className="border border-[#E0E5E1] p-5 bg-white">
-                        <div className="flex flex-wrap items-center justify-between pb-3 border-b border-gray-100 gap-2 mb-4">
-                          <div>
-                            <span className="text-[11px] font-bold text-[#79867D] uppercase tracking-wider block">Order Reference</span>
-                            <span className="text-[13px] font-mono font-bold text-[#003F25]">#{ord.id}</span>
-                          </div>
-                          <div>
-                            <span className="text-[11px] font-bold text-[#79867D] uppercase tracking-wider block">Date</span>
-                            <span className="text-[12px] text-[#1F2937]">{ord.date}</span>
-                          </div>
-                          <div>
-                            <span className="text-[11px] font-bold text-[#79867D] uppercase tracking-wider block">Status</span>
-                            <span className={`text-[12px] font-bold ${ord.statusColor}`}>{ord.status}</span>
-                          </div>
-                          <div>
-                            <span className="text-[11px] font-bold text-[#79867D] uppercase tracking-wider block">Tracking</span>
-                            <span className="text-[12px] font-mono text-[#003F25]">{ord.trackingNumber}</span>
-                          </div>
-                        </div>
+                  {ordersSource === 'device' && !ordersLoading && orders.length > 0 && (
+                    <div className="mb-5 p-3 bg-amber-50 border border-amber-200 text-[12px] text-amber-800 flex items-start gap-2">
+                      <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                      <span>
+                        The store API is unreachable, so this list is only the holds filed on this device.
+                      </span>
+                    </div>
+                  )}
 
-                        <div className="divide-y divide-gray-100">
-                          {ord.items.map((item, idx) => (
-                            <div key={idx} className="py-2.5 flex items-center justify-between text-[12px]">
-                              <div className="flex items-center gap-3">
-                                <img src={item.image} alt={item.title} className="w-12 h-14 object-cover border border-gray-200" />
-                                <div>
-                                  <h4 className="font-bold text-[#003F25] uppercase">{item.title}</h4>
-                                  <span className="text-[#79867D] capitalize">{item.colour} • Size {item.size}</span>
-                                </div>
+                  {orders.length === 0 ? (
+                    <div className="border border-dashed border-[#E0E5E1] p-12 text-center bg-gray-50/50">
+                      <Package size={32} className="mx-auto text-gray-400 mb-3" />
+                      <h3 className="text-sm font-bold text-[#111111] uppercase tracking-wider mb-1">No Orders Found</h3>
+                      <p className="text-xs text-gray-500 mb-4">You have not placed any garment orders or showroom holds yet.</p>
+                      <button
+                        onClick={onNavigateCollection}
+                        className="px-5 py-2.5 bg-[#003F25] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#002e1b] cursor-pointer"
+                      >
+                        Explore Collection
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {orders.map((ord) => {
+                        const orderRef = ord.orderId || ord.id;
+                        const isCancellable = isCancellableStatus(ord.status);
+                        const statusBadgeClass = 
+                          ord.status === 'Cancelled' ? 'bg-rose-50 text-rose-800 border-rose-200' :
+                          ord.status === 'Delivered' ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                          (ord.status === 'Shipped' || ord.status === 'Dispatched') ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                          (ord.status === 'Confirmed' || ord.status === 'Processing') ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                          'bg-amber-50 text-amber-800 border-amber-200';
+
+                        return (
+                          <div key={ord.id || ord.orderId} className="border border-[#E0E5E1] p-5 bg-white shadow-xs">
+                            {/* Order Header */}
+                            <div className="flex flex-wrap items-center justify-between pb-3 border-b border-gray-100 gap-2 mb-4">
+                              <div>
+                                <span className="text-[10px] font-bold text-[#79867D] uppercase tracking-wider block">Order Reference</span>
+                                <span className="text-[13px] font-mono font-bold text-[#003F25]">#{orderRef}</span>
                               </div>
-                              <button
-                                onClick={() => onOpenProduct && onOpenProduct(item)}
-                                className="text-[11px] text-[#003F25] font-semibold underline hover:opacity-80"
-                              >
-                                View Piece ↗
-                              </button>
+                              <div>
+                                <span className="text-[10px] font-bold text-[#79867D] uppercase tracking-wider block">Order Date</span>
+                                <span className="text-[12px] text-[#1F2937]">{ord.date}</span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-bold text-[#79867D] uppercase tracking-wider block">Status</span>
+                                <span className={`inline-block px-2.5 py-0.5 text-[11px] font-bold border uppercase rounded-xs ${statusBadgeClass}`}>
+                                  {ord.status || 'New Hold'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-[10px] font-bold text-[#79867D] uppercase tracking-wider block">Grand Total</span>
+                                <span className="text-[13px] font-bold text-[#111111]">
+                                  {ord.grandTotal || ord.totalAmount || 'Price on enquiry'}
+                                </span>
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+
+                            {/* Tracking & Courier Info (if shipped) */}
+                            {ord.trackingNumber && ord.trackingNumber !== 'Pending' && (
+                              <div className="mb-4 p-3 bg-emerald-50/60 border border-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 text-emerald-900 font-medium">
+                                  <Truck size={15} />
+                                  <span>Courier Tracking: <strong className="font-mono">{ord.trackingNumber}</strong></span>
+                                </div>
+                                <span className="text-[11px] text-emerald-800 font-bold uppercase tracking-wider">
+                                  {ord.courier || 'Domestic Express'} • In Transit
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Delivery & Promo Meta */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#79867D] mb-4 pb-3 border-b border-gray-50">
+                              <div>
+                                <span className="font-semibold text-gray-700">Fulfillment:</span>{' '}
+                                {deliveryLabel(ord.deliveryMethod)}
+                                {ord.shippingAddress?.city && ` (${ord.shippingAddress.city}, ${ord.shippingAddress.state || ''})`}
+                              </div>
+                              {ord.appliedPromo && (
+                                <div>
+                                  <span className="font-semibold text-gray-700">Privilege Code:</span>{' '}
+                                  <span className="font-mono font-bold text-[#003F25]">{ord.appliedPromo}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Items List */}
+                            <div className="divide-y divide-gray-100">
+                              {(ord.items || []).map((item, idx) => (
+                                <div key={idx} className="py-2.5 flex items-center justify-between text-[12px]">
+                                  <div className="flex items-center gap-3">
+                                    <img
+                                      src={item.image || '/assets/products/extra-wide-denim.jpg'}
+                                      alt={item.title}
+                                      className="w-12 h-14 object-cover border border-gray-200"
+                                      onError={(e) => { e.target.src = '/assets/products/extra-wide-denim.jpg'; }}
+                                    />
+                                    <div>
+                                      <h4 className="font-bold text-[#003F25] uppercase">{item.title}</h4>
+                                      <span className="text-[#79867D] capitalize">
+                                        {item.colour || 'vintage'} • Size {item.size || 'One Size'}
+                                        {item.quantity ? ` • Qty ${item.quantity}` : ''}
+                                      </span>
+                                      <div className="font-medium text-[#111111]">{item.price}</div>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => onOpenProduct && onOpenProduct(item)}
+                                    className="text-[11px] text-[#003F25] font-semibold underline hover:opacity-80 cursor-pointer"
+                                  >
+                                    View Piece ↗
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Action Row */}
+                            <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                              <span className="text-[11px] text-gray-400">
+                                Protected by TONTO Atelier Hold Protocol
+                              </span>
+
+                              {isCancellable && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCancelOrder(orderRef)}
+                                  className="text-[11px] text-rose-700 hover:text-rose-900 font-bold underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <XCircle size={13} />
+                                  <span>Cancel Order Hold</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -429,8 +692,9 @@ export default function AccountPage({
                       <input
                         type="email"
                         value={userProfile.email}
-                        onChange={(e) => setUserProfile({ ...userProfile, email: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 focus:border-[#003F25] focus:outline-none rounded-xs"
+                        readOnly
+                        title="Your sign-in address is managed by the showroom"
+                        className="w-full px-3 py-2 border border-gray-200 bg-gray-50 text-gray-500 rounded-xs cursor-not-allowed"
                       />
                     </div>
                     <div>
@@ -475,11 +739,22 @@ export default function AccountPage({
                       </div>
                     </div>
 
+                    {profileNote && (
+                      <div className={`p-3 text-[12px] rounded-xs flex items-center gap-2 ${
+                        profileNote.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-800 border border-green-200'
+                      }`}>
+                        {profileNote.type === 'error' ? <AlertCircle size={15} /> : <Check size={15} />}
+                        <span>{profileNote.text}</span>
+                      </div>
+                    )}
+
                     <button
-                      onClick={() => alert('Profile updated successfully.')}
-                      className="mt-4 px-6 py-2.5 bg-[#003F25] text-white text-[12px] font-bold uppercase tracking-wider hover:bg-[#002e1b] transition-colors cursor-pointer"
+                      onClick={handleSaveProfile}
+                      disabled={savingProfile}
+                      className="mt-4 px-6 py-2.5 bg-[#003F25] text-white text-[12px] font-bold uppercase tracking-wider hover:bg-[#002e1b] transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-wait flex items-center gap-2"
                     >
-                      Save Preferences
+                      {savingProfile && <RefreshCw size={14} className="animate-spin" />}
+                      <span>{savingProfile ? 'Saving\u2026' : 'Save Preferences'}</span>
                     </button>
                   </div>
                 </div>
@@ -492,6 +767,15 @@ export default function AccountPage({
                     Saved Delivery Addresses
                   </h2>
                   <div className="space-y-4 max-w-xl">
+                    {addresses.length === 0 && (
+                      <div className="border border-dashed border-[#E0E5E1] p-8 text-center bg-gray-50/50">
+                        <MapPin size={26} className="mx-auto text-gray-400 mb-2" />
+                        <h3 className="text-[13px] font-bold text-[#111111] uppercase tracking-wider mb-1">No Saved Addresses</h3>
+                        <p className="text-xs text-gray-500">
+                          Add a delivery address at checkout and it will be kept here for your next hold.
+                        </p>
+                      </div>
+                    )}
                     {addresses.map((addr) => (
                       <div key={addr.id} className="border border-[#E0E5E1] p-5 bg-white relative">
                         {addr.isDefault && (
@@ -548,13 +832,13 @@ export default function AccountPage({
 
                     <label className="flex items-center justify-between p-3 border border-gray-100 hover:bg-gray-50 cursor-pointer">
                       <div>
-                        <strong className="block text-[13px] text-[#003F25]">Studio Showroom Private Hours</strong>
+                        <strong className="block text-[13px] text-[#003F25]">Showroom Private Hours</strong>
                         <span className="text-[11px] text-[#79867D]">Invitations to exclusive in-person try-on events in Coimbatore.</span>
                       </div>
                       <input
                         type="checkbox"
-                        checked={notifications.studioAppointments}
-                        onChange={(e) => setNotifications({ ...notifications, studioAppointments: e.target.checked })}
+                        checked={notifications.showroomAppointments}
+                        onChange={(e) => setNotifications({ ...notifications, showroomAppointments: e.target.checked })}
                         className="accent-[#003F25] w-4 h-4 cursor-pointer"
                       />
                     </label>

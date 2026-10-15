@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from './ProductCard';
 import FilterDrawer from './FilterDrawer';
+import { displayPrice } from '../data/priceFallbacks';
 
 export default function CollectionView({
   products = [],
@@ -44,6 +45,14 @@ export default function CollectionView({
   const [selectedAvailability, setSelectedAvailability] = useState(initialFilters.availability);
   const [gridCols, setGridCols] = useState(4); // 2 or 4
 
+  // Show the store's price for each piece; unpriced pieces stay "on enquiry"
+  const catalog = useMemo(() => {
+    return (products || []).map((p) => ({
+      ...p,
+      price: displayPrice(p)
+    }));
+  }, [products]);
+
   // Keep state synced with URL query parameters
   useEffect(() => {
     const params = new URLSearchParams();
@@ -62,7 +71,7 @@ export default function CollectionView({
 
   // Filter & Sort Logic with verified real data
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    let result = [...catalog];
 
     // Category filter matching MNML categories
     if (selectedCategory && selectedCategory !== 'All') {

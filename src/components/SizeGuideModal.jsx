@@ -30,7 +30,7 @@ export default function SizeGuideModal({ isOpen, onClose, category = 'Denim' }) 
 
       {/* Modal Dialog */}
       <div
-        className="relative w-full max-w-lg bg-white border border-[#E0E5E1] shadow-2xl z-10 p-6 sm:p-8 rounded-xs text-left animate-scale-up"
+        className="relative w-full max-w-lg bg-white border border-[#E0E5E1] shadow-2xl z-10 p-4 sm:p-8 rounded-xs text-left animate-scale-up max-h-[92vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
       >
@@ -147,7 +147,7 @@ export default function SizeGuideModal({ isOpen, onClose, category = 'Denim' }) 
         </div>
 
         <div className="p-3 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs text-[11px] text-[#6B7280]">
-          <strong className="text-[#003F25]">Studio Note:</strong> Individual thrift and surplus items can vary by 0.5–1 inch due to specialized wash treatments. For custom flat measurements of any piece, use the "Ask about this piece" button.
+          <strong className="text-[#003F25]">Care Note:</strong> Individual thrift and surplus items can vary by 0.5–1 inch due to specialized wash treatments. For custom flat measurements of any piece, use the "Ask about this piece" button.
         </div>
       </div>
     </div>,

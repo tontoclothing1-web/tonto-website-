@@ -1,10 +1,13 @@
 import React, { useEffect } from 'react';
-import { X, Lock, ArrowUpRight, Bookmark } from 'lucide-react';
+import { X, Lock, ArrowUpRight, Bookmark, RefreshCw, AlertCircle } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
+import { submitWaitlist, mirror } from '../lib/capture';
 
 export default function AccountModal({ isOpen, onClose, onOpenSaved, onNavigateAccount }) {
   const [emailOrPhone, setEmailOrPhone] = React.useState('');
   const [subscribed, setSubscribed] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [subscribeError, setSubscribeError] = React.useState('');
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -22,13 +25,53 @@ export default function AccountModal({ isOpen, onClose, onOpenSaved, onNavigateA
 
   if (!isOpen) return null;
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!emailOrPhone.trim()) return;
+    const value = emailOrPhone.trim();
+    if (!value || isSubmitting) return;
+
+    const isEmail = value.includes('@');
+    if (isEmail && !/^\S+@\S+\.\S+$/.test(value)) {
+      setSubscribeError('Enter a valid email address.');
+      return;
+    }
+    if (!isEmail && value.replace(/\D/g, '').length < 8) {
+      setSubscribeError('Enter a reachable email or phone number.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubscribeError('');
+
+    // POST /api/leads/waitlist accepts either an email or a phone, which is what
+    // this field offers. Without it the address only ever lived in this browser.
+    const result = await submitWaitlist({
+      dropName: 'Coimbatore Drop Alerts',
+      email: isEmail ? value : undefined,
+      phone: isEmail ? undefined : value
+    });
+
+    if (result.rejected) {
+      setIsSubmitting(false);
+      setSubscribeError(result.error || 'Could not add that address to the alert list.');
+      return;
+    }
+
+    mirror('tonto_admin_leads', {
+      id: `LEAD-${Date.now().toString(36).toUpperCase().slice(-6)}`,
+      name: isEmail ? value.split('@')[0] : 'Store Shopper',
+      phone: isEmail ? '' : value,
+      email: isEmail ? value : '',
+      source: 'Account Modal Drop Alerts',
+      interest: 'Coimbatore Showroom Drop Notifications',
+      stage: 'New',
+      date: new Date().toISOString().split('T')[0],
+      notes: 'Joined drop alerts from the account modal.'
+    });
+
+    setIsSubmitting(false);
     setSubscribed(true);
-    setTimeout(() => {
-      // keep subscribed message
-    }, 2000);
+    setEmailOrPhone('');
   };
 
   return (
@@ -74,21 +117,34 @@ export default function AccountModal({ isOpen, onClose, onOpenSaved, onNavigateA
               ✓ You are on the private TONTO drop notification list.
             </div>
           ) : (
-            <form onSubmit={handleSubscribe} className="flex gap-2">
-              <input
-                type="text"
-                required
-                value={emailOrPhone}
-                onChange={(e) => setEmailOrPhone(e.target.value)}
-                placeholder="Email or phone number"
-                className="flex-1 px-3 py-2 text-[12px] border border-gray-300 focus:border-[#003F25] focus:outline-none rounded-xs"
-              />
-              <button
-                type="submit"
-                className="px-3.5 py-2 bg-[#003F25] text-white text-[11px] font-bold uppercase tracking-wider hover:bg-[#002e1b] transition-colors rounded-xs cursor-pointer"
-              >
-                Join
-              </button>
+            <form onSubmit={handleSubscribe} className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  required
+                  value={emailOrPhone}
+                  onChange={(e) => {
+                    setEmailOrPhone(e.target.value);
+                    if (subscribeError) setSubscribeError('');
+                  }}
+                  placeholder="Email or phone number"
+                  className="flex-1 px-3 py-2 text-[12px] border border-gray-300 focus:border-[#003F25] focus:outline-none rounded-xs"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-3.5 py-2 bg-[#003F25] text-white text-[11px] font-bold uppercase tracking-wider hover:bg-[#002e1b] transition-colors rounded-xs cursor-pointer disabled:opacity-60 disabled:cursor-wait flex items-center gap-1.5"
+                >
+                  {isSubmitting && <RefreshCw size={12} className="animate-spin" />}
+                  <span>{isSubmitting ? 'Joining' : 'Join'}</span>
+                </button>
+              </div>
+              {subscribeError && (
+                <p className="text-[11px] text-red-600 flex items-center gap-1.5">
+                  <AlertCircle size={12} className="shrink-0" />
+                  <span>{subscribeError}</span>
+                </p>
+              )}
             </form>
           )}
         </div>

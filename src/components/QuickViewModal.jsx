@@ -80,7 +80,7 @@ export default function QuickViewModal({
 
       {/* Card Dialog */}
       <div
-        className="relative w-full max-w-3xl bg-white border border-[#E0E5E1] shadow-2xl z-10 overflow-hidden flex flex-col md:flex-row my-auto animate-scale-up"
+        className="relative w-full max-w-3xl bg-white border border-[#E0E5E1] shadow-2xl z-10 overflow-y-auto max-h-[92vh] flex flex-col md:flex-row my-auto animate-scale-up"
         role="dialog"
         aria-modal="true"
         aria-labelledby="quickview-title"
@@ -270,9 +270,10 @@ export default function QuickViewModal({
             </button>
 
             <button
+              type="button"
               onClick={() => {
-                onClose();
-                onOpenEnquiry(product, selectedSize);
+                onClose?.();
+                onOpenEnquiry?.(product, selectedSize);
               }}
               className="w-full py-3 border border-[#003F25] text-[#003F25] hover:bg-[#F9FAF9] text-[12px] font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >

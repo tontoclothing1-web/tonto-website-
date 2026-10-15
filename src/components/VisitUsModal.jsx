@@ -1,16 +1,14 @@
 import React, { useEffect } from 'react';
-import { X, MapPin, ArrowUpRight } from 'lucide-react';
-
-const InstagramIcon = ({ size = 18, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-  </svg>
-);
+import { X, MapPin, ArrowUpRight, Phone, MessageCircle, Navigation } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 
-export default function VisitUsModal({ isOpen, onClose, onOpenEnquiry }) {
+export default function VisitUsModal({ isOpen, onClose }) {
+  const storeAddress = "Opposite to Prozone Mall, Sathy Road, Coimbatore, Tamil Nadu - 641035, India";
+  const landmark = "Opposite Prozone Mall";
+  const phoneNumber = "+91 82483 21214";
+  const phoneRaw = "+918248321214";
+  const googleMapsShareUrl = "https://share.google/6kenpRy2HPjbnZ9Lo";
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
@@ -45,7 +43,7 @@ export default function VisitUsModal({ isOpen, onClose, onOpenEnquiry }) {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[#003F25] hover:opacity-70 transition-opacity rounded-full focus:outline-none"
+          className="absolute top-4 right-4 p-2 text-[#003F25] hover:opacity-70 transition-opacity rounded-full focus:outline-none cursor-pointer"
           aria-label="Close dialog"
         >
           <X size={18} strokeWidth={2} />
@@ -54,61 +52,73 @@ export default function VisitUsModal({ isOpen, onClose, onOpenEnquiry }) {
         <div className="flex items-center gap-2 text-[#003F25] mb-2">
           <MapPin size={18} strokeWidth={2.2} />
           <span className="text-[11px] font-bold tracking-[0.15em] uppercase text-[#79867D]">
-            STORE LOCATION
+            STORE LOCATION & CONTACT
           </span>
         </div>
 
-        <h2 id="visit-modal-title" className="text-xl sm:text-2xl font-extrabold text-[#003F25] uppercase tracking-tight mb-4">
-          Visit TONTO
+        <h2 id="visit-modal-title" className="text-xl sm:text-2xl font-extrabold text-[#111111] uppercase tracking-tight mb-4 font-['Futura_PT_Book',sans-serif]">
+          VISIT TONTO
         </h2>
 
         <div className="space-y-4 text-[13px] text-[#374151] leading-relaxed">
+          {/* Location Box */}
           <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-1.5">
-            <p className="font-bold text-[#003F25] text-[14px]">
-              Coimbatore, Tamil Nadu, India
+            <span className="text-[10px] font-mono font-bold text-[#003F25] uppercase tracking-wider block">
+              LOCATION
+            </span>
+            <p className="font-bold text-[#111111] text-[13.5px]">
+              {storeAddress}
             </p>
             <p className="text-[12px] text-[#79867D]">
-              Physical studio showroom & archive fitting space.
+              Landmark: <span className="text-[#003F25] font-semibold">{landmark}</span>
             </p>
           </div>
 
-          <div className="text-[12px] text-[#6B7280] space-y-2 border-l-2 border-[#003F25] pl-3 py-1">
-            <p className="font-medium text-[#111827]">
-              Studio Visits & Fitting Appointments
-            </p>
-            <p>
-              To respect curated piece drops, in-person studio visits and styling previews are coordinated by advance appointment.
-            </p>
-          </div>
-
-          <div className="space-y-2.5 pt-2">
-            <button
-              onClick={() => {
-                onClose();
-                onOpenEnquiry({
-                  id: 'studio-appointment',
-                  title: 'Studio Fitting Appointment (Coimbatore)',
-                  colour: 'In-person trial',
-                  fit: 'Custom fittings',
-                  price: 'Free appointment',
-                  images: ['/assets/hero-banner-hd.jpg']
-                });
-              }}
-              className="w-full py-3.5 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold tracking-wider uppercase flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <span>Request Studio Appointment</span>
-              <ArrowUpRight size={15} />
-            </button>
-
+          {/* Phone Box */}
+          <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-1.5">
+            <span className="text-[10px] font-mono font-bold text-[#003F25] uppercase tracking-wider block">
+              PHONE NUMBER
+            </span>
             <a
-              href={BRAND_INFO.instagramUrl}
+              href={`tel:${phoneRaw}`}
+              className="text-lg font-extrabold text-[#003F25] tracking-tight hover:underline block"
+            >
+              {phoneNumber}
+            </a>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-2.5 pt-1">
+            <a
+              href={googleMapsShareUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-3 border border-[#003F25] text-[#003F25] hover:bg-gray-50 text-[12px] font-bold tracking-wider uppercase flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full py-3.5 bg-[#003F25] hover:bg-[#002e1b] text-white text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer rounded-xs shadow-xs"
             >
-              <InstagramIcon size={15} />
-              <span>DM on Instagram @{BRAND_INFO.instagram}</span>
+              <Navigation size={14} />
+              <span>Open in Google Maps</span>
+              <ArrowUpRight size={14} />
             </a>
+
+            <div className="grid grid-cols-2 gap-2">
+              <a
+                href={`tel:${phoneRaw}`}
+                className="py-2.5 px-3 bg-white border border-[#003F25] text-[#003F25] hover:bg-[#003F25] hover:text-white text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer rounded-xs"
+              >
+                <Phone size={13} />
+                <span>Call Store</span>
+              </a>
+
+              <a
+                href={`https://wa.me/${phoneRaw.replace('+', '')}?text=Hi%20TONTO,%20I%20am%20enquiring%20about%20your%20store%20location.`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2.5 px-3 bg-[#128C7E] hover:bg-[#075E54] text-white text-[11px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors cursor-pointer rounded-xs"
+              >
+                <MessageCircle size={14} />
+                <span>WhatsApp</span>
+              </a>
+            </div>
           </div>
         </div>
 

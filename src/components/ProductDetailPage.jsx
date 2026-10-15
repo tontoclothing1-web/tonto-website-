@@ -280,10 +280,17 @@ export default function ProductDetailPage({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-[#79867D]">Availability</span>
-                <span className="font-medium text-[#003F25] flex items-center gap-1">
-                  <Check size={14} strokeWidth={2.5} />
-                  <span>{product.availability}</span>
-                </span>
+                {(product.inStock === false || product.stock === 0) ? (
+                  <span className="font-medium text-rose-700 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-rose-600 inline-block"></span>
+                    <span>Sold Out / In Atelier Archive</span>
+                  </span>
+                ) : (
+                  <span className="font-medium text-[#003F25] flex items-center gap-1">
+                    <Check size={14} strokeWidth={2.5} />
+                    <span>{product.availability || `${product.stock || 5} pieces left`}</span>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -344,7 +351,8 @@ export default function ProductDetailPage({
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    className="p-2 hover:bg-gray-100 text-[#003F25] transition-colors cursor-pointer"
+                    disabled={product.inStock === false || product.stock === 0}
+                    className="p-2 hover:bg-gray-100 text-[#003F25] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label="Decrease quantity"
                   >
                     <Minus size={13} />
@@ -355,7 +363,8 @@ export default function ProductDetailPage({
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="p-2 hover:bg-gray-100 text-[#003F25] transition-colors cursor-pointer"
+                    disabled={product.inStock === false || product.stock === 0}
+                    className="p-2 hover:bg-gray-100 text-[#003F25] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                     aria-label="Increase quantity"
                   >
                     <Plus size={13} />
@@ -363,16 +372,28 @@ export default function ProductDetailPage({
                 </div>
               </div>
 
-              <button
-                onClick={() => onAddToCart(product, selectedSize, quantity)}
-                className="w-full py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold tracking-wider uppercase flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003F25]"
-              >
-                <ShoppingBag size={17} strokeWidth={2} />
-                <span>Add To Bag {quantity > 1 ? `(${quantity})` : ''} {selectedSize ? `• ${selectedSize}` : ''}</span>
-              </button>
+              {(product.inStock === false || product.stock === 0) ? (
+                <button
+                  type="button"
+                  disabled
+                  className="w-full py-4 bg-gray-200 text-gray-500 text-[13px] font-bold tracking-wider uppercase flex items-center justify-center gap-2 cursor-not-allowed rounded-xs"
+                >
+                  <ShoppingBag size={17} strokeWidth={2} />
+                  <span>SOLD OUT / IN ATELIER ARCHIVE</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => onAddToCart(product, selectedSize, quantity)}
+                  className="w-full py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold tracking-wider uppercase flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm focus:outline-none focus:ring-2 focus:ring-[#003F25]"
+                >
+                  <ShoppingBag size={17} strokeWidth={2} />
+                  <span>Add To Bag {quantity > 1 ? `(${quantity})` : ''} {selectedSize ? `• ${selectedSize}` : ''}</span>
+                </button>
+              )}
 
               <button
-                onClick={() => onOpenEnquiry(product, selectedSize)}
+                type="button"
+                onClick={() => onOpenEnquiry?.(product, selectedSize)}
                 className="w-full py-3.5 border border-[#003F25] text-[#003F25] hover:bg-[#F9FAF9] text-[13px] font-bold tracking-wider uppercase flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span>Ask about this piece</span>
@@ -423,22 +444,22 @@ export default function ProductDetailPage({
                 )}
               </div>
 
-              {/* Studio & Worldwide Shipping */}
+              {/* Showroom & Worldwide Shipping */}
               <div>
                 <button
                   onClick={() => toggleAccordion('shipping')}
                   className="w-full py-3.5 flex items-center justify-between font-bold text-[#003F25] uppercase tracking-wider text-left cursor-pointer"
                 >
-                  <span>Coimbatore Studio & Shipping</span>
+                  <span>Coimbatore Showroom & Shipping</span>
                   {activeAccordion === 'shipping' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {activeAccordion === 'shipping' && (
                   <div className="pb-4 text-[#4B5563] text-[12px] space-y-2 leading-relaxed">
                     <p>
-                      <strong>Studio Showroom:</strong> Coimbatore, Tamil Nadu, India. In-person fitting appointments available by request.
+                      <strong>Showroom:</strong> Coimbatore, Tamil Nadu, India. In-person fitting appointments available by request.
                     </p>
                     <p>
-                      <strong>Domestic & Global Shipping:</strong> Dispatched within 24–48 hours from Coimbatore studio. Express delivery available across India and international regions.
+                      <strong>Domestic & Global Shipping:</strong> Dispatched within 24–48 hours from Coimbatore. Express delivery available across India and international regions.
                     </p>
                   </div>
                 )}
@@ -494,7 +515,8 @@ export default function ProductDetailPage({
 
         <div className="flex items-center gap-2 shrink-0">
           <button
-            onClick={() => onOpenEnquiry(product, selectedSize)}
+            type="button"
+            onClick={() => onOpenEnquiry?.(product, selectedSize)}
             className="p-2.5 border border-[#003F25] text-[#003F25] hover:bg-gray-50 rounded-xs transition-colors cursor-pointer"
             title="Ask about piece"
             aria-label="Enquire about piece"

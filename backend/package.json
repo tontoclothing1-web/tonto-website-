@@ -1,0 +1,29 @@
+{
+  "name": "tonto-clothing-backend",
+  "version": "1.0.0",
+  "description": "TONTO Clothing production API — auth, catalog, orders, admin",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.44.0",
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.8.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "express-validator": "^7.1.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, memo } from 'react';
 import { Bookmark, ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function ProductCard({
+function ProductCard({
   product,
   isSaved,
   onToggleSave,
@@ -161,9 +161,15 @@ export default function ProductCard({
         onMouseUp={handleMouseUp}
       >
         {/* MNML Tag/Badge in Top-Left */}
-        <span className="absolute top-2 left-2 z-10 bg-[#F4EDE5] text-[#222222] text-[10.5px] px-2 py-0.5 lowercase tracking-normal font-normal font-['Futura_PT_Book',sans-serif] pointer-events-none">
-          {product.isTrending ? 'back in stock' : 'sale'}
-        </span>
+        {(product.inStock === false || product.stock === 0) ? (
+          <span className="absolute top-2 left-2 z-10 bg-black text-white text-[10px] px-2 py-0.5 uppercase tracking-wider font-bold pointer-events-none shadow-xs">
+            SOLD OUT
+          </span>
+        ) : (
+          <span className="absolute top-2 left-2 z-10 bg-white/95 text-[#111111] border border-[#E0E5E1] text-[10.5px] px-2 py-0.5 lowercase tracking-normal font-normal font-['Futura_PT_Book',sans-serif] pointer-events-none shadow-xs">
+            {product.badge || (product.isTrending ? 'back in stock' : (product.isNew ? 'new arrival' : 'sale'))}
+          </span>
+        )}
 
         {/* Sliding Carousel Track */}
         <div
@@ -173,17 +179,28 @@ export default function ProductCard({
             transition: isDragging ? 'none' : 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)'
           }}
         >
-          {images.map((img, i) => (
-            <div key={i} className="min-w-full h-full relative shrink-0">
-              <img
-                src={img}
-                alt={`${product.alt || product.title} - view ${i + 1}`}
-                className="w-full h-full object-cover object-center pointer-events-none select-none"
-                loading={i === 0 ? 'eager' : 'lazy'}
-                draggable={false}
-              />
-            </div>
-          ))}
+          {images.map((img, i) => {
+            const shouldLoad = i === 0 || i === currentIndex || isHovered || isDragging;
+            return (
+              <div key={i} className="min-w-full h-full relative shrink-0">
+                {shouldLoad ? (
+                  <img
+                    src={img}
+                    alt={`${product.alt || product.title} - view ${i + 1}`}
+                    className="w-full h-full object-cover object-center pointer-events-none select-none"
+                    // First view is the one the shopper actually sees (and the LCP
+                    // candidate); the alternates wait until they are needed.
+                    loading={i === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={i === 0 ? 'high' : 'auto'}
+                    decoding="async"
+                    draggable={false}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-[#F5F5F5]" />
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Swipe Left Arrow (Prev Image) */}
@@ -271,12 +288,16 @@ export default function ProductCard({
             e.stopPropagation();
             onQuickView(product);
           }}
-          className={`absolute bottom-0 left-0 right-0 z-20 bg-[#003F25] text-white py-2.5 px-4 flex items-center justify-between transition-transform duration-300 ease-out cursor-pointer hover:bg-[#002e1b] ${
+          className={`absolute bottom-0 left-0 right-0 z-20 ${
+            (product.inStock === false || product.stock === 0)
+              ? 'bg-black/90 text-white hover:bg-black'
+              : 'bg-[#003F25] text-white hover:bg-[#002e1b]'
+          } py-2.5 px-4 flex items-center justify-between transition-transform duration-300 ease-out cursor-pointer ${
             isHovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
           }`}
         >
           <span className="text-[11.5px] font-semibold tracking-wider uppercase">
-            QUICK VIEW
+            {(product.inStock === false || product.stock === 0) ? 'SOLD OUT • DETAILS' : 'QUICK VIEW'}
           </span>
           <ArrowUpRight size={14} strokeWidth={2} />
         </button>
@@ -343,3 +364,5 @@ export default function ProductCard({
     </div>
   );
 }
+
+export default memo(ProductCard);

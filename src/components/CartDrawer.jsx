@@ -64,16 +64,16 @@ export default function CartDrawer({
       <div className="relative w-full max-w-[420px] sm:max-w-[460px] h-full bg-white shadow-2xl z-10 flex flex-col justify-between text-left animate-slide-left">
         
         {/* Header */}
-        <div className="p-6 border-b border-[#E0E5E1] flex items-center justify-between">
+        <div className="p-4 sm:p-6 border-b border-[#E0E5E1] flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShoppingBag size={18} className="text-[#003F25]" strokeWidth={2.2} />
-            <h2 className="text-[14px] font-extrabold tracking-[0.08em] text-[#003F25] uppercase">
+            <h2 className="text-[13px] sm:text-[14px] font-extrabold tracking-[0.08em] text-[#003F25] uppercase">
               YOUR BAG ({totalQuantity})
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-[#003F25] hover:opacity-70 transition-opacity focus:outline-none"
+            className="p-1 text-[#003F25] hover:opacity-70 transition-opacity focus:outline-none cursor-pointer"
             aria-label="Close cart drawer"
           >
             <X size={18} strokeWidth={2} />
@@ -81,7 +81,7 @@ export default function CartDrawer({
         </div>
 
         {/* Cart Item List */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {cartItems.length > 0 ? (
             cartItems.map((item) => (
               <div
@@ -174,7 +174,7 @@ export default function CartDrawer({
             </div>
 
             <p className="text-[11px] text-[#79867D]">
-              Dispatched directly from Coimbatore studio showroom. Worldwide delivery.
+              Dispatched directly from Coimbatore showroom. Worldwide delivery.
             </p>
 
             <button
@@ -216,17 +216,20 @@ export default function CartDrawer({
 
             <div className="grid grid-cols-2 gap-2 pt-1">
               <button
+                type="button"
                 onClick={() => {
-                  onClose();
+                  onClose?.();
+                  const firstImg = cartItems[0]?.image || cartItems[0]?.images?.[0] || '/assets/products/extra-wide-denim.jpg';
                   const combinedPiece = {
                     id: 'bag-order',
                     title: `Bag Order (${totalQuantity} items)`,
-                    colour: cartItems.map(i => i.colour).join(', '),
+                    colour: cartItems.map(i => i.colour || 'Standard').join(', '),
                     fit: 'Multiple',
                     price: 'Order review',
-                    images: [cartItems[0]?.image || cartItems[0]?.images?.[0]]
+                    images: [firstImg],
+                    variants: ['Standard']
                   };
-                  onOpenEnquiry(combinedPiece);
+                  onOpenEnquiry?.(combinedPiece);
                 }}
                 className="py-2.5 border border-[#003F25] text-[#003F25] text-[11px] font-bold tracking-wider uppercase hover:bg-gray-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
               >

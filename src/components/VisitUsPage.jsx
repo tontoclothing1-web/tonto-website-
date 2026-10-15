@@ -1,242 +1,198 @@
-import React, { useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Calendar, PhoneCall, ArrowUpRight, Check, Send, Sparkles } from 'lucide-react';
+import React from 'react';
+import { ArrowLeft, MapPin, Phone, MessageCircle, ArrowUpRight, Navigation, PhoneCall } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 
-const InstagramIcon = ({ size = 16, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-  </svg>
-);
-
 export default function VisitUsPage({ onNavigateHome, onNavigateCollection }) {
-  const [appointmentName, setAppointmentName] = useState('');
-  const [appointmentPhone, setAppointmentPhone] = useState('');
-  const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentNotes, setAppointmentNotes] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!appointmentName.trim() || !appointmentPhone.trim()) return;
-    setIsSubmitted(true);
-  };
-
-  const handleWhatsAppBooking = () => {
-    const text = `Hi TONTO, I would like to schedule a studio visit at your Coimbatore showroom.\n\nName: ${appointmentName || 'Customer'}\nPreferred Date: ${appointmentDate || 'Upcoming weekend'}\nNotes: ${appointmentNotes || 'Interested in trying on denim and surplus pieces'}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-  };
+  const storeAddress = "Opposite to Prozone Mall, Sathy Road, Coimbatore, Tamil Nadu - 641035, India";
+  const landmark = "Opposite Prozone Mall";
+  const phoneNumber = "+91 82483 21214";
+  const phoneRaw = "+918248321214";
+  const googleMapsShareUrl = "https://share.google/6kenpRy2HPjbnZ9Lo";
+  const googleMapsEmbedUrl = "https://maps.google.com/maps?q=Tonto+Clothing+Opposite+Prozone+Mall+Coimbatore&t=&z=16&ie=UTF8&iwloc=&output=embed";
 
   return (
-    <div className="w-full bg-white text-[#111827] pb-24">
+    <div className="w-full bg-white text-[#111111] pb-24 selection:bg-[#003F25] selection:text-white">
       
-      {/* Breadcrumb Navigation */}
+      {/* 1. Breadcrumb Navigation */}
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
         <div className="flex items-center gap-1.5">
           <button
             onClick={onNavigateHome}
-            className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1"
+            className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1 font-medium"
           >
             <ArrowLeft size={14} />
             <span>home</span>
           </button>
           <span className="text-[#D1D5DB]">/</span>
-          <span className="text-[#003F25] font-semibold">visit us</span>
+          <span className="text-[#003F25] font-semibold tracking-wider uppercase">visit us</span>
         </div>
 
         <button
           onClick={onNavigateCollection}
-          className="hover:text-[#003F25] transition-colors text-[12px] underline cursor-pointer"
+          className="hover:text-[#003F25] transition-colors text-[12px] font-semibold tracking-wider uppercase underline underline-offset-4 cursor-pointer"
         >
           View Collection
         </button>
       </div>
 
-      {/* Hero Header */}
-      <div className="relative w-full h-[280px] sm:h-[360px] overflow-hidden bg-[#0A1A12] select-none">
-        <img
-          src="/assets/editorial/editorial-standing-camo.jpg"
-          alt="TONTO Coimbatore Studio"
-          className="w-full h-full object-cover object-center opacity-70"
-        />
-        <div className="absolute inset-0 bg-black/45 pointer-events-none" />
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-          <span className="text-[11px] font-bold tracking-[0.25em] text-white/90 uppercase mb-2">
-            STUDIO & SHOWROOM
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white uppercase mb-2">
-            VISIT TONTO COIMBATORE
-          </h1>
-          <p className="text-[13px] text-white/80 max-w-md">
-            Private try-ons, custom fit consultations, and firsthand archive selections.
-          </p>
+      {/* 2. Page Header */}
+      <div className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-10 sm:pt-14 pb-8 text-center sm:text-left">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F9FAF9] text-[#003F25] text-[11px] font-bold tracking-[0.2em] uppercase rounded-xs border border-[#E0E5E1] mb-3">
+          <MapPin size={13} className="text-[#003F25]" />
+          <span>STORE LOCATION & CONTACT</span>
         </div>
+        <h1 className="text-3xl sm:text-5xl font-extrabold uppercase tracking-tight text-[#111111] font-['Futura_PT_Book',sans-serif]">
+          VISIT TONTO CLOTHING
+        </h1>
+        <p className="text-[13.5px] sm:text-[14.5px] text-[#79867D] mt-2 max-w-xl">
+          Find our physical store in Coimbatore. Drop in for size fittings and in-store pickups.
+        </p>
       </div>
 
-      {/* Main Studio Information & Booking Form */}
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+      {/* 3. Core Content: Location Details, Phone Number & Map */}
+      <div className="max-w-[1200px] mx-auto px-5 sm:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
-          {/* Left Column: Location & Hours (6 cols) */}
-          <div className="lg:col-span-6 space-y-8 text-left">
-            <div>
-              <span className="text-[11px] font-bold tracking-[0.2em] text-[#79867D] uppercase block mb-1">
-                OUR LOCATION
-              </span>
-              <h2 className="text-2xl font-extrabold text-[#003F25] uppercase tracking-tight mb-4">
-                The Coimbatore Studio
-              </h2>
-              <div className="space-y-3 text-[13px] text-[#4B5563]">
-                <div className="flex items-start gap-3">
-                  <MapPin size={18} className="text-[#003F25] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block text-[#003F25]">Cross Cut Road, Gandhipuram</strong>
-                    <span>Coimbatore, Tamil Nadu, 641012, India</span>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Clock size={18} className="text-[#003F25] flex-shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block text-[#003F25]">Showroom & Fitting Hours</strong>
-                    <span>Monday to Saturday: 11:00 AM – 8:30 PM IST</span>
-                    <span className="block text-[11px] text-[#79867D]">Sunday by advance appointment</span>
-                  </div>
-                </div>
+          {/* Left Column: Location Details & Phone Number (5 cols) */}
+          <div className="lg:col-span-5 space-y-6 text-left">
+            
+            {/* Card 1: Location Details */}
+            <div className="p-6 sm:p-7 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-4 shadow-xs">
+              <div className="flex items-center gap-2 text-[#003F25]">
+                <MapPin size={20} strokeWidth={2.2} />
+                <span className="text-[11px] font-mono font-bold tracking-widest uppercase">
+                  STORE ADDRESS
+                </span>
               </div>
-            </div>
 
-            {/* Direct Connect Buttons */}
-            <div className="space-y-3 pt-4 border-t border-[#E0E5E1]">
-              <h3 className="text-[12px] font-bold text-[#003F25] uppercase tracking-wider">
-                Direct Studio Concierge
-              </h3>
+              <div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-[#111111] uppercase tracking-tight font-['Futura_PT_Book',sans-serif]">
+                  TONTO CLOTHING
+                </h2>
+                <p className="text-[14px] text-[#374151] mt-2 leading-relaxed font-medium">
+                  {storeAddress}
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  onClick={() => window.open('https://api.whatsapp.com/send?text=Hi%20TONTO,%20I%20would%20like%20to%20enquire%20about%20visiting%20your%20Coimbatore%20studio.', '_blank')}
-                  className="py-3 px-4 bg-[#128C7E] hover:bg-[#075E54] text-white text-[12px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer rounded-xs"
-                >
-                  <PhoneCall size={14} />
-                  <span>WhatsApp Studio</span>
-                </button>
+              <div className="pt-2 border-t border-[#E0E5E1] flex items-center justify-between text-[12px]">
+                <span className="text-[#79867D] font-mono uppercase">Landmark:</span>
+                <span className="font-bold text-[#003F25]">{landmark}</span>
+              </div>
 
+              {/* Direct Google Maps Share Link Button */}
+              <div className="pt-2">
                 <a
-                  href={BRAND_INFO.instagramUrl}
+                  href={googleMapsShareUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="py-3 px-4 border border-[#003F25] text-[#003F25] hover:bg-[#F9FAF9] text-[12px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer rounded-xs"
+                  className="w-full py-3.5 px-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer rounded-xs shadow-xs"
                 >
-                  <InstagramIcon size={15} />
-                  <span>Instagram @{BRAND_INFO.instagram}</span>
-                  <ArrowUpRight size={13} />
+                  <Navigation size={15} />
+                  <span>Open in Google Maps</span>
+                  <ArrowUpRight size={14} />
                 </a>
               </div>
             </div>
 
-            {/* In-Person Experience Perks */}
-            <div className="p-5 bg-[#F9FAF9] border border-[#E0E5E1] space-y-3 text-[12px] text-[#4B5563]">
-              <div className="flex items-center gap-2 text-[#003F25] font-bold uppercase tracking-wider">
-                <Sparkles size={16} />
-                <span>Showroom Private Appointments</span>
+            {/* Card 2: Phone Number & WhatsApp */}
+            <div className="p-6 sm:p-7 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-4 shadow-xs">
+              <div className="flex items-center gap-2 text-[#003F25]">
+                <Phone size={19} strokeWidth={2.2} />
+                <span className="text-[11px] font-mono font-bold tracking-widest uppercase">
+                  PHONE & WHATSAPP
+                </span>
               </div>
-              <ul className="space-y-1.5 list-disc list-inside">
-                <li>Pre-select archive pieces to be steamed and ready upon your arrival.</li>
-                <li>In-person waist and stack measurements for wide-leg denim.</li>
-                <li>Surplus overshirts and military outerwear inspection before release.</li>
-              </ul>
+
+              <div>
+                <span className="text-[11px] text-[#79867D] font-mono uppercase block mb-1">
+                  DIRECT CALL / WHATSAPP
+                </span>
+                <a
+                  href={`tel:${phoneRaw}`}
+                  className="text-2xl font-extrabold text-[#003F25] tracking-tight hover:underline block font-['Futura_PT_Book',sans-serif]"
+                >
+                  {phoneNumber}
+                </a>
+              </div>
+
+              {/* Action Buttons: Call & WhatsApp */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <a
+                  href={`tel:${phoneRaw}`}
+                  className="py-3 px-4 bg-white border border-[#003F25] text-[#003F25] hover:bg-[#003F25] hover:text-white text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer rounded-xs"
+                >
+                  <PhoneCall size={14} />
+                  <span>Call Store</span>
+                </a>
+
+                <a
+                  href={`https://wa.me/${phoneRaw.replace('+', '')}?text=Hi%20TONTO,%20I%20am%20enquiring%20about%20your%20store%20location%20and%20collection.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 px-4 bg-[#128C7E] hover:bg-[#075E54] text-white text-[12px] font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer rounded-xs"
+                >
+                  <MessageCircle size={15} />
+                  <span>WhatsApp</span>
+                </a>
+              </div>
             </div>
 
           </div>
 
-          {/* Right Column: Appointment Booking Form (6 cols) */}
-          <div className="lg:col-span-6">
-            <div className="border border-[#E0E5E1] p-6 sm:p-8 bg-white shadow-xs">
-              <h3 className="text-[14px] font-extrabold text-[#003F25] uppercase tracking-wider pb-3 border-b border-[#E0E5E1] mb-6">
-                Book a Studio Appointment
-              </h3>
-
-              {isSubmitted ? (
-                <div className="py-8 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-[#003F25] text-white flex items-center justify-center mx-auto">
-                    <Check size={24} strokeWidth={3} />
-                  </div>
-                  <h4 className="text-lg font-bold text-[#003F25] uppercase">
-                    Appointment Request Received
-                  </h4>
-                  <p className="text-[13px] text-[#4B5563] max-w-sm mx-auto">
-                    Thank you, <strong className="text-[#003F25]">{appointmentName}</strong>. Our Coimbatore team will confirm your time via WhatsApp at <strong className="text-[#003F25]">{appointmentPhone}</strong>.
-                  </p>
-                  <button
-                    onClick={handleWhatsAppBooking}
-                    className="mt-4 px-6 py-3 bg-[#128C7E] hover:bg-[#075E54] text-white text-[12px] font-bold uppercase tracking-wider transition-colors inline-flex items-center gap-2 cursor-pointer"
-                  >
-                    <Send size={14} />
-                    <span>Send Reminder to WhatsApp</span>
-                  </button>
+          {/* Right Column: Embedded Google Map (7 cols) */}
+          <div className="lg:col-span-7">
+            <div className="border border-[#E0E5E1] rounded-xs overflow-hidden shadow-xs bg-[#F9FAF9]">
+              
+              {/* Map Bar Header */}
+              <div className="px-5 py-3.5 bg-white border-b border-[#E0E5E1] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#003F25]" />
+                  <span className="text-[12px] font-bold uppercase tracking-wider text-[#111111]">
+                    LIVE MAP LOCATION
+                  </span>
                 </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4 text-left">
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#003F25] uppercase mb-1">Your Name *</label>
-                    <input
-                      type="text"
-                      required
-                      value={appointmentName}
-                      onChange={(e) => setAppointmentName(e.target.value)}
-                      placeholder="e.g. Aravind Shankar"
-                      className="w-full px-3 py-2.5 text-[13px] border border-gray-300 focus:border-[#003F25] focus:outline-none rounded-xs"
-                    />
-                  </div>
+                <a
+                  href={googleMapsShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] font-mono text-[#003F25] hover:underline font-bold inline-flex items-center gap-1"
+                >
+                  <span>share.google</span>
+                  <ArrowUpRight size={12} />
+                </a>
+              </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#003F25] uppercase mb-1">WhatsApp / Phone Number *</label>
-                    <input
-                      type="tel"
-                      required
-                      value={appointmentPhone}
-                      onChange={(e) => setAppointmentPhone(e.target.value)}
-                      placeholder="+91 98765 43210"
-                      className="w-full px-3 py-2.5 text-[13px] border border-gray-300 focus:border-[#003F25] focus:outline-none rounded-xs"
-                    />
-                  </div>
+              {/* Map Iframe */}
+              <div className="relative w-full aspect-[4/3] sm:aspect-[16/11] bg-gray-100">
+                <iframe
+                  title="TONTO Clothing Location Map"
+                  src={googleMapsEmbedUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  className="w-full h-full"
+                />
+              </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#003F25] uppercase mb-1">Preferred Date</label>
-                    <input
-                      type="date"
-                      value={appointmentDate}
-                      onChange={(e) => setAppointmentDate(e.target.value)}
-                      className="w-full px-3 py-2.5 text-[13px] border border-gray-300 focus:border-[#003F25] focus:outline-none rounded-xs"
-                    />
-                  </div>
+              {/* Map Footer Bar */}
+              <div className="p-4 bg-white border-t border-[#E0E5E1] flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+                <div className="text-[12px] text-[#79867D]">
+                  <strong className="text-[#111111]">Tonto Clothing</strong> • Opposite to Prozone Mall, Coimbatore
+                </div>
+                <a
+                  href={googleMapsShareUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-[#003F25] text-white text-[11px] font-bold uppercase tracking-wider hover:bg-[#002e1b] transition-colors rounded-xs shrink-0 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>Directions</span>
+                  <ArrowUpRight size={13} />
+                </a>
+              </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-[#003F25] uppercase mb-1">Items of Interest / Notes</label>
-                    <textarea
-                      rows={3}
-                      value={appointmentNotes}
-                      onChange={(e) => setAppointmentNotes(e.target.value)}
-                      placeholder="e.g. Looking for size 32 washed denim and vintage graphic tees."
-                      className="w-full px-3 py-2 text-[13px] border border-gray-300 focus:border-[#003F25] focus:outline-none rounded-xs"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <Calendar size={15} />
-                    <span>Request Studio Appointment</span>
-                  </button>
-
-                  <p className="text-[11px] text-[#79867D] text-center pt-1">
-                    Free appointments. Walk-ins are also welcome during regular showroom hours.
-                  </p>
-                </form>
-              )}
             </div>
           </div>
 

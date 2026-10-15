@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, ArrowUpRight } from 'lucide-react';
+import { submitNewsletter, mirror, readList } from '../lib/capture';
 
 const InstagramIcon = ({ size = 16, className = "" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -10,17 +11,66 @@ const InstagramIcon = ({ size = 16, className = "" }) => (
 );
 import { BRAND_INFO } from '../data/products';
 
-export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
+export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAccount, storeSettings, onNavigateAdmin }) {
   const [newsletterEmail, setNewsletterEmail] = React.useState('');
   const [newsletterSubscribed, setNewsletterSubscribed] = React.useState(false);
+  const [newsletterBusy, setNewsletterBusy] = React.useState(false);
+  const [newsletterNote, setNewsletterNote] = React.useState('');
 
-  const handleNewsletterSubmit = (e) => {
+  const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-    if (!newsletterEmail.trim()) return;
+    const email = newsletterEmail.trim().toLowerCase();
+    if (!email || newsletterBusy) return;
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setNewsletterNote('Enter a valid email address.');
+      return;
+    }
+
+    setNewsletterBusy(true);
+    setNewsletterNote('');
+
+    // POST /api/leads/claim-offer is what puts the address in the owner's CRM;
+    // the localStorage lists below only feed this browser's Admin Dashboard.
+    const result = await submitNewsletter({
+      email,
+      name: email.split('@')[0].replace(/[._-]/g, ' '),
+      source: 'Footer Drop Alerts'
+    });
+
+    if (result.rejected) {
+      setNewsletterBusy(false);
+      setNewsletterNote(result.error || 'Could not subscribe that address.');
+      return;
+    }
+
+    const subscribers = readList('tonto_admin_subscribers');
+    if (!subscribers.some((s) => String(s?.email).toLowerCase() === email)) {
+      mirror('tonto_admin_subscribers', {
+        email,
+        source: 'Footer Drop Alerts',
+        date: new Date().toISOString().split('T')[0]
+      }, { append: true, max: 500, match: 'email' });
+    }
+
+    mirror('tonto_admin_leads', {
+      id: `LEAD-${Date.now().toString(36).toUpperCase().slice(-6)}`,
+      name: email.split('@')[0].replace(/[._-]/g, ' '),
+      phone: '',
+      email,
+      source: 'TONTO Made Drop Waitlist',
+      interest: 'Coimbatore Drop Alert Notifications',
+      estimatedValue: 4000,
+      stage: 'New',
+      date: new Date().toISOString().split('T')[0],
+      notes: 'Subscribed to drop alerts from storefront footer.'
+    });
+
+    setNewsletterBusy(false);
     setNewsletterSubscribed(true);
+    setNewsletterEmail('');
   };
   return (
-    <footer className="w-full bg-[#003F25] border-t border-[#002e1b] pt-14 pb-12 text-white">
+    <footer className="w-full bg-[#003F25] border-t border-[#002e1b] pt-14 pb-12 text-white content-visibility-auto">
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8">
         
         {/* Main Footer Grid */}
@@ -50,7 +100,15 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
                 <button
-                  onClick={() => onNavigate('home')}
+                  onClick={() => onNavigate('new-arrivals')}
+                  className="hover:text-white transition-colors cursor-pointer"
+                >
+                  New Arrivals
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onNavigate('featured')}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Featured Styles
@@ -74,51 +132,32 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
               </li>
               <li>
                 <button
-                  onClick={() => {
-                    onNavigate('home');
-                    setTimeout(() => {
-                      document.getElementById('lookbook-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 50);
-                  }}
+                  onClick={() => onNavigate('lookbook')}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
-                  The Lookbook Edit
+                  TONTO Made
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => {
-                    onNavigate('home');
-                    setTimeout(() => {
-                      document.getElementById('tonto-own-make')?.scrollIntoView({ behavior: 'smooth' });
-                    }, 50);
-                  }}
+                  onClick={() => onNavigate('about')}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
-                  TONTO's Own Make
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onOpenOffer?.('offer')}
-                  className="text-white hover:underline transition-all cursor-pointer font-semibold inline-flex items-center gap-1.5"
-                >
-                  <span>15% Welcome Privilege</span>
-                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded-xs font-mono">TONTO15</span>
+                  About TONTO
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Studio & Client Care */}
+          {/* Col 3: Showroom & Client Care */}
           <div>
             <h4 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
-              Studio & Client Care
+              Showroom & Client Care
             </h4>
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
                 <button
-                  onClick={() => onOpenOffer?.('signin')}
+                  onClick={() => onOpenAccount ? onOpenAccount() : onNavigate('account')}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Sign In / Member Access
@@ -129,7 +168,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
                   onClick={() => onNavigate('visit')}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
-                  Studio Visits & Appointments
+                  Coimbatore Location & Map
                 </button>
               </li>
               <li>
@@ -202,11 +241,15 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer }) {
                 />
                 <button
                   type="submit"
-                  className="px-3.5 py-2 bg-black hover:bg-black/80 text-white text-[11px] font-bold uppercase tracking-wider transition-colors rounded-xs cursor-pointer"
+                  disabled={newsletterBusy}
+                  className="px-3.5 py-2 bg-black hover:bg-black/80 text-white text-[11px] font-bold uppercase tracking-wider transition-colors rounded-xs cursor-pointer disabled:opacity-60"
                 >
-                  Join
+                  {newsletterBusy ? '…' : 'Join'}
                 </button>
               </form>
+            )}
+            {newsletterNote && (
+              <p className="text-[11px] text-amber-200 -mt-1 mb-2">{newsletterNote}</p>
             )}
             <div className="inline-block px-3 py-1 bg-white/10 border border-white/20 text-[11px] font-bold text-white uppercase tracking-widest">
               THRIFT • IMPORTED • SURPLUS

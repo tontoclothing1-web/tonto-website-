@@ -4,6 +4,7 @@ import ProductCard from './ProductCard';
 import { PRODUCTS } from '../data/products';
 
 export default function SavedItemsPage({
+  products,
   savedIds,
   onToggleSave,
   onRemoveSaved,
@@ -14,19 +15,24 @@ export default function SavedItemsPage({
   onNavigateHome,
   onNavigateCollection
 }) {
-  const savedProducts = PRODUCTS.filter((p) => savedIds.includes(p.id));
+  // Live catalogue first (the store's real stock list); the shipped constant is
+  // only the offline fallback, so a piece the owner added never looks unsavable.
+  const catalog = products && products.length > 0 ? products : PRODUCTS;
+  const savedProducts = catalog.filter((p) => savedIds.includes(p.id));
 
   const handleEnquireAll = () => {
     if (savedProducts.length === 0) return;
+    const firstImg = savedProducts[0]?.images?.[0] || savedProducts[0]?.image || '/assets/products/extra-wide-denim.jpg';
     const combinedPiece = {
       id: 'saved-shortlist',
       title: `Shortlist Enquiry (${savedProducts.length} pieces)`,
-      colour: savedProducts.map(p => p.colour).join(', '),
+      colour: savedProducts.map(p => p.colour || 'Standard').join(', '),
       fit: 'Various',
       price: 'Price on enquiry',
-      images: [savedProducts[0]?.images?.[0]]
+      images: [firstImg],
+      variants: ['Standard']
     };
-    onOpenEnquiry(combinedPiece);
+    onOpenEnquiry?.(combinedPiece);
   };
 
   return (
@@ -118,10 +124,12 @@ export default function SavedItemsPage({
           <div className="py-24 text-center max-w-md mx-auto">
             <Bookmark size={44} className="mx-auto text-gray-300 mb-4" strokeWidth={1.5} />
             <h2 className="text-xl font-extrabold text-[#003F25] uppercase tracking-tight mb-2">
-              Your Shortlist is Empty
+              {savedIds.length > 0 ? 'Saved Pieces Are Gone' : 'Your Shortlist is Empty'}
             </h2>
             <p className="text-[13px] text-[#79867D] mb-8">
-              Click the bookmark icon on any piece to save it to your wishlist for quick comparison or collective studio enquiry.
+              {savedIds.length > 0
+                ? `${savedIds.length} ${savedIds.length === 1 ? 'piece is' : 'pieces are'} on your list but no longer in the collection. Remove ${savedIds.length === 1 ? 'it' : 'them'} and the shortlist is clean again.`
+                : 'Click the bookmark icon on any piece to save it to your wishlist for quick comparison or collective enquiry.'}
             </p>
             <button
               onClick={onNavigateCollection}

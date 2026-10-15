@@ -5,9 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n api,web -c green,cyan \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "vite",
+    "dev:backend": "npm --prefix backend run dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "npm --prefix backend run start"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -19,6 +22,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.6",
     "tailwindcss": "^4.3.3",
     "vite": "^8.3.1"
   }

@@ -1,18 +1,97 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Check, AlertCircle, ShoppingBag, ShieldCheck, MapPin, Send, Copy, ArrowRight, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Check, AlertCircle, ShoppingBag, ShieldCheck, MapPin, Send, Copy, ArrowRight, RefreshCw, WifiOff } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
+import { placeOrder, newClientRequestId, validatePromoCode, mirror, mirrorMerge, readList } from '../lib/capture';
+import { PROMO_REASONS, fromApiOrder } from '../lib/orderView';
+
+/**
+ * Mirror into the keys AdminDashboard reads. Stock + promo counters are only
+ * bumped on the offline path — the API already decremented inventory and
+ * consumed the promo use, and doing it again here is a double spend.
+ */
+function recordLocally(record, { synced = false } = {}) {
+  const { firstName = '', lastName = '', phone = '', email = '', city = '' } = record.customer || {};
+  const items = record.items || [];
+
+  mirror('tonto_admin_orders', record);
+
+  mirror('tonto_admin_enquiries', {
+    id: record.orderId,
+    clientName: `${firstName} ${lastName}`.trim(),
+    contact: phone || email,
+    productTitle: `${items.length} Piece(s): ${items.map((i) => i.title).join(', ')}`,
+    colour: items.map((i) => i.colour).filter(Boolean).join(' / ') || 'Standard',
+    size: items.map((i) => i.size).filter(Boolean).join(', ') || 'Standard',
+    date: record.date,
+    status: 'Hold Reserved at Showroom',
+    notes: `Delivery: ${record.deliveryMethod === 'shipping' ? 'Courier Dispatch' : 'Showroom Pickup'}. City: ${city || 'Coimbatore'}. Total: ${record.totalAmount}.`,
+  });
+
+  mirror('tonto_admin_leads', {
+    id: `LEAD-${Date.now().toString().slice(-6)}`,
+    name: `${firstName} ${lastName}`.trim(),
+    phone,
+    email,
+    source: 'Storefront Checkout',
+    interest: items.map((i) => `${i.title} (${i.size})`).join(', '),
+    estimatedValue: record.numericTotal || 4500,
+    stage: 'In Discussion',
+    date: new Date().toISOString().split('T')[0],
+    notes: `Order #${record.orderId} reserved on storefront. Total ${record.totalAmount}. Awaiting UPI confirmation.`,
+  });
+
+  if (synced) return;
+
+  if (record.appliedPromo) {
+    mirrorMerge('tonto_admin_promos', (list) => {
+      const idx = list.findIndex((p) => String(p?.code).toUpperCase() === String(record.appliedPromo).toUpperCase());
+      if (idx > -1) list[idx] = { ...list[idx], uses: (list[idx].uses || 0) + 1 };
+      return list;
+    });
+  }
+
+  const saved = readList('tonto_products');
+  if (saved.length) {
+    const next = saved.map((p) => {
+      const line = items.find((i) => i.id === p.id || i.productId === p.id);
+      if (!line) return p;
+      const stock = Math.max(0, (typeof p.stock === 'number' ? p.stock : 8) - (Number(line.quantity) || 1));
+      return { ...p, stock, inStock: stock > 0 };
+    });
+    try {
+      localStorage.setItem('tonto_products', JSON.stringify(next));
+    } catch { /* private mode */ }
+  }
+}
 
 export default function CheckoutPage({
   cartItems,
   onClearCart,
   onNavigateHome,
   onNavigateCart,
-  onNavigateCollection
+  onNavigateCollection,
+  onNavigateAccount,
+  onUpdateProducts,
+  storeSettings
 }) {
   const [step, setStep] = useState('details'); // 'details' | 'review' | 'pending' | 'success' | 'failure'
-  const [deliveryMethod, setDeliveryMethod] = useState('shipping'); // 'shipping' | 'studio'
+  const [deliveryMethod, setDeliveryMethod] = useState('shipping'); // 'shipping' | 'showroom'
   const [simulateError, setSimulateError] = useState(false);
   const [copiedOrder, setCopiedOrder] = useState(false);
+
+  // Promo Code State
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(() => {
+    try {
+      const isClaimed = localStorage.getItem('tonto_credentials_submitted') === 'true';
+      if (isClaimed) {
+        return { code: 'TONTO15', discountText: '15% OFF', percent: 15 };
+      }
+    } catch {}
+    return null;
+  });
+  const [promoError, setPromoError] = useState('');
+  const [promoChecking, setPromoChecking] = useState(false);
 
   // Form Fields
   const [formData, setFormData] = useState({
@@ -31,8 +110,136 @@ export default function CheckoutPage({
 
   const [errors, setErrors] = useState({});
   const [confirmedOrder, setConfirmedOrder] = useState(null);
+  // Why the API said no (shown on the failure screen) + whether the order only
+  // made it onto this device because the backend was unreachable.
+  const [failureReason, setFailureReason] = useState('');
+  const [offlineFallback, setOfflineFallback] = useState(false);
+  // Idempotency key for this checkout attempt — survives "Retry" so a retry
+  // cannot create a second hold.
+  const [clientRequestId, setClientRequestId] = useState('');
 
   const totalQuantity = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  // Money shown before the showroom quotes: catalogue numbers only. A piece with
+  // no price contributes nothing here and is flagged below, instead of being
+  // handed an invented ₹2,490 that no invoice would ever match.
+  const linePrice = (item) => {
+    const numeric = Number(item?.numericPrice);
+    if (numeric > 0) return numeric;
+    const digits = parseInt(String(item?.price || '').replace(/\D/g, ''), 10);
+    return Number.isFinite(digits) && digits > 0 ? digits : 0;
+  };
+  const unpricedCount = cartItems.filter((item) => linePrice(item) === 0).length;
+
+  // Financial Calculations
+  const subtotal = cartItems.reduce((acc, item) => acc + linePrice(item) * (item.quantity || 1), 0);
+
+  const discountAmount = appliedPromo ? Math.round((subtotal * appliedPromo.percent) / 100) : 0;
+  const freeThreshold = parseInt(String(storeSettings?.freeShippingThreshold || '2500').replace(/\D/g, ''), 10) || 2500;
+  const isFreeShipping = deliveryMethod === 'showroom' || subtotal >= freeThreshold;
+  const shippingFee = isFreeShipping ? 0 : 150;
+  const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
+
+  const handleApplyPromo = (e) => {
+    if (e) e.preventDefault();
+    handleApplyCodeDirect(promoInput);
+  };
+
+  /**
+   * Offline fallback only: the same strict rule the server uses (an explicit
+   * percent, or a "15% OFF" label — never a guessed discount for a broken row).
+   */
+  const applyLocalPromo = (cleanCode) => {
+    let promoList = readList('tonto_admin_promos');
+    if (!promoList.length) {
+      promoList = [
+        { code: 'TONTO15', discount: '15% OFF', percent: 15, active: true },
+        { code: 'TONTOVIP', discount: '20% OFF', percent: 20, active: true },
+        { code: 'ARCHIVE10', discount: '10% OFF', percent: 10, active: true }
+      ];
+    }
+
+    try {
+      const cms = localStorage.getItem('tonto_admin_cms');
+      if (cms) {
+        const parsed = JSON.parse(cms);
+        if (parsed.offerModal?.promoCode) {
+          promoList.push({
+            code: parsed.offerModal.promoCode.toUpperCase(),
+            discount: '15% OFF',
+            percent: 15,
+            active: true
+          });
+        }
+      }
+    } catch {}
+
+    const match = promoList.find((p) => String(p?.code).toUpperCase() === cleanCode);
+    if (!match) {
+      setPromoError(`Code "${cleanCode}" is not recognized.`);
+      return;
+    }
+    if (match.active === false) {
+      setPromoError(`Code "${cleanCode}" is currently inactive.`);
+      return;
+    }
+
+    const explicit = Number(match.percent);
+    const fromLabel = String(match.discount || match.discountText || '').match(/(\d{1,3})\s*%/);
+    const percent = explicit > 0 ? Math.floor(explicit) : fromLabel ? parseInt(fromLabel[1], 10) : 0;
+    if (percent <= 0) {
+      setPromoError(`Code "${cleanCode}" is misconfigured — no discount percentage.`);
+      return;
+    }
+
+    setAppliedPromo({ code: match.code, discountText: match.discount || match.discountText || `${percent}% OFF`, percent });
+    setPromoError('');
+    setPromoInput('');
+  };
+
+  /**
+   * Codes are resolved by the API — one engine for expiry, usage limits and the
+   * percentage the shop actually set. Submitting an order re-prices everything
+   * server-side regardless, so a code this device invented gets rejected at
+   * checkout instead of quietly discounting the bag.
+   */
+  const handleApplyCodeDirect = async (code) => {
+    const cleanCode = (code || '').trim().toUpperCase();
+    if (!cleanCode) return;
+
+    setPromoChecking(true);
+    setPromoError('');
+    const result = await validatePromoCode(cleanCode);
+    setPromoChecking(false);
+
+    if (result.ok) {
+      const promo = result.data?.promo || result.data?.data || result.data || {};
+      const percent = Number(promo.percent) || 0;
+      if (percent > 0) {
+        setAppliedPromo({
+          code: promo.code || cleanCode,
+          discountText: promo.discountText || promo.discount || `${percent}% OFF`,
+          percent
+        });
+        setPromoInput('');
+        return;
+      }
+      setPromoError(`Code "${cleanCode}" ${PROMO_REASONS[result.data?.reason] || 'is not valid.'}`);
+      return;
+    }
+
+    if (result.rejected) {
+      setPromoError(result.error || `Code "${cleanCode}" is not valid.`);
+      return;
+    }
+
+    applyLocalPromo(cleanCode);
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedPromo(null);
+    setPromoError('');
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,42 +274,139 @@ export default function CheckoutPage({
     }
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     setStep('pending');
+    setFailureReason('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Simulate authentic network latency
-    setTimeout(() => {
-      if (simulateError) {
-        setStep('failure');
-      } else {
-        const orderId = `TONTO-${Math.floor(100000 + Math.random() * 900000)}`;
-        const orderRecord = {
-          orderId,
-          date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }),
-          items: [...cartItems],
-          deliveryMethod,
-          customer: { ...formData },
-          status: 'Hold Reserved at Studio'
-        };
-        setConfirmedOrder(orderRecord);
-        onClearCart();
-        setStep('success');
-      }
-    }, 1400);
+    const customer = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      apartment: formData.apartment,
+      city: formData.city,
+      state: formData.state,
+      postalCode: formData.postalCode,
+      country: formData.country,
+      notes: formData.orderNotes,
+    };
+
+    // Dev Test Mode: fail before touching the network.
+    if (simulateError) {
+      setFailureReason('Dev Test Mode is switched on, so nothing was sent to the showroom.');
+      setStep('failure');
+      return;
+    }
+
+    // Generated once and reused by "Retry Order Submission": the backend treats
+    // it as an idempotency key, so a double tap cannot create two holds.
+    if (!clientRequestId) setClientRequestId(newClientRequestId());
+
+    const result = await placeOrder({
+      items: cartItems,
+      customer,
+      promoCode: appliedPromo?.code,
+      deliveryMethod,
+      notes: formData.orderNotes,
+      clientRequestId,
+    });
+
+    if (result.ok) {
+      // Totals, status and the promo use all come back from the server — this
+      // is the first time the price on the screen is the price on the invoice.
+      const record = fromApiOrder(result.data?.data || {}, customer);
+      recordLocally(record, { synced: true });
+      setConfirmedOrder(record);
+      onClearCart();
+      setOfflineFallback(false);
+      setClientRequestId('');
+      setStep('success');
+      return;
+    }
+
+    if (result.rejected) {
+      // Out of stock, dead promo code, missing address… Show the reason. A hold
+      // that the shop never accepted is worse than a failed button.
+      setFailureReason(result.error || 'The showroom could not reserve these pieces.');
+      setStep('failure');
+      return;
+    }
+
+    // No API reachable (backend down / offline / dev without a server): keep the
+    // on-device record so the intent is not lost, and label it on the receipt.
+    const orderId = `TONTO-${Math.floor(100000 + Math.random() * 900000)}`;
+    const record = {
+      id: orderId,
+      orderId,
+      date: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+      email: formData.email,
+      phone: formData.phone,
+      customer,
+      deliveryMethod,
+      shippingAddress: {
+        address: formData.address,
+        apartment: formData.apartment,
+        city: formData.city,
+        state: formData.state,
+        postalCode: formData.postalCode,
+        country: formData.country,
+      },
+      items: cartItems.map((item) => ({
+        id: item.id,
+        title: item.title,
+        colour: item.colour || 'Standard',
+        size: item.size || 'M',
+        price: item.price || 'Price on enquiry',
+        quantity: item.quantity || 1,
+        // Neutral brand image: pasting a different garment on the receipt would
+        // file a hold for a piece the shopper never picked.
+        image: item.image || item.images?.[0] || '/assets/branding/tonto-tags.jpg'
+      })),
+      subtotal: `₹${subtotal.toLocaleString('en-IN')}`,
+      numericSubtotal: subtotal,
+      discountAmount: discountAmount > 0 ? `₹${discountAmount.toLocaleString('en-IN')}` : '₹0',
+      numericDiscount: discountAmount,
+      appliedPromo: appliedPromo ? appliedPromo.code : null,
+      shippingFee: shippingFee > 0 ? `₹${shippingFee}` : 'Free',
+      totalAmount: `₹${grandTotal.toLocaleString('en-IN')}`,
+      numericTotal: grandTotal,
+      status: 'New Hold',
+      paymentStatus: 'Pending Payment Link',
+      courierPartner: deliveryMethod === 'shipping' ? 'BlueDart Express' : 'Showroom Handover',
+      trackingNumber: '',
+      notes: formData.orderNotes || `Delivery: ${deliveryMethod === 'shipping' ? 'Courier Dispatch' : 'Showroom Pickup'}. City: ${formData.city || 'Coimbatore'}.`,
+      recordedBy: 'device-only',
+    };
+
+    recordLocally(record);
+    const refreshed = readList('tonto_products');
+    if (refreshed.length && onUpdateProducts) onUpdateProducts(refreshed);
+    setConfirmedOrder(record);
+    onClearCart();
+    setOfflineFallback(true);
+    setStep('success');
   };
 
   const getOrderWhatsAppText = () => {
     if (!confirmedOrder) return '';
-    return `TONTO Studio Order Reservation\nOrder Ref: #${confirmedOrder.orderId}\nCustomer: ${confirmedOrder.customer.firstName} ${confirmedOrder.customer.lastName}\nPhone: ${confirmedOrder.customer.phone}\nDelivery: ${confirmedOrder.deliveryMethod === 'shipping' ? 'Courier Dispatch' : 'Coimbatore Studio Pickup'}\n\nPieces (${confirmedOrder.items.length}):\n` +
+    return `TONTO Order Reservation\nOrder Ref: #${confirmedOrder.orderId}\nCustomer: ${confirmedOrder.customer.firstName} ${confirmedOrder.customer.lastName}\nPhone: ${confirmedOrder.customer.phone}\nDelivery: ${confirmedOrder.deliveryMethod === 'shipping' ? 'Courier Dispatch' : 'Coimbatore Showroom Pickup'}\n\nPieces (${confirmedOrder.items.length}):\n` +
       confirmedOrder.items.map((i, idx) => `${idx + 1}. ${i.title} (${i.colour}) - Sz ${i.size} x ${i.quantity}`).join('\n') +
       `\n\nPlease confirm availability & payment link for dispatch.`;
   };
 
-  const handleCopySummary = () => {
-    navigator.clipboard.writeText(getOrderWhatsAppText());
-    setCopiedOrder(true);
-    setTimeout(() => setCopiedOrder(false), 2000);
+  const handleCopySummary = async () => {
+    try {
+      await navigator.clipboard?.writeText(getOrderWhatsAppText());
+      setCopiedOrder(true);
+      setTimeout(() => setCopiedOrder(false), 2000);
+    } catch {
+      // Clipboard is blocked outside https / without permission: the text stays
+      // on screen, so offer the honest alternative instead of a silent no-op.
+      setCopiedOrder(false);
+    }
   };
 
   return (
@@ -183,9 +487,10 @@ export default function CheckoutPage({
             <h2 className="text-xl font-bold text-red-900 uppercase tracking-tight mb-2">
               Order Hold Could Not Be Processed
             </h2>
-            <p className="text-[13px] text-red-700 mb-6">
-              A temporary connection issue occurred while registering your piece hold with the studio catalog. No charges were made.
+            <p className="text-[13px] text-red-700 mb-2">
+              {failureReason || 'A temporary connection issue occurred while registering your piece hold with the catalog. No charges were made.'}
             </p>
+            <p className="text-[12px] text-red-600/80 mb-6">Nothing was reserved and no payment was taken.</p>
             <div className="space-y-2">
               <button
                 onClick={() => setStep('review')}
@@ -218,6 +523,15 @@ export default function CheckoutPage({
               <p className="text-[13px] text-[#4B5563]">
                 Your order hold reference is <strong className="text-[#003F25] font-mono">#{confirmedOrder.orderId}</strong>.
               </p>
+              {offlineFallback && (
+                <div className="mt-4 flex items-start gap-2 text-left border border-amber-300 bg-amber-50 p-3 rounded-xs">
+                  <WifiOff size={15} className="text-amber-700 mt-0.5 shrink-0" />
+                  <p className="text-[11.5px] text-amber-900">
+                    The showroom server was not reachable, so this hold is saved on this device only.
+                    Please send the reference to TONTO WhatsApp below so the team can lock the pieces.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Next steps notice */}
@@ -260,7 +574,7 @@ export default function CheckoutPage({
                   Delivery Method
                 </span>
                 <span className="font-semibold text-[#003F25]">
-                  {confirmedOrder.deliveryMethod === 'shipping' ? 'Courier Dispatch (Tracked India)' : 'Studio Pickup (Coimbatore, TN)'}
+                  {confirmedOrder.deliveryMethod === 'shipping' ? 'Courier Dispatch (Tracked India)' : 'Showroom Pickup (Coimbatore, TN)'}
                 </span>
                 {confirmedOrder.deliveryMethod === 'shipping' && (
                   <p className="text-[#4B5563] mt-1">
@@ -304,6 +618,16 @@ export default function CheckoutPage({
                   Continue Shopping
                 </button>
               </div>
+
+              {onNavigateAccount && (
+                <button
+                  type="button"
+                  onClick={onNavigateAccount}
+                  className="w-full py-3 border border-[#003F25] text-[#003F25] hover:bg-[#F9FAF9] text-[12px] font-bold uppercase tracking-wider transition-colors cursor-pointer text-center block"
+                >
+                  View Order & Tracking in Customer Account →
+                </button>
+              )}
             </div>
 
           </div>
@@ -397,20 +721,20 @@ export default function CheckoutPage({
                           <span className="text-[11px] font-semibold text-[#003F25]">Across India</span>
                         </div>
                         <p className="text-[12px] text-[#79867D]">
-                          Dispatched from Coimbatore studio with tracking details provided on WhatsApp.
+                          Dispatched from Coimbatore with tracking details provided on WhatsApp.
                         </p>
                       </div>
 
                       <div
-                        onClick={() => setDeliveryMethod('studio')}
+                        onClick={() => setDeliveryMethod('showroom')}
                         className={`p-4 border cursor-pointer transition-all ${
-                          deliveryMethod === 'studio'
+                          deliveryMethod === 'showroom'
                             ? 'border-[#003F25] bg-[#F9FAF9] ring-1 ring-[#003F25]'
                             : 'border-gray-200 hover:border-gray-400'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[13px] font-bold text-[#003F25]">Coimbatore Studio Pickup</span>
+                          <span className="text-[13px] font-bold text-[#003F25]">Coimbatore Showroom Pickup</span>
                           <span className="text-[11px] font-semibold text-[#128C7E]">Free</span>
                         </div>
                         <p className="text-[12px] text-[#79867D]">
@@ -539,7 +863,7 @@ export default function CheckoutPage({
                       <div>
                         <span className="text-[11px] text-[#79867D] uppercase font-bold block mb-1">Fulfillment Mode</span>
                         <strong className="text-[#003F25]">
-                          {deliveryMethod === 'shipping' ? 'Standard Courier (Tracked)' : 'Coimbatore Studio Collection'}
+                          {deliveryMethod === 'shipping' ? 'Standard Courier (Tracked)' : 'Coimbatore Showroom Collection'}
                         </strong>
                         {deliveryMethod === 'shipping' ? (
                           <p className="text-[#4B5563] text-[12px]">{formData.address}, {formData.city}, {formData.state} - {formData.postalCode}</p>
@@ -562,7 +886,7 @@ export default function CheckoutPage({
 
                   <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] text-[12px] text-[#4B5563]">
                     <strong className="block text-[#003F25] font-bold mb-1">Honest Sourcing & Reservation Notice</strong>
-                    Submitting this form reserves your selected archive items. The TONTO studio team will confirm measurement fit with you before issuing final payment details.
+                    Submitting this form reserves your selected archive items. The TONTO team will confirm measurement fit with you before issuing final payment details.
                   </div>
 
                   <div className="flex gap-3">
@@ -591,40 +915,126 @@ export default function CheckoutPage({
                   Order Summary ({totalQuantity} Pieces)
                 </h3>
 
-                <div className="space-y-4 max-h-[360px] overflow-y-auto no-scrollbar pr-1 mb-4 divide-y divide-gray-100">
-                  {cartItems.map((item) => (
-                    <div key={`${item.id}-${item.size}`} className="pt-3 flex gap-3 items-center">
-                      <img src={item.image} alt={item.title} className="w-14 h-18 object-cover bg-gray-50 border border-gray-200" />
-                      <div className="flex-1 text-[12px]">
-                        <h4 className="font-bold text-[#003F25] uppercase">{item.title}</h4>
-                        <p className="text-[#79867D] capitalize">{item.colour} • Sz {item.size}</p>
-                        <p className="text-[#4B5563]">Qty: {item.quantity}</p>
+                <div className="space-y-4 max-h-[300px] overflow-y-auto no-scrollbar pr-1 mb-4 divide-y divide-gray-100">
+                  {cartItems.map((item) => {
+                    const priceNum = linePrice(item);
+                    return (
+                      <div key={`${item.id}-${item.size}`} className="pt-3 flex gap-3 items-center">
+                        <img src={item.image} alt={item.title} className="w-14 h-18 object-cover bg-gray-50 border border-gray-200" />
+                        <div className="flex-1 text-[12px]">
+                          <h4 className="font-bold text-[#003F25] uppercase">{item.title}</h4>
+                          <p className="text-[#79867D] capitalize">{item.colour} • Sz {item.size}</p>
+                          <p className="text-[#4B5563]">Qty: {item.quantity}</p>
+                        </div>
+                        <span className="text-[12px] font-semibold text-[#003F25]">
+                          {priceNum > 0
+                            ? `₹${(priceNum * (item.quantity || 1)).toLocaleString('en-IN')}`
+                            : 'On enquiry'}
+                        </span>
                       </div>
-                      <span className="text-[12px] font-semibold text-[#003F25]">{item.price}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
-                <div className="border-t border-[#E0E5E1] pt-4 space-y-2 text-[12px] text-[#4B5563]">
+                {/* Promo Code Input Box */}
+                <div className="pt-3 pb-4 border-t border-b border-[#E0E5E1] my-4">
+                  <span className="block text-[11px] font-bold text-[#003F25] uppercase tracking-wider mb-2">
+                    Promo / Privilege Code
+                  </span>
+
+                  {appliedPromo ? (
+                    <div className="flex items-center justify-between p-2.5 bg-emerald-50 border border-emerald-200 rounded-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-mono font-bold text-[#003F25] px-2 py-0.5 bg-white rounded border border-emerald-200">
+                          {appliedPromo.code}
+                        </span>
+                        <span className="text-[11px] font-bold text-emerald-800">
+                          {appliedPromo.discountText} Applied
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRemovePromo}
+                        className="text-[11px] text-gray-500 hover:text-red-600 underline cursor-pointer"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <form onSubmit={handleApplyPromo} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={promoInput}
+                          onChange={(e) => {
+                            setPromoInput(e.target.value.toUpperCase());
+                            setPromoError('');
+                          }}
+                          placeholder="e.g. TONTO15"
+                          className="flex-1 px-3 py-2 text-[12px] font-mono border border-gray-300 rounded-xs uppercase focus:border-[#003F25] outline-none"
+                        />
+                        <button
+                          type="submit"
+                          disabled={promoChecking}
+                          className="px-4 py-2 bg-[#003F25] hover:bg-[#002e1b] text-white text-[11px] font-bold uppercase tracking-wider rounded-xs cursor-pointer transition-colors disabled:opacity-60 disabled:cursor-wait"
+                        >
+                          {promoChecking ? 'Checking' : 'Apply'}
+                        </button>
+                      </form>
+                      {promoError && (
+                        <p className="text-[11px] text-red-600 mt-1 font-medium">{promoError}</p>
+                      )}
+                      <p className="text-[10.5px] text-gray-400 mt-1">
+                        Try <span className="font-mono text-[#003F25] cursor-pointer underline" onClick={() => handleApplyCodeDirect('TONTO15')}>TONTO15</span> for 15% off first order.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Subtotals & Calculations */}
+                <div className="space-y-2 text-[12px] text-[#4B5563]">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span className="font-semibold text-[#003F25]">₹{subtotal.toLocaleString('en-IN')}</span>
+                  </div>
+
+                  {appliedPromo && (
+                    <div className="flex justify-between text-emerald-700 font-medium">
+                      <span>Privilege Discount ({appliedPromo.discountText})</span>
+                      <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span className={shippingFee === 0 ? 'font-semibold text-emerald-700' : 'text-[#003F25]'}>
+                      {shippingFee === 0 ? 'FREE' : `₹${shippingFee}`}
+                    </span>
+                  </div>
+
                   <div className="flex justify-between">
                     <span>Fulfillment</span>
                     <span className="font-medium text-[#003F25]">
-                      {deliveryMethod === 'shipping' ? 'Tracked Courier' : 'Studio Pickup'}
+                      {deliveryMethod === 'shipping' ? 'Tracked Courier' : 'Showroom Pickup'}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Payment Method</span>
-                    <span className="font-medium text-[#003F25]">Confirmed on Order</span>
+
+                  <div className="flex justify-between pt-3 border-t border-gray-200 text-[14px] font-extrabold text-[#003F25]">
+                    <span>Total Hold Value</span>
+                    <span>₹{grandTotal.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="flex justify-between pt-2 border-t border-gray-100 text-[13px] font-bold text-[#003F25]">
-                    <span>Total Items</span>
-                    <span>{totalQuantity} pieces</span>
-                  </div>
+
+                  {unpricedCount > 0 && (
+                    <p className="pt-2 text-[11px] text-[#92400E] bg-amber-50 border border-amber-200 rounded-xs px-2.5 py-2">
+                      {unpricedCount} {unpricedCount === 1 ? 'piece is' : 'pieces are'} priced on enquiry, so they are not in
+                      this figure. The showroom confirms the final value on your payment link.
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-gray-100 text-[11px] text-[#79867D] flex items-center gap-2">
                   <ShieldCheck size={16} className="text-[#003F25] flex-shrink-0" />
-                  <span>Secure showroom reservation direct from Coimbatore studio.</span>
+                  <span>Secure showroom reservation direct from Coimbatore.</span>
                 </div>
               </div>
             </div>

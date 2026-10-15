@@ -28,3 +28,8 @@ Thumbs.db
 *.zip
 TONTO-Website-Files/
 Tonto-20260927T114534Z-1-001/
+
+# Temporary files & verification screenshots
+admin-*.png
+backend/supabase/.temp/
+.temp/

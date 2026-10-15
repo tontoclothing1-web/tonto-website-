@@ -217,3 +217,10 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Content-visibility optimization for below-the-fold sections */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+

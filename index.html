@@ -9,15 +9,17 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>TONTO Clothing | Thrift, Imported, Surplus Streetwear</title>
+    <meta name="description" content="TONTO Clothing — Curated thrift, surplus & heavy washed denim drops from Coimbatore, India." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="preload" href="/fonts/futura-pt-book.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="/assets/hero-banner-clean-orig.jpg" fetchpriority="high">
+    <!-- Typography is self-hosted (see src/index.css @font-face + the preload above).
+         No third-party font stylesheet: it would be a render-blocking cross-origin
+         request that the API's CSP (default-src 'self') refuses in production. -->
   </head>
   <body class="bg-white text-[#111827] antialiased selection:bg-[#003F25] selection:text-white">
     <div id="root"></div>

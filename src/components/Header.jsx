@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Bookmark, Search, ShoppingBag, Menu, X, ArrowUpRight } from 'lucide-react';
+import { User, Bookmark, Search, ShoppingBag, Menu, X, ArrowUpRight, Shield } from 'lucide-react';
 
 export default function Header({
   activeView,
@@ -13,16 +13,19 @@ export default function Header({
   onOpenBag,
   selectedRegion,
   onOpenRegion,
-  onOpenOffer
+  onOpenOffer,
+  onEnterTargetSection,
+  storeSettings,
+  onNavigateAdmin
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'FEATURED', view: 'home', targetId: 'trending-section' },
-    { label: "TONTO'S OWN MAKE", view: 'home', targetId: 'tonto-own-make' },
-    { label: 'NEW ARRIVALS', view: 'home', targetId: 'categories-section' },
+    { label: 'FEATURED', view: 'featured' },
+    { label: 'NEW ARRIVALS', view: 'new-arrivals' },
     { label: 'SHOP', view: 'collection', filter: 'All' },
-    { label: 'LOOKBOOK', view: 'lookbook' },
+    { label: 'TONTO MADE', view: 'lookbook' },
+    { label: 'ABOUT US', view: 'about' },
     { label: 'VISIT US', action: 'visit' }
   ];
 
@@ -37,6 +40,12 @@ export default function Header({
       onNavigate('collection', link.filter);
     } else if (link.view === 'lookbook') {
       onNavigate('lookbook');
+    } else if (link.view === 'featured') {
+      onNavigate('featured');
+    } else if (link.view === 'new-arrivals') {
+      onNavigate('new-arrivals');
+    } else if (link.view === 'about') {
+      onNavigate('about');
     } else {
       onNavigate('home');
       if (link.targetId) {
@@ -46,6 +55,9 @@ export default function Header({
             el.scrollIntoView({ behavior: 'smooth' });
           }
         }, 50);
+        if (link.targetId === 'trending-section' || link.targetId === 'tonto-own-make') {
+          onEnterTargetSection?.(link.targetId);
+        }
       }
     }
   };
@@ -55,7 +67,7 @@ export default function Header({
       {/* Top Streetwear Announcement Bar */}
       <div className="bg-[#003F25] text-white py-1.5 px-4 pt-[max(0.375rem,env(safe-area-inset-top,0px))] text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
         <div className="max-w-[1600px] mx-auto flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-          <span>✦ EXCLUSIVE PRIVILEGE: 15% OFF FIRST ORDER</span>
+          <span>{storeSettings?.announcementText || '✦ EXCLUSIVE PRIVILEGE: 15% OFF FIRST ORDER'}</span>
           <span className="hidden sm:inline text-white/40">•</span>
           <button
             onClick={() => onOpenOffer?.('offer')}
@@ -65,7 +77,7 @@ export default function Header({
           </button>
           <span className="text-white/40">|</span>
           <button
-            onClick={() => onOpenOffer?.('signin')}
+            onClick={() => onOpenAccount?.()}
             className="underline underline-offset-2 decoration-white/60 hover:decoration-white font-bold cursor-pointer transition-colors"
           >
             SIGN IN
@@ -192,7 +204,6 @@ export default function Header({
               <button onClick={() => { setMobileMenuOpen(false); onOpenRegion(); }} className="hover:text-[#003F25] font-semibold">
                 REGION: {selectedRegion?.display || 'INDIA'} ({selectedRegion?.currency || 'INR'})
               </button>
-              <button onClick={() => { setMobileMenuOpen(false); onOpenVisit(); }} className="text-[#003F25] underline font-medium">Coimbatore Studio</button>
             </div>
 
             <button
@@ -202,7 +213,7 @@ export default function Header({
               }}
               className="mt-3 w-full py-2.5 bg-[#003F25] text-white text-[11px] font-bold tracking-widest uppercase flex items-center justify-center gap-2 rounded-xs"
             >
-              <span>CLAIM 15% OFF / SIGN IN</span>
+              <span>CLAIM 15% OFF FIRST ORDER</span>
               <ArrowUpRight size={14} />
             </button>
           </nav>
