@@ -1,37 +1,29 @@
 import React from 'react';
 
 /**
- * Shared TONTO Clothing Brand Logo & Wordmark Component
+ * Shared TONTO Clothing Brand Logo Component
  * 
- * Variants:
- * - 'hero': Bold vector TONTO wordmark with drop shadow for hero banner
- * - 'header': Green vector TONTO wordmark for light header
- * - 'footer': White vector TONTO wordmark for dark footer
- * - 'admin': White vector TONTO wordmark for admin top bar
- * - 'wordmark': White TONTO vector wordmark
- * - 'wordmark-green': Green (#02441F) TONTO vector wordmark
- * - 'horizontal': Horizontal lockup (T mark + TONTO) in white
- * - 'horizontal-green': Horizontal lockup (T mark + TONTO) in green
- * - 'lockup-white': Full vertically stacked lockup in white
- * - 'lockup-green': Full vertically stacked lockup in green
- * - 'mark': Minimal 3-rect T mark
+ * - 'hero': Standalone enlarged crisp TONTO wordmark (ONLY hero banner has the emblem removed per design preference)
+ * - 'header': Official green TONTO lockup (emblem + TONTO + Clothing) for light header
+ * - 'footer': Official white TONTO lockup (emblem + TONTO + Clothing) for dark footer
+ * - 'admin': Official white TONTO lockup for admin desk
  */
 const VARIANTS = {
   hero: {
     src: '/assets/tonto-wordmark.svg',
-    className: 'h-5 sm:h-6.5 w-auto object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]',
+    className: 'h-6 sm:h-7 w-auto object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]',
   },
   header: {
-    src: '/assets/tonto-wordmark-green.svg',
-    className: 'h-6 sm:h-7 w-auto object-contain transition-transform duration-200 group-hover:opacity-90',
+    src: '/assets/tonto-lockup-green.svg',
+    className: 'h-10 sm:h-11 w-auto object-contain transition-transform duration-200 group-hover:opacity-90',
   },
   footer: {
-    src: '/assets/tonto-wordmark.svg',
-    className: 'h-7 sm:h-8 w-auto object-contain',
+    src: '/assets/tonto-lockup.svg',
+    className: 'h-11 sm:h-12 w-auto object-contain',
   },
   admin: {
-    src: '/assets/tonto-wordmark.svg',
-    className: 'h-5 sm:h-6 w-auto object-contain',
+    src: '/assets/tonto-lockup.svg',
+    className: 'h-6 sm:h-7 w-auto object-contain',
   },
   wordmark: {
     src: '/assets/tonto-wordmark.svg',
@@ -39,14 +31,6 @@ const VARIANTS = {
   },
   'wordmark-green': {
     src: '/assets/tonto-wordmark-green.svg',
-    className: 'h-6 sm:h-7 w-auto object-contain',
-  },
-  horizontal: {
-    src: '/assets/tonto-horizontal.svg',
-    className: 'h-6 sm:h-7 w-auto object-contain',
-  },
-  'horizontal-green': {
-    src: '/assets/tonto-horizontal-green.svg',
     className: 'h-6 sm:h-7 w-auto object-contain',
   },
   'lockup-white': {
