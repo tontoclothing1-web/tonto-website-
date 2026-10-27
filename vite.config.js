@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
         : undefined
     },
     build: {
-      target: 'es2022',
+      target: ['es2020', 'safari15', 'ios15'],
       cssCodeSplit: true,
       chunkSizeWarningLimit: 600,
       rollupOptions: {

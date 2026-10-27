@@ -10,7 +10,7 @@ import DropWaitlistBanner from './components/DropWaitlistBanner';
 import ShoppableLooks from './components/ShoppableLooks';
 import Footer from './components/Footer';
 
-// Eagerly imported storefront routes for instant 0ms response
+// Core high-traffic shopping routes (eagerly imported for instant LCP)
 import CollectionView from './components/CollectionView';
 import FeaturedPage from './components/FeaturedPage';
 import NewArrivalsPage from './components/NewArrivalsPage';
@@ -18,27 +18,29 @@ import ProductDetailPage from './components/ProductDetailPage';
 import LookbookView from './components/LookbookView';
 import CartPage from './components/CartPage';
 import CheckoutPage from './components/CheckoutPage';
-import AccountPage from './components/AccountPage';
 import SavedItemsPage from './components/SavedItemsPage';
-import VisitUsPage from './components/VisitUsPage';
-import AboutUsPage from './components/AboutUsPage';
-import PolicyPage from './components/PolicyPage';
-import NotFoundPage from './components/NotFoundPage';
-import CompleteLookPage from './components/CompleteLookPage';
 
-// Only AdminDashboard is kept lazy to keep the primary shopper bundle lean
+// Secondary routes code-split with React.lazy + Suspense for lean mobile initial chunk
+const AccountPage = React.lazy(() => import('./components/AccountPage'));
+const VisitUsPage = React.lazy(() => import('./components/VisitUsPage'));
+const AboutUsPage = React.lazy(() => import('./components/AboutUsPage'));
+const PolicyPage = React.lazy(() => import('./components/PolicyPage'));
+const NotFoundPage = React.lazy(() => import('./components/NotFoundPage'));
+const CompleteLookPage = React.lazy(() => import('./components/CompleteLookPage'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 
-// All interactive modals eagerly imported for 0ms immediate reaction
+// Core interaction drawers
 import QuickViewModal from './components/QuickViewModal';
 import CartDrawer from './components/CartDrawer';
 import SavedItemsDrawer from './components/SavedItemsDrawer';
 import SearchDialog from './components/SearchDialog';
 import OfferModal from './components/OfferModal';
-import EnquiryModal from './components/EnquiryModal';
-import VisitUsModal from './components/VisitUsModal';
-import AccountModal from './components/AccountModal';
-import RegionModal from './components/RegionModal';
+
+// Secondary modals lazy loaded on demand
+const EnquiryModal = React.lazy(() => import('./components/EnquiryModal'));
+const VisitUsModal = React.lazy(() => import('./components/VisitUsModal'));
+const AccountModal = React.lazy(() => import('./components/AccountModal'));
+const RegionModal = React.lazy(() => import('./components/RegionModal'));
 
 function ViewFallback() {
   return (

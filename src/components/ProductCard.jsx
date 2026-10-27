@@ -259,6 +259,7 @@ function ProductCard({
         <button
           data-save-btn="true"
           data-no-swipe="true"
+          aria-label={isSaved ? `Remove ${product.title} from saved items` : `Save ${product.title} to wishlist`}
           onClick={(e) => {
             e.stopPropagation();
             onToggleSave(product);
@@ -284,6 +285,7 @@ function ProductCard({
           type="button"
           data-qv-btn="true"
           data-no-swipe="true"
+          aria-label={`Quick view ${product.title}`}
           onClick={(e) => {
             e.stopPropagation();
             onQuickView(product);
