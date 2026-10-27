@@ -978,7 +978,7 @@ export default function CheckoutPage({
                     <button
                       type="button"
                       onClick={() => {
-                        if (paymentMethod === 'upi') {
+                        if (paymentMethod === 'upi' && unpricedCount === 0 && grandTotal > 0) {
                           setIsUpiModalOpen(true);
                         } else {
                           handlePlaceOrder();
@@ -988,7 +988,7 @@ export default function CheckoutPage({
                       className="flex-1 py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-wait"
                     >
                       <Check size={16} />
-                      <span>{isPlacingOrder ? 'Reserving Pieces…' : (paymentMethod === 'upi' ? 'Proceed to UPI Payment' : 'Confirm & Reserve Order')}</span>
+                      <span>{isPlacingOrder ? 'Reserving Pieces…' : (paymentMethod === 'upi' && unpricedCount === 0 && grandTotal > 0 ? 'Proceed to UPI Payment' : 'Confirm & Reserve Piece(s) Hold')}</span>
                     </button>
                   </div>
                 </div>
