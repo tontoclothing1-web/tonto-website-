@@ -36,7 +36,8 @@ export function useCenteredCarousel({
     gap: 20,
     itemStep: 400,
     paddingLeft: 530,
-    isReducedMotion: false
+    isReducedMotion: false,
+    isMobile: false
   });
 
   const activeIndexRef = useRef(initialIndex || 0);
@@ -101,7 +102,7 @@ export function useCenteredCarousel({
     const container = containerRef.current;
     if (!container) return;
 
-    const { containerWidth, cardWidth, itemStep, paddingLeft, isReducedMotion } = measurementsRef.current;
+    const { containerWidth, cardWidth, itemStep, paddingLeft, isReducedMotion, isMobile } = measurementsRef.current;
     const scrollLeft = container.scrollLeft;
     const centerX = scrollLeft + containerWidth / 2;
 
@@ -116,7 +117,10 @@ export function useCenteredCarousel({
     }
 
     const isMoving = isDraggingRef.current || isScrollingRef.current;
-    const centerScale = isMobile ? 1.12 : activeHighlightScale;
+    const targetCenterScale = isMobile 
+      ? (isCenterPlayingRef.current ? 1.14 : 1.10) 
+      : (isCenterPlayingRef.current ? activeHighlightScale : 1.10);
+    const centerScale = targetCenterScale;
     const minScale = sideScale;
 
     // Apply continuous GPU scale and opacity to card wrapper
