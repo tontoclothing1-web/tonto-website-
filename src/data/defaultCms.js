@@ -2,7 +2,7 @@ import { SHOPPABLE_LOOKS } from './products';
 
 export const DEFAULT_CMS_CONTENT = {
   hero: {
-    image: '/assets/hero-banner-clean-orig.jpg',
+    image: '/assets/hero-banner-clean.jpg',
     tagline: 'THRIFT / IMPORTED / SURPLUS',
     headline: 'MADE TO BE DIFFERENT',
     buttonText: 'SHOP THE NEW ARRIVALS'

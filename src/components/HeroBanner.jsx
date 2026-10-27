@@ -11,29 +11,37 @@ export default function HeroBanner({ onShopNow, heroMedia }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const heroImage = heroMedia?.image || '/assets/hero-banner-clean-orig.jpg';
+  const rawImage = heroMedia?.image || '/assets/hero-banner-clean.jpg';
+  // If rawImage is the default hero image or its clean-orig alias, use responsive images
+  const isDefaultHero = !heroMedia?.image || rawImage.includes('hero-banner');
+  const desktopHero = isDefaultHero ? '/assets/hero-banner-clean.jpg' : rawImage;
+  const mobileHero = isDefaultHero ? '/assets/hero-banner-mobile.jpg' : rawImage;
+
   const tagline = heroMedia?.tagline || 'THRIFT / IMPORTED / SURPLUS';
   const headline = heroMedia?.headline || 'MADE TO BE DIFFERENT';
   const buttonText = heroMedia?.buttonText || 'shop now';
 
   return (
-    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none min-h-[460px] sm:min-h-[560px] md:min-h-[620px] h-[calc(100dvh-76px)] min-h-[460px] max-h-[780px]">
+    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none min-h-[460px] sm:min-h-[560px] md:min-h-[620px] h-[calc(100dvh-76px)] max-h-[780px]">
       {/* Background Campaign Image with subtle settle scale */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
-        <img
-          src={heroImage}
-          width="1600"
-          height="780"
-          alt="TONTO Campaign - Unisex Streetwear Collection"
-          className={`w-full h-full object-cover object-[center_12%] transition-opacity duration-700 ${
-            mounted ? 'opacity-100' : 'opacity-90'
-          }`}
-          loading="eager"
-          fetchPriority="high"
-          decoding="async"
-        />
+        <picture>
+          <source media="(max-width: 640px)" srcSet={mobileHero} />
+          <img
+            src={desktopHero}
+            width="1600"
+            height="780"
+            alt="TONTO Campaign - Unisex Streetwear Collection"
+            className={`w-full h-full object-cover object-center sm:object-[center_12%] transition-opacity duration-700 ${
+              mounted ? 'opacity-100' : 'opacity-90'
+            }`}
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
         {/* Uniform full-width ambient depth gradient - seamless with zero vertical edges or color shifts */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/15 to-transparent pointer-events-none" />
       </div>
 
       {/* Hero Content - Lower Left Composition perfectly synced with Header Logo */}
