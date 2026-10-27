@@ -92,7 +92,7 @@ export default function Header({
         <div className="flex items-center">
           <button 
             onClick={() => onNavigate('home')} 
-            className="flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded p-1"
+            className="flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded p-0.5"
             aria-label="TONTO Clothing Home"
           >
             <Logo variant="header" alt="TONTO Clothing" />
