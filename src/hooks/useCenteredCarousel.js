@@ -16,7 +16,10 @@ export function useCenteredCarousel({
   totalBase,
   initialIndex,
   onActiveChange,
-  isPaused = false
+  isPaused = false,
+  isCenterPlaying = true,
+  activeHighlightScale = 1.08,
+  sideScale = 0.82
 }) {
   const containerRef = useRef(null);
   const cardMediaRefs = useRef([]);
@@ -38,6 +41,8 @@ export function useCenteredCarousel({
 
   const activeIndexRef = useRef(initialIndex || 0);
   const isDraggingRef = useRef(false);
+  const isCenterPlayingRef = useRef(isCenterPlaying);
+  const isScrollingRef = useRef(false);
   const dragInfoRef = useRef({ startX: 0, startScrollLeft: 0, hasMoved: false, lastX: 0, lastTime: 0, velocity: 0 });
   const scrollRafRef = useRef(null);
   const scrollIdleTimerRef = useRef(null);
@@ -109,6 +114,8 @@ export function useCenteredCarousel({
       onActiveChange?.(clampedIdx);
     }
 
+    const isMoving = isDraggingRef.current || isScrollingRef.current;
+
     // Apply scale and opacity to card media
     const mediaElements = cardMediaRefs.current;
     const len = mediaElements.length;
@@ -120,6 +127,7 @@ export function useCenteredCarousel({
       if (isReducedMotion) {
         mediaEl.style.transform = 'scale(1)';
         mediaEl.style.opacity = '1';
+        mediaEl.style.transition = 'none';
         continue;
       }
 
@@ -130,15 +138,29 @@ export function useCenteredCarousel({
       // Interpolation progress: 0 at center, 1 at 1 card away or further
       const progress = Math.min(1, dist / itemStep);
 
-      // Scale between 1.0 (active center) and 0.82 (side cards)
-      const scale = 1.0 - progress * 0.18;
+      // When settled at center and playing, enlarge to activeHighlightScale (e.g. 1.08) for hero highlight
+      let targetScale;
+      if (progress < 0.08 && !isMoving && isCenterPlayingRef.current) {
+        targetScale = activeHighlightScale;
+      } else {
+        // Continuous scale: 1.0 at center down to sideScale (e.g. 0.82)
+        targetScale = 1.0 - progress * (1.0 - sideScale);
+      }
+
       // Opacity between 1.0 (active center) and 0.88 (side cards)
       const opacity = 1.0 - progress * 0.12;
 
-      mediaEl.style.transform = `scale3d(${scale.toFixed(4)}, ${scale.toFixed(4)}, 1)`;
+      mediaEl.style.transition = isMoving ? 'none' : 'transform 450ms cubic-bezier(0.16, 1, 0.3, 1), opacity 450ms ease';
+      mediaEl.style.transform = `scale3d(${targetScale.toFixed(4)}, ${targetScale.toFixed(4)}, 1)`;
       mediaEl.style.opacity = opacity.toFixed(3);
     }
-  }, [totalItems, onActiveChange]);
+  }, [totalItems, onActiveChange, activeHighlightScale, sideScale]);
+
+  // Sync isCenterPlaying state
+  useEffect(() => {
+    isCenterPlayingRef.current = isCenterPlaying;
+    applyTransforms();
+  }, [isCenterPlaying, applyTransforms]);
 
   // Seamless wrap normalization handler for infinite buffer
   const checkInfiniteLoop = useCallback(() => {
@@ -177,10 +199,13 @@ export function useCenteredCarousel({
     if (!container) return;
 
     const onScroll = () => {
+      isScrollingRef.current = true;
       setIsScrolling(true);
       if (scrollIdleTimerRef.current) clearTimeout(scrollIdleTimerRef.current);
       scrollIdleTimerRef.current = setTimeout(() => {
+        isScrollingRef.current = false;
         setIsScrolling(false);
+        applyTransforms();
         checkInfiniteLoop();
       }, 120);
 
@@ -290,6 +315,7 @@ export function useCenteredCarousel({
     const onMouseUp = () => {
       isDraggingRef.current = false;
       setIsDragging(false);
+      applyTransforms();
 
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);

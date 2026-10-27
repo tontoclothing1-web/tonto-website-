@@ -41,10 +41,13 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
   const [isSectionVisible, setIsSectionVisible] = useState(true);
   const [isDocVisible, setIsDocVisible] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
   const sectionRef = useRef(null);
   const videoRefs = useRef([]);
   const autoPlayTimerRef = useRef(null);
+
+  const isPlayingHighlight = isVideoPlaying && isSectionVisible && isDocVisible;
 
   // Hook for native centered scroll snap & GPU scale interpolation
   const {
@@ -63,7 +66,10 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
     totalItems,
     totalBase,
     initialIndex,
-    isPaused: isHovered || !isSectionVisible || !isDocVisible
+    isPaused: isHovered || !isSectionVisible || !isDocVisible,
+    isCenterPlaying: isPlayingHighlight,
+    activeHighlightScale: 1.08,
+    sideScale: 0.82
   });
 
   const { cardWidth, gap, paddingLeft } = measurements;
@@ -99,6 +105,8 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
   useEffect(() => {
     const shouldPlay = isSectionVisible && isDocVisible;
 
+    let activeIsPlaying = false;
+
     extendedLooks.forEach((look, i) => {
       const video = videoRefs.current[i];
       if (!video) return;
@@ -110,12 +118,26 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
         video.muted = isMuted;
         const playPromise = video.play();
         if (playPromise !== undefined) {
-          playPromise.catch(() => {});
+          playPromise
+            .then(() => {
+              setIsVideoPlaying(true);
+            })
+            .catch(() => {
+              setIsVideoPlaying(false);
+            });
         }
+        activeIsPlaying = true;
       } else {
         video.pause();
       }
     });
+
+    // If the active card is an editorial image look, mark it as active showcase highlight when visible
+    if (!activeIsPlaying && shouldPlay) {
+      setIsVideoPlaying(true);
+    } else if (!shouldPlay) {
+      setIsVideoPlaying(false);
+    }
   }, [activeIndex, isSectionVisible, isDocVisible, isMuted, extendedLooks]);
 
   // Sync mute state to all video elements
@@ -219,7 +241,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
       </div>
 
       {/* FULL-BLEED NATIVE SCROLL-SNAP STRIP WITH MOMENTUM DRAG */}
-      <div className="relative w-full overflow-hidden py-2">
+      <div className="relative w-full overflow-hidden pt-8 pb-3">
         <div
           ref={containerRef}
           onMouseDown={handleMouseDown}
@@ -266,7 +288,9 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                   scrollSnapAlign: 'center',
                   flexShrink: 0
                 }}
-                className="flex flex-col cursor-pointer group"
+                className={`flex flex-col cursor-pointer group transition-[z-index] duration-300 ${
+                  isCenter ? 'z-20' : 'z-10'
+                }`}
               >
                 {/* Upper Media Box - Bottom-anchored GPU scale interpolation */}
                 <div
@@ -276,8 +300,12 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                     transformOrigin: 'bottom center',
                     willChange: isScrolling || isDragging ? 'transform, opacity' : 'auto'
                   }}
-                  className={`relative w-full aspect-[380/530] overflow-hidden bg-[#111111] border border-gray-200 transition-shadow duration-300 ${
-                    isCenter ? 'shadow-lg ring-1 ring-black/10' : 'shadow-xs'
+                  className={`relative w-full aspect-[380/530] overflow-hidden bg-[#111111] border transition-[box-shadow,border-color] duration-500 ${
+                    isCenter && isPlayingHighlight
+                      ? 'border-black/30 shadow-[0_22px_48px_rgba(0,0,0,0.28)] ring-2 ring-black/15'
+                      : isCenter
+                      ? 'border-black/20 shadow-lg ring-1 ring-black/10'
+                      : 'border-gray-200 shadow-xs'
                   }`}
                 >
                   {isVideo && videoSrc ? (
@@ -289,6 +317,12 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                       loop
                       playsInline
                       preload={isNearCenter ? 'auto' : 'metadata'}
+                      onPlaying={() => {
+                        if (idx === activeIndex) setIsVideoPlaying(true);
+                      }}
+                      onPause={() => {
+                        if (idx === activeIndex) setIsVideoPlaying(false);
+                      }}
                       className="w-full h-full object-cover object-center pointer-events-none select-none"
                     />
                   ) : (
