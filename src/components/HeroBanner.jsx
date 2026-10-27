@@ -22,6 +22,8 @@ export default function HeroBanner({ onShopNow, heroMedia }) {
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
           src={heroImage}
+          width="1600"
+          height="780"
           alt="TONTO Campaign - Unisex Streetwear Collection"
           className={`w-full h-full object-cover object-[center_12%] transition-opacity duration-700 ${
             mounted ? 'opacity-100' : 'opacity-90'

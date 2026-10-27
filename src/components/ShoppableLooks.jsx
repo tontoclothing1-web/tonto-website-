@@ -316,6 +316,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                       muted={isMuted}
                       loop
                       playsInline
+                      webkit-playsinline="true"
                       preload={isNearCenter ? 'auto' : 'metadata'}
                       onPlaying={() => {
                         if (idx === activeIndex) setIsVideoPlaying(true);

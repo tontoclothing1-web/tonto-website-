@@ -1,6 +1,16 @@
 @import "tailwindcss";
 
 @font-face {
+  font-family: "Futura PT Fallback";
+  src: local("Arial");
+  ascent-override: 96%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+  size-adjust: 100%;
+}
+
+
+@font-face {
   font-family: "Futura PT Book";
   src: url("/fonts/futura-pt-book.woff2") format("woff2");
   font-weight: 100 900;
@@ -20,8 +30,8 @@
 
 @layer base {
   :root {
-    --font-heading: "Futura PT Book", "Futura PT", "Futura", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-body: "Futura PT Book", "Futura PT", "Futura", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-heading: "Futura PT Book", "Futura PT", "Futura PT Fallback", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-body: "Futura PT Book", "Futura PT", "Futura PT Fallback", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-button: "Futura PT Book", "Futura PT", "Futura", "Jost", Arial, sans-serif;
     --brand-green: #003F25;
     --brand-green-hover: #002e1b;
