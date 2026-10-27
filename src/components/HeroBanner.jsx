@@ -43,14 +43,18 @@ export default function HeroBanner({ onShopNow, heroMedia }) {
             <Logo variant="hero" alt="TONTO Clothing" className={`transition-all duration-700 delay-100 ease-out ${
                 mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
               }`} />
-            <span className="text-white/50 text-[10px]">•</span>
-            <span
-              className={`text-[10.5px] sm:text-[11.5px] font-medium tracking-[0.22em] text-white/90 uppercase drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-700 delay-100 ease-out font-['Futura_PT_Book',sans-serif] ${
-                mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-              }`}
-            >
-              {tagline}
-            </span>
+            {tagline && !tagline.toLowerCase().includes('thrift') && (
+              <>
+                <span className="text-white/50 text-[10px]">•</span>
+                <span
+                  className={`text-[10.5px] sm:text-[11.5px] font-medium tracking-[0.22em] text-white/90 uppercase drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-700 delay-100 ease-out font-['Futura_PT_Book',sans-serif] ${
+                    mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                  }`}
+                >
+                  {tagline}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Heading */}

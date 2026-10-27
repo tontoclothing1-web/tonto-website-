@@ -248,9 +248,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
             {newsletterNote && (
               <p className="text-[11px] text-amber-200 -mt-1 mb-2">{newsletterNote}</p>
             )}
-            <div className="inline-block px-3 py-1 bg-white/10 border border-white/20 text-[11px] font-bold text-white uppercase tracking-widest">
-              THRIFT • IMPORTED • SURPLUS
-            </div>
+
           </div>
 
         </div>

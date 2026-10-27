@@ -12,9 +12,8 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
     const text = String(value || '').trim();
     if (!text) return fallback;
     if (/price on enquiry/i.test(text)) return 'Price on enquiry';
-    return text.startsWith('₹') || text.startsWith('Rs.')
-      ? text.replace('₹', 'Rs. ')
-      : `Rs. ${text}`;
+    const clean = text.replace(/^Rs\.?\s*/i, '₹').trim();
+    return clean.startsWith('₹') ? clean : `₹${clean}`;
   };
 
   const baseLooks = rawLooks.map((look, i) => {
