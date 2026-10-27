@@ -17,7 +17,7 @@ export default function HeroBanner({ onShopNow, heroMedia }) {
   const buttonText = heroMedia?.buttonText || 'shop now';
 
   return (
-    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none min-h-[460px] sm:min-h-[560px] md:min-h-[620px] h-[calc(100svh-76px)] max-h-[780px]">
+    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none min-h-[460px] sm:min-h-[560px] md:min-h-[620px] h-[calc(100dvh-76px)] min-h-[460px] max-h-[780px]">
       {/* Background Campaign Image with subtle settle scale */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img

@@ -448,7 +448,7 @@ export default function CheckoutPage({
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 sm:pt-10">
+      <div className="max-w-[1400px] mx-auto px-3.5 sm:px-8 pt-6 sm:pt-10">
         
         {/* Progress Stepper */}
         <div className="max-w-xl mx-auto mb-10">
@@ -977,7 +977,7 @@ export default function CheckoutPage({
                             setPromoError('');
                           }}
                           placeholder="e.g. TONTO15"
-                          className="flex-1 px-3 py-2 text-[12px] font-mono border border-gray-300 rounded-xs uppercase focus:border-[#003F25] outline-none"
+                          className="min-w-0 flex-1 px-3 py-2 text-base sm:text-[12px] font-mono border border-gray-300 rounded-xs uppercase focus:border-[#003F25] outline-none"
                         />
                         <button
                           type="submit"

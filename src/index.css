@@ -39,6 +39,8 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    background-color: #FFFFFF;
+    color-scheme: light;
   }
 
   body {
@@ -52,6 +54,8 @@
     -webkit-tap-highlight-color: transparent;
     min-height: 100vh;
     min-height: 100dvh;
+    width: 100%;
+    max-width: 100%;
   }
 
   *, button, input, select, textarea {
@@ -76,7 +80,7 @@
   }
 }
 
-/* Safe Area Inset Helpers for iPhone notch and Android gesture bars */
+/* Safe Area Inset Helpers for iPhone notch, Dynamic Island, and Android gesture bars */
 .pt-safe {
   padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
 }
@@ -85,8 +89,21 @@
   padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
+.pl-safe {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+}
+
+.pr-safe {
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+.px-safe {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
 .bottom-safe {
-  bottom: env(safe-area-inset-bottom, 0px);
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
 /* MNML Signature Typography Classes */

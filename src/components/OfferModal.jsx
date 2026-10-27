@@ -174,7 +174,7 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
   const isVisible = mounted && !isClosing;
 
   return (
-    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto transition-opacity duration-300 ${
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-5 overflow-y-auto overflow-x-hidden transition-opacity duration-300 ${
       isVisible ? 'opacity-100' : 'opacity-0'
     }`}>
       {/* Dimmed backdrop with smooth fade */}
@@ -188,7 +188,7 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
 
       {/* Main Dialog Modal with smooth scale & settle easing */}
       <div
-        className={`relative w-full max-w-[840px] bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-sm overflow-hidden flex flex-col md:flex-row my-auto text-left max-h-[92vh] overflow-y-auto transform transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`relative w-full max-w-[840px] bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-sm overflow-hidden flex flex-col md:flex-row my-auto text-left max-h-[92dvh] overflow-y-auto transform transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           isVisible
             ? 'opacity-100 scale-100 translate-y-0'
             : 'opacity-0 scale-[0.95] translate-y-3'

@@ -75,7 +75,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8">
         
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8 pb-12 border-b border-white/15">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8 pb-12 border-b border-white/15">
           
           {/* Col 1: Brand Info */}
           <div className="space-y-4">
@@ -234,7 +234,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="flex-1 px-3 py-2 text-[12px] bg-white text-[#111111] placeholder-gray-500 border border-transparent focus:outline-none rounded-xs"
+                  className="min-w-0 flex-1 px-3 py-2 text-base sm:text-[12px] bg-white text-[#111111] placeholder-gray-500 border border-transparent focus:outline-none rounded-xs"
                 />
                 <button
                   type="submit"

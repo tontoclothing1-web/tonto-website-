@@ -66,7 +66,7 @@ export default function Header({
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-[#E0E5E1] transition-colors duration-200">
       {/* Top Streetwear Announcement Bar */}
-      <div className="bg-[#003F25] text-white py-1.5 px-4 pt-[max(0.375rem,env(safe-area-inset-top,0px))] text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
+      <div className="bg-[#003F25] text-white py-1.5 px-4 pt-[max(0.375rem,env(safe-area-inset-top,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
         <div className="max-w-[1600px] mx-auto flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
           <span>{storeSettings?.announcementText || '✦ EXCLUSIVE PRIVILEGE: 15% OFF FIRST ORDER'}</span>
           <span className="hidden sm:inline text-white/40">•</span>
@@ -86,7 +86,7 @@ export default function Header({
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto h-[76px] px-5 sm:px-8 flex items-center justify-between">
+      <div className="max-w-[1600px] mx-auto h-[76px] px-5 sm:px-8 pl-[max(1.25rem,env(safe-area-inset-left,0px))] pr-[max(1.25rem,env(safe-area-inset-right,0px))] flex items-center justify-between">
         
         {/* Left: TONTO Logo */}
         <div className="flex items-center">

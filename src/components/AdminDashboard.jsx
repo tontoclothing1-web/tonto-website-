@@ -1983,7 +1983,7 @@ export default function AdminDashboard({
   // LOGIN SCREEN
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen bg-[#0A1A12] flex items-center justify-center p-4 sm:p-6 text-white">
+      <div className="min-h-screen min-h-dvh bg-[#0A1A12] flex items-center justify-center p-4 sm:p-6 text-white">
         <div className="flex items-center gap-3 text-[12px] uppercase tracking-widest text-[#A5B4AB]">
           <RefreshCw size={15} className="animate-spin" />
           <span>Checking admin session&hellip;</span>
@@ -1994,7 +1994,7 @@ export default function AdminDashboard({
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0A1A12] flex items-center justify-center p-4 sm:p-6 text-white select-none">
+      <div className="min-h-screen min-h-dvh bg-[#0A1A12] flex items-center justify-center p-4 sm:p-6 text-white select-none">
         <div className="w-full max-w-md bg-[#10241A] border border-[#204E36] rounded-sm p-8 shadow-2xl relative animate-scale-up text-left">
           
           <div className="flex items-center justify-between pb-6 border-b border-white/10 mb-6">
@@ -2074,7 +2074,7 @@ export default function AdminDashboard({
 
   // MAIN ADMIN CONSOLE
   return (
-    <div className="min-h-screen pb-[calc(2rem+env(safe-area-inset-bottom,0px))] bg-[#F6F8F6] text-[#111111] flex flex-col font-sans select-none text-left">
+    <div className="min-h-screen min-h-dvh pb-[calc(2rem+env(safe-area-inset-bottom,0px))] bg-[#F6F8F6] text-[#111111] flex flex-col font-sans select-none text-left">
       
       {/* Toast Notification */}
       {toastMessage && (
