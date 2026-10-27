@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 125" width="760" height="125">
+  <title>TONTO</title>
+  <g fill="#02441F" transform="translate(0, 0) scale(0.367647)">
+    <!-- T Mark -->
+    <rect x="0" y="0" width="69" height="56"/>
+    <rect x="124" y="0" width="70" height="56"/>
+    <rect x="69" y="56" width="55" height="284"/>
+  </g>
+  <!-- Wordmark TONTO -->
+  <g fill="#02441F" transform="translate(130, -663)">
+    <path d="M232 663H328V705H297V785H263V705H232Z"/>
+    <path d="M484 785V663H514L558 727V663H590V785H560L516 721V785Z"/>
+    <path d="M598 663H694V705H663V785H629V705H598Z"/>
+  </g>
+  <g fill="none" stroke="#02441F" stroke-width="33" transform="translate(130, -663)">
+    <ellipse cx="403" cy="725.5" rx="44.5" ry="46"/>
+    <ellipse cx="781" cy="725.5" rx="44.5" ry="46"/>
+  </g>
+</svg>

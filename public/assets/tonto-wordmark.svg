@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="232 663 610 125" width="610" height="125">
+  <title>TONTO</title>
+  <g fill="#FFFFFF">
+    <path d="M232 663H328V705H297V785H263V705H232Z"/>
+    <path d="M484 785V663H514L558 727V663H590V785H560L516 721V785Z"/>
+    <path d="M598 663H694V705H663V785H629V705H598Z"/>
+  </g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="33">
+    <ellipse cx="403" cy="725.5" rx="44.5" ry="46"/>
+    <ellipse cx="781" cy="725.5" rx="44.5" ry="46"/>
+  </g>
+</svg>
