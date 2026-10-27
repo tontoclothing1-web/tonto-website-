@@ -91,9 +91,9 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
 
           {/* Col 2: Navigation */}
           <div>
-            <h4 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
               Explore
-            </h4>
+            </h3>
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
                 <button
@@ -148,9 +148,9 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
 
           {/* Col 3: Showroom & Client Care */}
           <div>
-            <h4 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
               Showroom & Client Care
-            </h4>
+            </h3>
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
                 <button
@@ -216,9 +216,9 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
 
           {/* Col 4: Sourcing & Standard */}
           <div>
-            <h4 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
               Drop Alerts
-            </h4>
+            </h3>
             <p className="text-[12px] text-white/80 leading-relaxed mb-3">
               Receive notifications when new thrift, surplus, and denim drops release in Coimbatore.
             </p>

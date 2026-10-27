@@ -35,7 +35,7 @@
     --font-button: "Futura PT Book", "Futura PT", "Futura", "Jost", Arial, sans-serif;
     --brand-green: #003F25;
     --brand-green-hover: #002e1b;
-    --brand-secondary: #79867D;
+    --brand-secondary: #5A665E;
     --brand-divider: #E0E5E1;
     --brand-bg: #FFFFFF;
     --safe-top: env(safe-area-inset-top, 0px);
@@ -253,3 +253,8 @@
   contain-intrinsic-size: auto 600px;
 }
 
+
+/* WCAG AA Contrast Enhancement for secondary brand text */
+.text-\[\#79867D\] {
+  color: #5A665E !important;
+}
