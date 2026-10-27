@@ -961,7 +961,14 @@ export default function CheckoutPage({
                       Back
                     </button>
                     <button
-                      onClick={handlePlaceOrder}
+                      type="button"
+                      onClick={() => {
+                        if (paymentMethod === 'upi') {
+                          setIsUpiModalOpen(true);
+                        } else {
+                          handlePlaceOrder();
+                        }
+                      }}
                       disabled={isPlacingOrder}
                       className="flex-1 py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-wait"
                     >
@@ -1114,10 +1121,14 @@ export default function CheckoutPage({
         isOpen={isUpiModalOpen}
         onClose={() => setIsUpiModalOpen(false)}
         amount={confirmedOrder?.numericTotal || grandTotal}
-        orderId={confirmedOrder?.orderId || 'HOLD'}
+        orderId={confirmedOrder?.orderId || 'TONTO-HOLD'}
         onPaymentConfirmed={(paymentData) => {
           setIsUpiModalOpen(false);
-          setConfirmedOrder((prev) => prev ? { ...prev, paymentStatus: 'Paid (UPI)', paymentData } : prev);
+          if (step !== 'success') {
+            handlePlaceOrder();
+          } else {
+            setConfirmedOrder((prev) => prev ? { ...prev, paymentStatus: 'Paid (UPI)', paymentData } : prev);
+          }
         }}
       />
     </div>
