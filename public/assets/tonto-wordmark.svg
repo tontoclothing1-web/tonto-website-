@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="232 663 610 125" width="610" height="125">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="230 663 604 125" width="604" height="125">
   <title>TONTO</title>
   <g fill="#FFFFFF">
     <path d="M232 663H328V705H297V785H263V705H232Z"/>
@@ -7,6 +7,6 @@
   </g>
   <g fill="none" stroke="#FFFFFF" stroke-width="33">
     <ellipse cx="403" cy="725.5" rx="44.5" ry="46"/>
-    <ellipse cx="781" cy="725.5" rx="44.5" ry="46"/>
+    <ellipse cx="769" cy="725.5" rx="44.5" ry="46"/>
   </g>
 </svg>

@@ -18,8 +18,8 @@ export function useCenteredCarousel({
   onActiveChange,
   isPaused = false,
   isCenterPlaying = true,
-  activeHighlightScale = 1.08,
-  sideScale = 0.82
+  activeHighlightScale = 1.16,
+  sideScale = 0.85
 }) {
   const containerRef = useRef(null);
   const cardMediaRefs = useRef([]);
@@ -91,7 +91,8 @@ export function useCenteredCarousel({
       gap,
       itemStep,
       paddingLeft,
-      isReducedMotion
+      isReducedMotion,
+      isMobile: containerWidth < 640
     };
   }, []);
 
@@ -115,19 +116,21 @@ export function useCenteredCarousel({
     }
 
     const isMoving = isDraggingRef.current || isScrollingRef.current;
+    const centerScale = isMobile ? 1.12 : activeHighlightScale;
+    const minScale = sideScale;
 
-    // Apply scale and opacity to card media
-    const mediaElements = cardMediaRefs.current;
-    const len = mediaElements.length;
+    // Apply continuous GPU scale and opacity to card wrapper
+    const wrappers = cardWrapperRefs.current;
+    const len = wrappers.length;
 
     for (let i = 0; i < len; i++) {
-      const mediaEl = mediaElements[i];
-      if (!mediaEl) continue;
+      const wrapperEl = wrappers[i];
+      if (!wrapperEl) continue;
 
       if (isReducedMotion) {
-        mediaEl.style.transform = 'scale(1)';
-        mediaEl.style.opacity = '1';
-        mediaEl.style.transition = 'none';
+        wrapperEl.style.transform = 'scale(1)';
+        wrapperEl.style.opacity = '1';
+        wrapperEl.style.transition = 'none';
         continue;
       }
 
@@ -138,21 +141,19 @@ export function useCenteredCarousel({
       // Interpolation progress: 0 at center, 1 at 1 card away or further
       const progress = Math.min(1, dist / itemStep);
 
-      // When settled at center and playing, enlarge to activeHighlightScale (e.g. 1.08) for hero highlight
-      let targetScale;
-      if (progress < 0.08 && !isMoving && isCenterPlayingRef.current) {
-        targetScale = activeHighlightScale;
-      } else {
-        // Continuous scale: 1.0 at center down to sideScale (e.g. 0.82)
-        targetScale = 1.0 - progress * (1.0 - sideScale);
-      }
+      // Smooth cosine easing curve for continuous organic scaling
+      const ease = 0.5 * (1 + Math.cos(Math.PI * progress));
 
-      // Opacity between 1.0 (active center) and 0.88 (side cards)
-      const opacity = 1.0 - progress * 0.12;
+      // Continuous scale from centerScale at center down to minScale on sides
+      const targetScale = minScale + ease * (centerScale - minScale);
 
-      mediaEl.style.transition = isMoving ? 'none' : 'transform 450ms cubic-bezier(0.16, 1, 0.3, 1), opacity 450ms ease';
-      mediaEl.style.transform = `scale3d(${targetScale.toFixed(4)}, ${targetScale.toFixed(4)}, 1)`;
-      mediaEl.style.opacity = opacity.toFixed(3);
+      // Opacity between 1.0 (active center) and 0.78 (side cards)
+      const opacity = 0.78 + ease * (1.0 - 0.78);
+
+      wrapperEl.style.transition = isMoving ? 'none' : 'transform 450ms cubic-bezier(0.16, 1, 0.3, 1), opacity 450ms ease';
+      wrapperEl.style.transform = `scale3d(${targetScale.toFixed(4)}, ${targetScale.toFixed(4)}, 1)`;
+      wrapperEl.style.opacity = opacity.toFixed(3);
+      wrapperEl.style.zIndex = Math.round(10 + ease * 20);
     }
   }, [totalItems, onActiveChange, activeHighlightScale, sideScale]);
 

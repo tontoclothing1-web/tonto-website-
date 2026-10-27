@@ -68,8 +68,8 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
     initialIndex,
     isPaused: isHovered || !isSectionVisible || !isDocVisible,
     isCenterPlaying: isPlayingHighlight,
-    activeHighlightScale: 1.08,
-    sideScale: 0.82
+    activeHighlightScale: 1.16,
+    sideScale: 0.85
   });
 
   const { cardWidth, gap, paddingLeft } = measurements;
@@ -241,13 +241,13 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
       </div>
 
       {/* FULL-BLEED NATIVE SCROLL-SNAP STRIP WITH MOMENTUM DRAG */}
-      <div className="relative w-full overflow-hidden pt-8 pb-3">
+      <div className="relative w-full overflow-hidden pt-12 pb-12 sm:pt-16 sm:pb-16">
         <div
           ref={containerRef}
           onMouseDown={handleMouseDown}
           onKeyDown={handleKeyDown}
           tabIndex={0}
-          className={`relative w-full overflow-x-auto flex items-end no-scrollbar select-none outline-none ${
+          className={`relative w-full overflow-x-auto flex items-center no-scrollbar select-none outline-none ${
             isDragging ? 'cursor-grabbing' : 'cursor-grab'
           }`}
           style={{
@@ -286,7 +286,10 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                 style={{
                   width: `${cardWidth}px`,
                   scrollSnapAlign: 'center',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  transformOrigin: 'center center',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden'
                 }}
                 className={`flex flex-col cursor-pointer group transition-[z-index] duration-300 ${
                   isCenter ? 'z-20' : 'z-10'
@@ -297,7 +300,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                   ref={(el) => (cardMediaRefs.current[idx] = el)}
                   data-card-media="true"
                   style={{
-                    transformOrigin: 'bottom center',
+                    transformOrigin: 'center center',
                     willChange: isScrolling || isDragging ? 'transform, opacity' : 'auto'
                   }}
                   className={`relative w-full aspect-[380/530] overflow-hidden bg-[#111111] border transition-[box-shadow,border-color] duration-500 ${
@@ -390,7 +393,9 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                     e.stopPropagation();
                     handleLookClick(look);
                   }}
-                  className="mt-2 p-2.5 bg-white border border-gray-200 hover:border-gray-400 flex items-center justify-between shadow-xs transition-colors cursor-pointer"
+                  className={`mt-2 p-2.5 bg-white border flex items-center justify-between transition-colors cursor-pointer ${
+                    isCenter ? 'border-black/25 shadow-md' : 'border-gray-200 shadow-xs hover:border-gray-400'
+                  }`}
                 >
                   <div className="flex items-center gap-2.5 overflow-hidden">
                     <img
