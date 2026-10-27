@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import UPIPaymentModal from './UPIPaymentModal';
+import { Smartphone } from 'lucide-react';
 import { ArrowLeft, Check, AlertCircle, ShoppingBag, ShieldCheck, MapPin, Send, Copy, ArrowRight, RefreshCw, WifiOff } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 import { placeOrder, newClientRequestId, validatePromoCode, mirror, mirrorMerge, readList } from '../lib/capture';
@@ -76,6 +78,9 @@ export default function CheckoutPage({
 }) {
   const [step, setStep] = useState('details'); // 'details' | 'review' | 'pending' | 'success' | 'failure'
   const [deliveryMethod, setDeliveryMethod] = useState('shipping'); // 'shipping' | 'showroom'
+  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'whatsapp' | 'cod'
+  const [isUpiModalOpen, setIsUpiModalOpen] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [simulateError, setSimulateError] = useState(false);
   const [copiedOrder, setCopiedOrder] = useState(false);
 
@@ -890,6 +895,59 @@ export default function CheckoutPage({
                     )}
                   </div>
 
+                  {/* Payment Method Selector */}
+                  <div className="space-y-3">
+                    <h3 className="text-[12px] font-extrabold text-[#003F25] uppercase tracking-wider">
+                      Select Payment Mode
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div
+                        onClick={() => setPaymentMethod('upi')}
+                        className={`p-3 border rounded-xs cursor-pointer transition-all ${
+                          paymentMethod === 'upi'
+                            ? 'border-[#003F25] bg-[#F9FAF9] ring-1 ring-[#003F25]'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="w-2 h-2 rounded-full bg-[#003F25]" />
+                          <strong className="text-[12px] text-[#003F25] uppercase">UPI Instant</strong>
+                        </div>
+                        <p className="text-[11px] text-[#79867D]">GPay, PhonePe, Paytm, QR</p>
+                      </div>
+
+                      <div
+                        onClick={() => setPaymentMethod('whatsapp')}
+                        className={`p-3 border rounded-xs cursor-pointer transition-all ${
+                          paymentMethod === 'whatsapp'
+                            ? 'border-[#003F25] bg-[#F9FAF9] ring-1 ring-[#003F25]'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="w-2 h-2 rounded-full bg-[#128C7E]" />
+                          <strong className="text-[12px] text-[#003F25] uppercase">WhatsApp Concierge</strong>
+                        </div>
+                        <p className="text-[11px] text-[#79867D]">Manual Invoice & Support</p>
+                      </div>
+
+                      <div
+                        onClick={() => setPaymentMethod('cod')}
+                        className={`p-3 border rounded-xs cursor-pointer transition-all ${
+                          paymentMethod === 'cod'
+                            ? 'border-[#003F25] bg-[#F9FAF9] ring-1 ring-[#003F25]'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="w-2 h-2 rounded-full bg-gray-600" />
+                          <strong className="text-[12px] text-[#003F25] uppercase">Showroom Pickup</strong>
+                        </div>
+                        <p className="text-[11px] text-[#79867D]">Pay at Coimbatore store</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] text-[12px] text-[#4B5563]">
                     <strong className="block text-[#003F25] font-bold mb-1">Honest Sourcing & Reservation Notice</strong>
                     Submitting this form reserves your selected archive items. The TONTO team will confirm measurement fit with you before issuing final payment details.
@@ -904,10 +962,11 @@ export default function CheckoutPage({
                     </button>
                     <button
                       onClick={handlePlaceOrder}
-                      className="flex-1 py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                      disabled={isPlacingOrder}
+                      className="flex-1 py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-wait"
                     >
                       <Check size={16} />
-                      <span>Confirm & Reserve Order</span>
+                      <span>{isPlacingOrder ? 'Reserving Pieces…' : (paymentMethod === 'upi' ? 'Proceed to UPI Payment' : 'Confirm & Reserve Order')}</span>
                     </button>
                   </div>
                 </div>
@@ -1050,6 +1109,17 @@ export default function CheckoutPage({
 
       </div>
 
+      {/* UPI Payment Modal */}
+      <UPIPaymentModal
+        isOpen={isUpiModalOpen}
+        onClose={() => setIsUpiModalOpen(false)}
+        amount={confirmedOrder?.numericTotal || grandTotal}
+        orderId={confirmedOrder?.orderId || 'HOLD'}
+        onPaymentConfirmed={(paymentData) => {
+          setIsUpiModalOpen(false);
+          setConfirmedOrder((prev) => prev ? { ...prev, paymentStatus: 'Paid (UPI)', paymentData } : prev);
+        }}
+      />
     </div>
   );
 }
