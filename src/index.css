@@ -1,11 +1,22 @@
 @import "tailwindcss";
 
 @font-face {
+  font-family: "Futura PT Fallback";
+  src: local("Arial");
+  ascent-override: 96%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+  size-adjust: 100%;
+}
+
+
+@font-face {
   font-family: "Futura PT Book";
   src: url("/fonts/futura-pt-book.woff2") format("woff2");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-20B8, U+20BA-FFFF;
 }
 
 @font-face {
@@ -14,16 +25,17 @@
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-20B8, U+20BA-FFFF;
 }
 
 @layer base {
   :root {
-    --font-heading: "Futura PT Book", "Futura PT", "Futura", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --font-body: "Futura PT Book", "Futura PT", "Futura", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-heading: "Futura PT Book", "Futura PT", "Futura PT Fallback", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-body: "Futura PT Book", "Futura PT", "Futura PT Fallback", "Jost", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-button: "Futura PT Book", "Futura PT", "Futura", "Jost", Arial, sans-serif;
     --brand-green: #003F25;
     --brand-green-hover: #002e1b;
-    --brand-secondary: #79867D;
+    --brand-secondary: #5A665E;
     --brand-divider: #E0E5E1;
     --brand-bg: #FFFFFF;
     --safe-top: env(safe-area-inset-top, 0px);
@@ -37,6 +49,8 @@
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+    background-color: #FFFFFF;
+    color-scheme: light;
   }
 
   body {
@@ -50,6 +64,8 @@
     -webkit-tap-highlight-color: transparent;
     min-height: 100vh;
     min-height: 100dvh;
+    width: 100%;
+    max-width: 100%;
   }
 
   *, button, input, select, textarea {
@@ -74,7 +90,7 @@
   }
 }
 
-/* Safe Area Inset Helpers for iPhone notch and Android gesture bars */
+/* Safe Area Inset Helpers for iPhone notch, Dynamic Island, and Android gesture bars */
 .pt-safe {
   padding-top: max(0.5rem, env(safe-area-inset-top, 0px));
 }
@@ -83,8 +99,21 @@
   padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
+.pl-safe {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+}
+
+.pr-safe {
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+.px-safe {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
 .bottom-safe {
-  bottom: env(safe-area-inset-bottom, 0px);
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 }
 
 /* MNML Signature Typography Classes */
@@ -206,7 +235,7 @@
 
 .animate-scale-in,
 .animate-scale-up {
-  animation: scaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -224,3 +253,8 @@
   contain-intrinsic-size: auto 600px;
 }
 
+
+/* WCAG AA Contrast Enhancement for secondary brand text */
+.text-\[\#79867D\] {
+  color: #5A665E !important;
+}

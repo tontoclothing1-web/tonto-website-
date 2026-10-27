@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { User, Bookmark, Search, ShoppingBag, Menu, X, ArrowUpRight, Shield } from 'lucide-react';
+import Logo from './Logo';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 
 export default function Header({
   activeView,
@@ -65,7 +67,7 @@ export default function Header({
   return (
     <header className="sticky top-0 z-40 w-full bg-white border-b border-[#E0E5E1] transition-colors duration-200">
       {/* Top Streetwear Announcement Bar */}
-      <div className="bg-[#003F25] text-white py-1.5 px-4 pt-[max(0.375rem,env(safe-area-inset-top,0px))] text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
+      <div className="bg-[#003F25] text-white py-1.5 px-4 pt-[max(0.375rem,env(safe-area-inset-top,0px))] pl-[max(1rem,env(safe-area-inset-left,0px))] pr-[max(1rem,env(safe-area-inset-right,0px))] text-center text-[10.5px] sm:text-[11px] font-semibold tracking-[0.14em] uppercase">
         <div className="max-w-[1600px] mx-auto flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
           <span>{storeSettings?.announcementText || '✦ EXCLUSIVE PRIVILEGE: 15% OFF FIRST ORDER'}</span>
           <span className="hidden sm:inline text-white/40">•</span>
@@ -85,20 +87,16 @@ export default function Header({
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto h-[76px] px-5 sm:px-8 flex items-center justify-between">
+      <div className="max-w-[1600px] mx-auto h-[76px] px-5 sm:px-8 pl-[max(1.25rem,env(safe-area-inset-left,0px))] pr-[max(1.25rem,env(safe-area-inset-right,0px))] flex items-center justify-between">
         
         {/* Left: TONTO Logo */}
         <div className="flex items-center">
           <button 
             onClick={() => onNavigate('home')} 
-            className="flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded p-1"
+            className="flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded p-0.5"
             aria-label="TONTO Clothing Home"
           >
-            <img 
-              src="/assets/logo.png" 
-              alt="TONTO Logo" 
-              className="h-7 w-auto object-contain transition-transform duration-200 group-hover:opacity-90"
-            />
+            <Logo variant="header" alt="TONTO Clothing" />
           </button>
         </div>
 
@@ -132,7 +130,7 @@ export default function Header({
           {/* Account */}
           <button
             onClick={onOpenAccount}
-            className="p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label="Customer Account"
           >
             <User size={19} strokeWidth={1.75} />
@@ -141,7 +139,7 @@ export default function Header({
           {/* Saved Items */}
           <button
             onClick={onOpenSaved}
-            className="relative p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="relative p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label={`Saved Items (${savedCount})`}
           >
             <Bookmark size={19} strokeWidth={1.75} />
@@ -155,7 +153,7 @@ export default function Header({
           {/* Search */}
           <button
             onClick={onOpenSearch}
-            className="p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label="Search Catalog"
           >
             <Search size={19} strokeWidth={1.75} />
@@ -164,7 +162,7 @@ export default function Header({
           {/* Bag */}
           <button
             onClick={onOpenBag}
-            className="relative p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="relative p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label={`Shopping Bag (${bagCount})`}
           >
             <ShoppingBag size={19} strokeWidth={1.75} />
@@ -178,7 +176,7 @@ export default function Header({
           {/* Mobile Hamburger Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-1.5 hover:opacity-70 transition-opacity focus:outline-none"
+            className="lg:hidden p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity focus:outline-none cursor-pointer"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}

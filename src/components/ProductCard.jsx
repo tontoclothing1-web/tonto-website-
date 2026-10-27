@@ -245,7 +245,7 @@ function ProductCard({
                   setCurrentIndex(idx);
                 }}
                 aria-label={`Go to slide ${idx + 1}`}
-                className={`h-1 rounded-full transition-all duration-200 pointer-events-auto cursor-pointer ${
+                className={`h-1 py-1.5 -my-1.5 rounded-full transition-all duration-200 pointer-events-auto cursor-pointer ${
                   idx === currentIndex
                     ? 'w-4 bg-[#003F25]'
                     : 'w-1.5 bg-black/25 hover:bg-black/50'
@@ -259,6 +259,7 @@ function ProductCard({
         <button
           data-save-btn="true"
           data-no-swipe="true"
+          aria-label={isSaved ? `Remove ${product.title} from saved items` : `Save ${product.title} to wishlist`}
           onClick={(e) => {
             e.stopPropagation();
             onToggleSave(product);
@@ -284,6 +285,7 @@ function ProductCard({
           type="button"
           data-qv-btn="true"
           data-no-swipe="true"
+          aria-label={`Quick view ${product.title}`}
           onClick={(e) => {
             e.stopPropagation();
             onQuickView(product);

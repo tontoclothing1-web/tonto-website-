@@ -128,7 +128,7 @@ export default function CompleteLookPage({
   };
 
   return (
-    <div className="w-full bg-[#FAFBF9] min-h-screen pb-24 text-left">
+    <div className="w-full bg-[#FAFBF9] min-h-screen min-h-dvh pb-24 text-left">
       
       {/* Top Breadcrumb Header */}
       <div className="bg-white border-b border-[#E0E5E1]">

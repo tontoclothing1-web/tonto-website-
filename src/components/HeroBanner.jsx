@@ -1,3 +1,4 @@
+import Logo from './Logo';
 import React, { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -16,11 +17,13 @@ export default function HeroBanner({ onShopNow, heroMedia }) {
   const buttonText = heroMedia?.buttonText || 'shop now';
 
   return (
-    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none min-h-[460px] sm:min-h-[560px] md:min-h-[620px] h-[calc(100svh-76px)] max-h-[780px]">
+    <section className="relative w-full overflow-hidden bg-[#0A1A12] select-none min-h-[460px] sm:min-h-[560px] md:min-h-[620px] h-[calc(100dvh-76px)] min-h-[460px] max-h-[780px]">
       {/* Background Campaign Image with subtle settle scale */}
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
           src={heroImage}
+          width="1600"
+          height="780"
           alt="TONTO Campaign - Unisex Streetwear Collection"
           className={`w-full h-full object-cover object-[center_12%] transition-opacity duration-700 ${
             mounted ? 'opacity-100' : 'opacity-90'
@@ -39,21 +42,21 @@ export default function HeroBanner({ onShopNow, heroMedia }) {
           
           {/* Logo & Supporting Tagline */}
           <div className="overflow-hidden mb-3 flex items-center gap-2.5">
-            <img
-              src="/assets/logo.png"
-              alt="TONTO Logo"
-              className={`h-6 sm:h-7 w-auto object-contain brightness-0 invert drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] transition-all duration-700 delay-100 ease-out ${
+            <Logo variant="hero" alt="TONTO Clothing" className={`transition-all duration-700 delay-100 ease-out ${
                 mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-              }`}
-            />
-            <span className="text-white/50 text-[10px]">•</span>
-            <span
-              className={`text-[10.5px] sm:text-[11.5px] font-medium tracking-[0.22em] text-white/90 uppercase drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-700 delay-100 ease-out font-['Futura_PT_Book',sans-serif] ${
-                mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-              }`}
-            >
-              {tagline}
-            </span>
+              }`} />
+            {tagline && !tagline.toLowerCase().includes('thrift') && (
+              <>
+                <span className="text-white/50 text-[10px]">•</span>
+                <span
+                  className={`text-[10.5px] sm:text-[11.5px] font-medium tracking-[0.22em] text-white/90 uppercase drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-700 delay-100 ease-out font-['Futura_PT_Book',sans-serif] ${
+                    mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                  }`}
+                >
+                  {tagline}
+                </span>
+              </>
+            )}
           </div>
 
           {/* Heading */}

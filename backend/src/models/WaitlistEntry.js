@@ -54,4 +54,13 @@ export async function findWaitlistEntry({ dropName, email = '', name = '', phone
   return data ? mapRowToWaitlistEntry(data) : null;
 }
 
-export default { WAITLIST_TABLE, mapRowToWaitlistEntry, mapWaitlistEntryToRow, createWaitlistEntry, findWaitlistEntry };
+export async function listWaitlistEntries({ dropName } = {}) {
+  const sb = requireSupabase();
+  let query = sb.from(WAITLIST_TABLE).select('*').order('created_at', { ascending: false });
+  if (dropName) query = query.eq('drop_name', dropName);
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data || []).map(mapRowToWaitlistEntry);
+}
+
+export default { WAITLIST_TABLE, mapRowToWaitlistEntry, mapWaitlistEntryToRow, createWaitlistEntry, findWaitlistEntry, listWaitlistEntries };

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 import { X, Trash2, Plus, Minus, ArrowUpRight, Send, Copy, Check, ShoppingBag } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 
@@ -21,11 +22,11 @@ export default function CartDrawer({
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
+      unlockScroll();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);
@@ -121,7 +122,7 @@ export default function CartDrawer({
                   <div className="flex items-center gap-3 mt-3">
                     <div className="flex items-center border border-[#E0E5E1] rounded-xs">
                       <button
-                        onClick={() => onUpdateQuantity(item.id, item.size, item.quantity - 1)}
+                        onClick={() => onUpdateQuantity(item.id, item.size, -1)}
                         className="px-2 py-1 text-gray-500 hover:text-black transition-colors"
                         aria-label="Decrease quantity"
                       >
@@ -131,7 +132,7 @@ export default function CartDrawer({
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => onUpdateQuantity(item.id, item.size, item.quantity + 1)}
+                        onClick={() => onUpdateQuantity(item.id, item.size, 1)}
                         className="px-2 py-1 text-gray-500 hover:text-black transition-colors"
                         aria-label="Increase quantity"
                       >

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 import { X, Check } from 'lucide-react';
 
 export default function FilterDrawer({
@@ -22,11 +23,11 @@ export default function FilterDrawer({
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
+      unlockScroll();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

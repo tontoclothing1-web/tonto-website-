@@ -1,4 +1,5 @@
 import React from 'react';
+import Logo from './Logo';
 import { MapPin, ArrowUpRight } from 'lucide-react';
 import { submitNewsletter, mirror, readList } from '../lib/capture';
 
@@ -74,15 +75,11 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8">
         
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 md:gap-8 pb-12 border-b border-white/15">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8 pb-12 border-b border-white/15">
           
           {/* Col 1: Brand Info */}
           <div className="space-y-4">
-            <img
-              src="/assets/logo.png"
-              alt="TONTO Clothing"
-              className="h-7 w-auto object-contain brightness-0 invert"
-            />
+            <Logo variant="footer" alt="TONTO Clothing" />
             <p className="text-[12px] text-white/80 leading-relaxed max-w-xs">
               Curated unisex streetwear, washed denim, oversized graphics, and surplus finds. Based in Coimbatore, Tamil Nadu.
             </p>
@@ -94,9 +91,9 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
 
           {/* Col 2: Navigation */}
           <div>
-            <h4 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
               Explore
-            </h4>
+            </h3>
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
                 <button
@@ -151,9 +148,9 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
 
           {/* Col 3: Showroom & Client Care */}
           <div>
-            <h4 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
               Showroom & Client Care
-            </h4>
+            </h3>
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
                 <button
@@ -219,9 +216,9 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
 
           {/* Col 4: Sourcing & Standard */}
           <div>
-            <h4 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
+            <h3 className="text-[12px] font-bold text-white uppercase tracking-wider mb-4">
               Drop Alerts
-            </h4>
+            </h3>
             <p className="text-[12px] text-white/80 leading-relaxed mb-3">
               Receive notifications when new thrift, surplus, and denim drops release in Coimbatore.
             </p>
@@ -237,7 +234,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="flex-1 px-3 py-2 text-[12px] bg-white text-[#111111] placeholder-gray-500 border border-transparent focus:outline-none rounded-xs"
+                  className="min-w-0 flex-1 px-3 py-2 text-base sm:text-[12px] bg-white text-[#111111] placeholder-gray-500 border border-transparent focus:outline-none rounded-xs"
                 />
                 <button
                   type="submit"
@@ -251,9 +248,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
             {newsletterNote && (
               <p className="text-[11px] text-amber-200 -mt-1 mb-2">{newsletterNote}</p>
             )}
-            <div className="inline-block px-3 py-1 bg-white/10 border border-white/20 text-[11px] font-bold text-white uppercase tracking-widest">
-              THRIFT • IMPORTED • SURPLUS
-            </div>
+
           </div>
 
         </div>

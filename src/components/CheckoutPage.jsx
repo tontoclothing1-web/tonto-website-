@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import UPIPaymentModal from './UPIPaymentModal';
+import { Smartphone } from 'lucide-react';
 import { ArrowLeft, Check, AlertCircle, ShoppingBag, ShieldCheck, MapPin, Send, Copy, ArrowRight, RefreshCw, WifiOff } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 import { placeOrder, newClientRequestId, validatePromoCode, mirror, mirrorMerge, readList } from '../lib/capture';
@@ -76,6 +78,9 @@ export default function CheckoutPage({
 }) {
   const [step, setStep] = useState('details'); // 'details' | 'review' | 'pending' | 'success' | 'failure'
   const [deliveryMethod, setDeliveryMethod] = useState('shipping'); // 'shipping' | 'showroom'
+  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'whatsapp' | 'cod'
+  const [isUpiModalOpen, setIsUpiModalOpen] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [simulateError, setSimulateError] = useState(false);
   const [copiedOrder, setCopiedOrder] = useState(false);
 
@@ -253,13 +258,25 @@ export default function CheckoutPage({
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.trim() || !formData.email.includes('@')) newErrors.email = 'Valid email is required';
-    if (!formData.phone.trim() || formData.phone.length < 8) newErrors.phone = 'Valid phone / WhatsApp number is required';
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
+      newErrors.email = 'Valid email address is required (e.g. name@domain.com)';
+    }
+
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      newErrors.phone = 'Valid 10-digit mobile / WhatsApp number is required';
+    }
     
     if (deliveryMethod === 'shipping') {
       if (!formData.address.trim()) newErrors.address = 'Street address is required';
       if (!formData.city.trim()) newErrors.city = 'City is required';
-      if (!formData.postalCode.trim() || formData.postalCode.length < 5) newErrors.postalCode = 'Valid PIN / postal code is required';
+      
+      const cleanPin = formData.postalCode.replace(/\D/g, '');
+      if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+        newErrors.postalCode = 'Valid 6-digit Indian PIN code is required';
+      }
     }
 
     setErrors(newErrors);
@@ -448,7 +465,7 @@ export default function CheckoutPage({
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 sm:pt-10">
+      <div className="max-w-[1400px] mx-auto px-3.5 sm:px-8 pt-6 sm:pt-10">
         
         {/* Progress Stepper */}
         <div className="max-w-xl mx-auto mb-10">
@@ -890,9 +907,65 @@ export default function CheckoutPage({
                     )}
                   </div>
 
+                  {/* Payment Method Selector */}
+                  <div className="space-y-3">
+                    <h3 className="text-[12px] font-extrabold text-[#003F25] uppercase tracking-wider">
+                      Select Payment Mode
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div
+                        onClick={() => setPaymentMethod('upi')}
+                        className={`p-3 border rounded-xs cursor-pointer transition-all ${
+                          paymentMethod === 'upi'
+                            ? 'border-[#003F25] bg-[#F9FAF9] ring-1 ring-[#003F25]'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="w-2 h-2 rounded-full bg-[#003F25]" />
+                          <strong className="text-[12px] text-[#003F25] uppercase">UPI Instant</strong>
+                        </div>
+                        <p className="text-[11px] text-[#79867D]">GPay, PhonePe, Paytm, QR</p>
+                      </div>
+
+                      <div
+                        onClick={() => setPaymentMethod('whatsapp')}
+                        className={`p-3 border rounded-xs cursor-pointer transition-all ${
+                          paymentMethod === 'whatsapp'
+                            ? 'border-[#003F25] bg-[#F9FAF9] ring-1 ring-[#003F25]'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="w-2 h-2 rounded-full bg-[#128C7E]" />
+                          <strong className="text-[12px] text-[#003F25] uppercase">WhatsApp Concierge</strong>
+                        </div>
+                        <p className="text-[11px] text-[#79867D]">Manual Invoice & Support</p>
+                      </div>
+
+                      <div
+                        onClick={() => setPaymentMethod('cod')}
+                        className={`p-3 border rounded-xs cursor-pointer transition-all ${
+                          paymentMethod === 'cod'
+                            ? 'border-[#003F25] bg-[#F9FAF9] ring-1 ring-[#003F25]'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="w-2 h-2 rounded-full bg-gray-600" />
+                          <strong className="text-[12px] text-[#003F25] uppercase">Showroom Pickup</strong>
+                        </div>
+                        <p className="text-[11px] text-[#79867D]">Pay at Coimbatore store</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] text-[12px] text-[#4B5563]">
                     <strong className="block text-[#003F25] font-bold mb-1">Honest Sourcing & Reservation Notice</strong>
                     Submitting this form reserves your selected archive items. The TONTO team will confirm measurement fit with you before issuing final payment details.
+                    <span className="block mt-2 text-[11px] text-[#79867D]">
+                      By proceeding, you agree to our <a href="#/policy/terms" className="underline hover:text-[#003F25]">Terms</a> and <a href="#/policy/privacy" className="underline hover:text-[#003F25]">Privacy Policy</a>. Personal data is used solely for order delivery and customer support in accordance with the DPDP Act 2023.
+                    </span>
                   </div>
 
                   <div className="flex gap-3">
@@ -903,11 +976,19 @@ export default function CheckoutPage({
                       Back
                     </button>
                     <button
-                      onClick={handlePlaceOrder}
-                      className="flex-1 py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                      type="button"
+                      onClick={() => {
+                        if (paymentMethod === 'upi' && unpricedCount === 0 && grandTotal > 0) {
+                          setIsUpiModalOpen(true);
+                        } else {
+                          handlePlaceOrder();
+                        }
+                      }}
+                      disabled={isPlacingOrder}
+                      className="flex-1 py-4 bg-[#003F25] hover:bg-[#002e1b] text-white text-[13px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-60 disabled:cursor-wait"
                     >
                       <Check size={16} />
-                      <span>Confirm & Reserve Order</span>
+                      <span>{isPlacingOrder ? 'Reserving Pieces…' : (paymentMethod === 'upi' && unpricedCount === 0 && grandTotal > 0 ? 'Proceed to UPI Payment' : 'Confirm & Reserve Piece(s) Hold')}</span>
                     </button>
                   </div>
                 </div>
@@ -977,7 +1058,7 @@ export default function CheckoutPage({
                             setPromoError('');
                           }}
                           placeholder="e.g. TONTO15"
-                          className="flex-1 px-3 py-2 text-[12px] font-mono border border-gray-300 rounded-xs uppercase focus:border-[#003F25] outline-none"
+                          className="min-w-0 flex-1 px-3 py-2 text-base sm:text-[12px] font-mono border border-gray-300 rounded-xs uppercase focus:border-[#003F25] outline-none"
                         />
                         <button
                           type="submit"
@@ -1050,6 +1131,21 @@ export default function CheckoutPage({
 
       </div>
 
+      {/* UPI Payment Modal */}
+      <UPIPaymentModal
+        isOpen={isUpiModalOpen}
+        onClose={() => setIsUpiModalOpen(false)}
+        amount={confirmedOrder?.numericTotal || grandTotal}
+        orderId={confirmedOrder?.orderId || 'TONTO-HOLD'}
+        onPaymentConfirmed={(paymentData) => {
+          setIsUpiModalOpen(false);
+          if (step !== 'success') {
+            handlePlaceOrder();
+          } else {
+            setConfirmedOrder((prev) => prev ? { ...prev, paymentStatus: 'Paid (UPI)', paymentData } : prev);
+          }
+        }}
+      />
     </div>
   );
 }

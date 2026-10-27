@@ -28,6 +28,7 @@ import looksRoutes from './routes/looks.routes.js';
 import reviewsRoutes from './routes/reviews.routes.js'; // mounted at /api (see below)
 import accountRoutes from './routes/account.routes.js';
 import policiesRoutes from './routes/policies.routes.js';
+import { errorHandler } from './middleware/errorHandler.js';
 import storeRoutes from './routes/store.routes.js';
 
 const app = express();
@@ -123,7 +124,8 @@ app.use('/api', (_req, res) => {
   res.status(404).json({ success: false, message: 'No such endpoint. See backend/README.md.' });
 });
 
-// ---- 404 + centralized errors are mounted by server.js AFTER static/SPA fallback ----
+// Centralized error formatter for all /api routes
+app.use(errorHandler);
 // (server.js adds express.static(dist), the SPA catch-all, then notFound + errorHandler last)
 
 export default app;
