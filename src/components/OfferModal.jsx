@@ -10,6 +10,10 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
 
+  // Smooth animation entrance and exit states
+  const [mounted, setMounted] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
   const bannerImage = offerModalMedia?.image || '/assets/editorial/editorial-seated-camo.jpg';
   const tag = offerModalMedia?.tag || 'TONTO ARCHIVE';
   const badge = offerModalMedia?.badge || 'LIMITED OFFER';
@@ -26,12 +30,33 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
       setIsSubmitted(false);
       setIsSubmitting(false);
       setFormError('');
+      setIsClosing(false);
+      // Double rAF ensures DOM paint before transitioning in for butter-smooth animation
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setMounted(true);
+        });
+      });
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setMounted(false);
+      setIsClosing(false);
     }
   }, [isOpen]);
 
+  const handleSmoothClose = () => {
+    if (isClosing) return;
+    setIsClosing(true);
+    setMounted(false);
+    setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, 280);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleSmoothClose();
     };
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -41,7 +66,7 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, isClosing]);
 
   if (!isOpen) return null;
 
@@ -58,9 +83,6 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
     setIsSubmitting(true);
     setFormError('');
 
-    // POST /api/leads/claim-offer is what puts the address in the owner's CRM.
-    // A 4xx is a real answer (bad payload / rate limited) and must not be
-    // papered over with the "you're on the list" screen.
     const result = await submitOfferClaim({
       name: cleanEmail.split('@')[0].replace(/[._-]/g, ' '),
       email: cleanEmail,
@@ -74,7 +96,6 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
       return;
     }
 
-    // Mirror for this browser's Admin Dashboard (also the offline fallback).
     const emailKey = cleanEmail;
     const subscribers = readList('tonto_admin_subscribers');
     if (!subscribers.some((s) => String(s?.email).toLowerCase() === emailKey)) {
@@ -117,7 +138,7 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
       navigator.clipboard?.writeText(PROMO_CODE)?.catch(() => {});
       setIsCopied(true);
     } catch (err) {
-      // clipboard blocked (iframe / permissions) — the code is still on screen
+      // clipboard blocked
     }
 
     setIsSubmitting(false);
@@ -126,9 +147,9 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
       onCredentialsSubmitted({ email: cleanEmail, phone: cleanPhone });
     }
 
-    // Auto-dismiss modal after 2.5s once credentials have been given
+    // Auto-dismiss modal smoothly after 2.5s once credentials have been given
     setTimeout(() => {
-      onClose();
+      handleSmoothClose();
     }, 2500);
   };
 
@@ -138,36 +159,46 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2500);
     } catch (err) {
-      // clipboard unavailable (insecure context / permissions) — the code is on screen
+      // clipboard unavailable
     }
   };
 
   const handleShopWithCode = () => {
     handleCopyCode();
-    onClose();
+    handleSmoothClose();
     if (onNavigateCollection) {
       onNavigateCollection('All');
     }
   };
 
+  const isVisible = mounted && !isClosing;
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-      {/* Dimmed backdrop */}
+    <div className={`fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-5 overflow-y-auto transition-opacity duration-300 ${
+      isVisible ? 'opacity-100' : 'opacity-0'
+    }`}>
+      {/* Dimmed backdrop with smooth fade */}
       <div
-        className="fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity duration-300 z-0 animate-fade-in"
-        onClick={onClose}
+        className={`fixed inset-0 bg-black/75 backdrop-blur-xs transition-opacity duration-300 ease-out z-0 ${
+          isVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+        onClick={handleSmoothClose}
         aria-hidden="true"
       />
 
-      {/* Main Dialog Modal */}
+      {/* Main Dialog Modal with smooth scale & settle easing */}
       <div
-        className="relative w-full max-w-[840px] bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-sm overflow-hidden flex flex-col md:flex-row my-auto animate-scale-in text-left max-h-[92vh] overflow-y-auto"
+        className={`relative w-full max-w-[840px] bg-white border border-[#E0E5E1] shadow-2xl z-10 rounded-sm overflow-hidden flex flex-col md:flex-row my-auto text-left max-h-[92vh] overflow-y-auto transform transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          isVisible
+            ? 'opacity-100 scale-100 translate-y-0'
+            : 'opacity-0 scale-[0.95] translate-y-3'
+        }`}
         role="dialog"
         aria-modal="true"
       >
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleSmoothClose}
           className="absolute top-3.5 right-3.5 z-30 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#111111] flex items-center justify-center shadow-sm transition-all hover:scale-105 active:scale-95 cursor-pointer focus:outline-none"
           aria-label="Close modal"
         >
@@ -344,7 +375,7 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
           <div className="pt-4 mt-2 text-center">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleSmoothClose}
               className="text-[11.5px] text-gray-400 hover:text-black transition-colors cursor-pointer underline underline-offset-2"
             >
               No thanks, continue browsing

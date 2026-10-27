@@ -318,93 +318,63 @@ export default function App() {
     }
   });
 
-  // 15% off offer modal: pops up on initial visit only if credentials have NOT been given
+  // Offer popup trigger logic:
+  // Appears ONLY ONCE on home page open, then in New Arrivals (once), and in TONTO Made (once) only.
   useEffect(() => {
-    if (activeView === 'home' && !hasGivenCredentials) {
-      const hasInitialShown = sessionStorage.getItem('tonto_initial_pop_shown');
-      if (!hasInitialShown) {
-        sessionStorage.setItem('tonto_initial_pop_shown', 'true');
+    if (hasGivenCredentials) return;
+
+    const isSubmitted = () => {
+      try {
+        return localStorage.getItem('tonto_credentials_submitted') === 'true';
+      } catch (e) {
+        return false;
+      }
+    };
+
+    if (isSubmitted()) return;
+
+    // 1. Website Home Page opens: appears only once
+    if (activeView === 'home') {
+      const shownHome = sessionStorage.getItem('tonto_pop_shown_home');
+      if (!shownHome) {
+        sessionStorage.setItem('tonto_pop_shown_home', 'true');
         const timer = setTimeout(() => {
-          setIsOfferModalOpen(true);
-        }, 800);
+          if (!isSubmitted()) {
+            setIsOfferModalOpen(true);
+          }
+        }, 900);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    // 2. In New Arrivals view: appears only once
+    if (activeView === 'new-arrivals') {
+      const shownNewArrivals = sessionStorage.getItem('tonto_pop_shown_new_arrivals');
+      if (!shownNewArrivals) {
+        sessionStorage.setItem('tonto_pop_shown_new_arrivals', 'true');
+        const timer = setTimeout(() => {
+          if (!isSubmitted()) {
+            setIsOfferModalOpen(true);
+          }
+        }, 650);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    // 3. In TONTO Made view: appears only once
+    if (activeView === 'lookbook') {
+      const shownTontoMade = sessionStorage.getItem('tonto_pop_shown_tonto_made');
+      if (!shownTontoMade) {
+        sessionStorage.setItem('tonto_pop_shown_tonto_made', 'true');
+        const timer = setTimeout(() => {
+          if (!isSubmitted()) {
+            setIsOfferModalOpen(true);
+          }
+        }, 650);
         return () => clearTimeout(timer);
       }
     }
   }, [activeView, hasGivenCredentials]);
-
-  // Pop up when customer enters FEATURED if they haven't provided credentials
-  useEffect(() => {
-    if (activeView === 'featured' && !hasGivenCredentials) {
-      const timer = setTimeout(() => {
-        const stillNotGiven = localStorage.getItem('tonto_credentials_submitted') === 'true';
-        if (!stillNotGiven) {
-          setIsOfferModalOpen(true);
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [activeView, hasGivenCredentials]);
-
-  // If customer has NOT given credentials, pop up again ONLY when they enter FEATURED (scroll observer on home)
-  const activeObservedSectionRef = useRef(null);
-
-  useEffect(() => {
-    if (activeView !== 'home' || hasGivenCredentials) return;
-
-    const targetIds = ['trending-section', 'tonto-own-make'];
-    const elements = targetIds
-      .map((id) => document.getElementById(id))
-      .filter(Boolean);
-
-    if (elements.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const sectionId = entry.target.id;
-            if (activeObservedSectionRef.current !== sectionId) {
-              activeObservedSectionRef.current = sectionId;
-              const hasGiven = localStorage.getItem('tonto_credentials_submitted') === 'true';
-              if (!hasGiven) {
-                setTimeout(() => {
-                  const stillNotGiven = localStorage.getItem('tonto_credentials_submitted') === 'true';
-                  if (!stillNotGiven) {
-                    setIsOfferModalOpen(true);
-                  }
-                }, 300);
-              }
-            }
-          } else {
-            if (activeObservedSectionRef.current === entry.target.id) {
-              activeObservedSectionRef.current = null;
-            }
-          }
-        });
-      },
-      {
-        threshold: 0.15,
-      }
-    );
-
-    elements.forEach((el) => observer.observe(el));
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [activeView, hasGivenCredentials]);
-
-  const handleEnterTargetSection = (targetId) => {
-    const hasGiven = localStorage.getItem('tonto_credentials_submitted') === 'true';
-    if (!hasGiven && (targetId === 'trending-section' || targetId === 'tonto-own-make')) {
-      setTimeout(() => {
-        const stillNotGiven = localStorage.getItem('tonto_credentials_submitted') === 'true';
-        if (!stillNotGiven) {
-          setIsOfferModalOpen(true);
-        }
-      }, 500);
-    }
-  };
 
   // URL Routing Listener (Pathname + Hash)
   useEffect(() => {
@@ -734,7 +704,6 @@ export default function App() {
           onOpenOffer={() => {
             setIsOfferModalOpen(true);
           }}
-          onEnterTargetSection={handleEnterTargetSection}
           onOpenBag={() => setIsBagOpen(true)}
           selectedRegion={selectedRegion}
           onOpenRegion={() => setIsRegionOpen(true)}
