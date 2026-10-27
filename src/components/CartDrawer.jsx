@@ -122,7 +122,7 @@ export default function CartDrawer({
                   <div className="flex items-center gap-3 mt-3">
                     <div className="flex items-center border border-[#E0E5E1] rounded-xs">
                       <button
-                        onClick={() => onUpdateQuantity(item.id, item.size, item.quantity - 1)}
+                        onClick={() => onUpdateQuantity(item.id, item.size, -1)}
                         className="px-2 py-1 text-gray-500 hover:text-black transition-colors"
                         aria-label="Decrease quantity"
                       >
@@ -132,7 +132,7 @@ export default function CartDrawer({
                         {item.quantity}
                       </span>
                       <button
-                        onClick={() => onUpdateQuantity(item.id, item.size, item.quantity + 1)}
+                        onClick={() => onUpdateQuantity(item.id, item.size, 1)}
                         className="px-2 py-1 text-gray-500 hover:text-black transition-colors"
                         aria-label="Increase quantity"
                       >
