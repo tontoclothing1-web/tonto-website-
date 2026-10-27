@@ -1,13 +1,53 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 
 /**
+ * Compute responsive dimensions so that:
+ * - On Mobile (< 640px): Card is nicely proportioned (220px - 260px), leaving room
+ *   for the left and right cards to peek in, and fitting comfortably within vertical mobile viewport.
+ * - On Tablet (640px - 1024px): 310px card.
+ * - On Desktop (>= 1024px): 360px card.
+ */
+function computeMeasurements(width) {
+  const isMobile = width < 640;
+  const isTablet = width >= 640 && width < 1024;
+  let cardWidth;
+  let gap;
+
+  if (isMobile) {
+    // 68-72% of screen width, clamped between 220px and 260px
+    cardWidth = Math.min(260, Math.max(220, Math.round(width * 0.70)));
+    gap = 12;
+  } else if (isTablet) {
+    cardWidth = Math.min(310, Math.round(width * 0.42));
+    gap = 16;
+  } else {
+    cardWidth = 360;
+    gap = 22;
+  }
+
+  const itemStep = cardWidth + gap;
+  const paddingLeft = Math.max(0, Math.round((width - cardWidth) / 2));
+  const isReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  return {
+    containerWidth: width,
+    cardWidth,
+    gap,
+    itemStep,
+    paddingLeft,
+    isReducedMotion,
+    isMobile
+  };
+}
+
+/**
  * useCenteredCarousel Hook
  * 
  * High-performance, GPU-accelerated center-snapped carousel controller.
- * - Interpolates scale (1.0 -> 0.82) and opacity (1.0 -> 0.88) via requestAnimationFrame
+ * - Interpolates scale and opacity via requestAnimationFrame
  * - Writes styles directly to element refs (el.style.transform), zero re-renders on scroll
  * - Native CSS scroll-snap with programmatic smooth centering
- * - Mouse drag with inertia, touch momentum, and trackpad support
+ * - Full touch swipe and mouse drag support with momentum
  * - Caches measurements with ResizeObserver
  * - Full cleanup on unmount for React 19 StrictMode & SPA safety
  */
@@ -29,22 +69,19 @@ export function useCenteredCarousel({
   const [isDragging, setIsDragging] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
 
-  // Cached measurements
-  const measurementsRef = useRef({
-    containerWidth: 1440,
-    cardWidth: 380,
-    gap: 20,
-    itemStep: 400,
-    paddingLeft: 530,
-    isReducedMotion: false,
-    isMobile: false
+  // Responsive measurements state & ref
+  const [measurements, setMeasurements] = useState(() => {
+    const initialWidth = typeof window !== 'undefined' ? window.innerWidth : 1440;
+    return computeMeasurements(initialWidth);
   });
+  const measurementsRef = useRef(measurements);
 
   const activeIndexRef = useRef(initialIndex || 0);
   const isDraggingRef = useRef(false);
   const isCenterPlayingRef = useRef(isCenterPlaying);
   const isScrollingRef = useRef(false);
   const dragInfoRef = useRef({ startX: 0, startScrollLeft: 0, hasMoved: false, lastX: 0, lastTime: 0, velocity: 0 });
+  const touchInfoRef = useRef({ startX: 0, startY: 0, hasMoved: false });
   const scrollRafRef = useRef(null);
   const scrollIdleTimerRef = useRef(null);
   const isNormalizingRef = useRef(false);
@@ -60,41 +97,20 @@ export function useCenteredCarousel({
     if (!container) return;
 
     const containerWidth = container.clientWidth;
-    const firstCard = cardWrapperRefs.current[0];
-    const secondCard = cardWrapperRefs.current[1];
+    const newM = computeMeasurements(containerWidth);
 
-    let cardWidth = 380;
-    let gap = 20;
-
-    if (firstCard) {
-      cardWidth = firstCard.offsetWidth || 380;
-      if (secondCard) {
-        gap = Math.max(8, secondCard.offsetLeft - (firstCard.offsetLeft + cardWidth));
+    measurementsRef.current = newM;
+    setMeasurements((prev) => {
+      if (
+        prev.cardWidth === newM.cardWidth &&
+        prev.gap === newM.gap &&
+        prev.paddingLeft === newM.paddingLeft &&
+        prev.isMobile === newM.isMobile
+      ) {
+        return prev;
       }
-    } else {
-      // Responsive fallback estimations
-      if (containerWidth < 640) {
-        cardWidth = 270;
-        gap = 12;
-      } else if (containerWidth < 1024) {
-        cardWidth = 330;
-        gap = 16;
-      }
-    }
-
-    const itemStep = cardWidth + gap;
-    const paddingLeft = Math.max(0, (containerWidth - cardWidth) / 2);
-    const isReducedMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    measurementsRef.current = {
-      containerWidth,
-      cardWidth,
-      gap,
-      itemStep,
-      paddingLeft,
-      isReducedMotion,
-      isMobile: containerWidth < 640
-    };
+      return newM;
+    });
   }, []);
 
   // Frame-by-frame continuous distance interpolation
@@ -117,11 +133,13 @@ export function useCenteredCarousel({
     }
 
     const isMoving = isDraggingRef.current || isScrollingRef.current;
+    // On mobile: 1.08x highlight / 1.04x center, 0.88x sides. Fits phone screen vertically without clipping!
+    // On desktop: 1.16x highlight / 1.10x center, 0.85x sides.
     const targetCenterScale = isMobile 
-      ? (isCenterPlayingRef.current ? 1.14 : 1.10) 
+      ? (isCenterPlayingRef.current ? 1.08 : 1.04) 
       : (isCenterPlayingRef.current ? activeHighlightScale : 1.10);
     const centerScale = targetCenterScale;
-    const minScale = sideScale;
+    const minScale = isMobile ? 0.88 : sideScale;
 
     // Apply continuous GPU scale and opacity to card wrapper
     const wrappers = cardWrapperRefs.current;
@@ -267,7 +285,6 @@ export function useCenteredCarousel({
     if (!container) return;
 
     updateMeasurements();
-    // Position initially without animation
     const { paddingLeft, itemStep } = measurementsRef.current;
     const initialTarget = Math.max(0, paddingLeft + (initialIndex || 0) * itemStep - paddingLeft);
     container.scrollLeft = initialTarget;
@@ -278,9 +295,42 @@ export function useCenteredCarousel({
     });
   }, []);
 
+  // Touch Swipe Handlers for Mobile Devices
+  const handleTouchStart = useCallback((e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    touchInfoRef.current = {
+      startX: touch.clientX,
+      startY: touch.clientY,
+      hasMoved: false
+    };
+    dragInfoRef.current.hasMoved = false;
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!e.touches || e.touches.length === 0) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchInfoRef.current.startX);
+    const dy = Math.abs(touch.clientY - touchInfoRef.current.startY);
+
+    if (dx > 6 || dy > 6) {
+      touchInfoRef.current.hasMoved = true;
+      dragInfoRef.current.hasMoved = true;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (touchInfoRef.current.hasMoved) {
+      dragInfoRef.current.hasMoved = true;
+      setTimeout(() => {
+        dragInfoRef.current.hasMoved = false;
+        touchInfoRef.current.hasMoved = false;
+      }, 120);
+    }
+  }, []);
+
   // Mouse Drag with Velocity and Momentum
   const handleMouseDown = useCallback((e) => {
-    // Only drag with primary mouse button
     if (e.button !== 0) return;
     const container = containerRef.current;
     if (!container) return;
@@ -307,7 +357,6 @@ export function useCenteredCarousel({
 
       container.scrollLeft = dragInfoRef.current.startScrollLeft - dx;
 
-      // Track velocity for release inertia
       const now = performance.now();
       const dt = now - dragInfoRef.current.lastTime;
       if (dt > 16) {
@@ -325,7 +374,6 @@ export function useCenteredCarousel({
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
 
-      // Inertia throw
       const v = dragInfoRef.current.velocity;
       if (Math.abs(v) > 0.4) {
         const momentumDistance = v * -220;
@@ -362,7 +410,10 @@ export function useCenteredCarousel({
     hasMoved: dragInfoRef.current.hasMoved,
     scrollToIndex,
     handleMouseDown,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     handleKeyDown,
-    measurements: measurementsRef.current
+    measurements
   };
 }

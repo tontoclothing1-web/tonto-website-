@@ -60,6 +60,9 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
     hasMoved,
     scrollToIndex,
     handleMouseDown,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
     handleKeyDown,
     measurements
   } = useCenteredCarousel({
@@ -241,10 +244,13 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
       </div>
 
       {/* FULL-BLEED NATIVE SCROLL-SNAP STRIP WITH MOMENTUM DRAG */}
-      <div className="relative w-full overflow-hidden pt-12 pb-12 sm:pt-16 sm:pb-16">
+      <div className="relative w-full overflow-hidden py-8 sm:py-14">
         <div
           ref={containerRef}
           onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
           onKeyDown={handleKeyDown}
           tabIndex={0}
           className={`relative w-full overflow-x-auto flex items-center no-scrollbar select-none outline-none ${
@@ -253,7 +259,8 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
           style={{
             scrollSnapType: isDragging ? 'none' : 'x mandatory',
             scrollBehavior: 'smooth',
-            touchAction: 'pan-y',
+            touchAction: 'pan-x pan-y',
+            WebkitOverflowScrolling: 'touch',
             overscrollBehaviorX: 'contain',
             paddingLeft: `${paddingLeft}px`,
             paddingRight: `${paddingLeft}px`,
@@ -303,7 +310,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                     transformOrigin: 'center center',
                     willChange: isScrolling || isDragging ? 'transform, opacity' : 'auto'
                   }}
-                  className={`relative w-full aspect-[380/530] overflow-hidden bg-[#111111] border transition-[box-shadow,border-color] duration-500 ${
+                  className={`relative w-full aspect-[380/500] sm:aspect-[380/530] overflow-hidden bg-[#111111] border transition-[box-shadow,border-color] duration-500 ${
                     isCenter && isPlayingHighlight
                       ? 'border-black/30 shadow-[0_22px_48px_rgba(0,0,0,0.28)] ring-2 ring-black/15'
                       : isCenter
@@ -393,7 +400,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                     e.stopPropagation();
                     handleLookClick(look);
                   }}
-                  className={`mt-2 p-2.5 bg-white border flex items-center justify-between transition-colors cursor-pointer ${
+                  className={`mt-2 p-2 sm:p-2.5 bg-white border flex items-center justify-between transition-colors cursor-pointer ${
                     isCenter ? 'border-black/25 shadow-md' : 'border-gray-200 shadow-xs hover:border-gray-400'
                   }`}
                 >
