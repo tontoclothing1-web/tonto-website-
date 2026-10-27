@@ -71,7 +71,7 @@ export async function request(path, { method = 'GET', body, auth = true, query }
   const headers = { 'Content-Type': 'application/json' };
   if (auth) {
     const token = getToken();
-    if (token && token !== 'tonto-admin-offline-session') headers.Authorization = `Bearer ${token}`;
+    if (token) headers.Authorization = `Bearer ${token}`;
   }
   let res;
   try {

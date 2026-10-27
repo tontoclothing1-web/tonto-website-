@@ -210,9 +210,6 @@ export default function AdminDashboard({
    * its own as the next toast replaced it.
    */
   const expireAdminSession = (message = 'Admin session expired — sign in again.') => {
-    if (getToken() === 'tonto-admin-offline-session') {
-      return;
-    }
     clearToken();
     try {
       localStorage.removeItem('tonto_admin_session');
@@ -1284,21 +1281,11 @@ export default function AdminDashboard({
         return;
       }
       try {
-        const token = getToken();
-        if (token === 'tonto-admin-offline-session') {
-          if (!cancelled) setIsAuthenticated(true);
-        } else {
-          const res = await auth.me();
-          if (!cancelled && res?.user?.role === 'admin') setIsAuthenticated(true);
-          else handleSessionDrop();
-        }
+        const res = await auth.me();
+        if (!cancelled && res?.user?.role === 'admin') setIsAuthenticated(true);
+        else handleSessionDrop();
       } catch {
-        const token = getToken();
-        if (token === 'tonto-admin-offline-session') {
-          if (!cancelled) setIsAuthenticated(true);
-        } else {
-          handleSessionDrop();
-        }
+        handleSessionDrop();
       }
       if (!cancelled) setSessionChecked(true);
     };
@@ -1313,17 +1300,7 @@ export default function AdminDashboard({
     setIsAuthBusy(true);
     setAuthError('');
     try {
-      // Immediate local pass for default passcode (avoids 405 on static hosting where API is not co-located)
-      const configuredPasscode = (import.meta.env?.VITE_ADMIN_PASSCODE || 'tonto-admin-2026').trim();
-      if (clean === configuredPasscode || clean === 'tonto-admin-2026') {
-        setToken('tonto-admin-offline-session');
-        try { localStorage.setItem('tonto_admin_session', 'true'); } catch { /* private mode */ }
-        setIsAuthenticated(true);
-        setPasscode('');
-        setAuthError('');
-        showToast('Welcome to TONTO Admin Desk');
-        return;
-      }
+
       const res = await auth.adminLogin(clean);
       if (!res?.token) throw new Error('Incorrect passcode.');
       setToken(res.token);
