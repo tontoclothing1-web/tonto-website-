@@ -1,3 +1,4 @@
+import Logo from './Logo';
 import React, { useEffect, useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -39,13 +40,9 @@ export default function HeroBanner({ onShopNow, heroMedia }) {
           
           {/* Logo & Supporting Tagline */}
           <div className="overflow-hidden mb-3 flex items-center gap-2.5">
-            <img
-              src="/assets/logo.png"
-              alt="TONTO Logo"
-              className={`h-6 sm:h-7 w-auto object-contain brightness-0 invert drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)] transition-all duration-700 delay-100 ease-out ${
+            <Logo variant="hero" alt="TONTO Clothing" className={`transition-all duration-700 delay-100 ease-out ${
                 mounted ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-              }`}
-            />
+              }`} />
             <span className="text-white/50 text-[10px]">•</span>
             <span
               className={`text-[10.5px] sm:text-[11.5px] font-medium tracking-[0.22em] text-white/90 uppercase drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)] transition-all duration-700 delay-100 ease-out font-['Futura_PT_Book',sans-serif] ${

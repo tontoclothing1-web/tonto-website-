@@ -2095,11 +2095,7 @@ export default function AdminDashboard({
               className="flex items-center gap-2 group cursor-pointer shrink-0"
               title="Click to visit live store"
             >
-              <img
-                src="/assets/logo.png"
-                alt="TONTO Logo"
-                className="h-5 sm:h-6 w-auto object-contain brightness-0 invert"
-              />
+              <img src="/assets/tonto-lockup.svg" alt="TONTO Clothing" className="h-6 sm:h-7 w-auto object-contain" />
               <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] bg-white/15 px-1.5 sm:px-2 py-0.5 rounded-xs text-[#E0E5E1] whitespace-nowrap">
                 ADMIN DESK
               </span>

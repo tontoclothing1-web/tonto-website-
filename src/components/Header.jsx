@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, Bookmark, Search, ShoppingBag, Menu, X, ArrowUpRight, Shield } from 'lucide-react';
+import Logo from './Logo';
 
 export default function Header({
   activeView,
@@ -94,11 +95,7 @@ export default function Header({
             className="flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded p-1"
             aria-label="TONTO Clothing Home"
           >
-            <img 
-              src="/assets/logo.png" 
-              alt="TONTO Logo" 
-              className="h-7 w-auto object-contain transition-transform duration-200 group-hover:opacity-90"
-            />
+            <Logo variant="header" alt="TONTO Clothing" />
           </button>
         </div>
 

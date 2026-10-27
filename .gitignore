@@ -33,3 +33,7 @@ Tonto-20260927T114534Z-1-001/
 admin-*.png
 backend/supabase/.temp/
 .temp/
+.vercel
+
+screenshots/
+

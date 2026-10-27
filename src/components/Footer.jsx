@@ -1,4 +1,5 @@
 import React from 'react';
+import Logo from './Logo';
 import { MapPin, ArrowUpRight } from 'lucide-react';
 import { submitNewsletter, mirror, readList } from '../lib/capture';
 
@@ -78,11 +79,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
           
           {/* Col 1: Brand Info */}
           <div className="space-y-4">
-            <img
-              src="/assets/logo.png"
-              alt="TONTO Clothing"
-              className="h-7 w-auto object-contain brightness-0 invert"
-            />
+            <Logo variant="footer" alt="TONTO Clothing" />
             <p className="text-[12px] text-white/80 leading-relaxed max-w-xs">
               Curated unisex streetwear, washed denim, oversized graphics, and surplus finds. Based in Coimbatore, Tamil Nadu.
             </p>
