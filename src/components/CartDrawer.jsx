@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 import { X, Trash2, Plus, Minus, ArrowUpRight, Send, Copy, Check, ShoppingBag } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 
@@ -21,11 +22,11 @@ export default function CartDrawer({
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
+      unlockScroll();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

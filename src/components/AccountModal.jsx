@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 import { X, Lock, ArrowUpRight, Bookmark, RefreshCw, AlertCircle } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 import { submitWaitlist, mirror } from '../lib/capture';
@@ -14,11 +15,11 @@ export default function AccountModal({ isOpen, onClose, onOpenSaved, onNavigateA
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
+      unlockScroll();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

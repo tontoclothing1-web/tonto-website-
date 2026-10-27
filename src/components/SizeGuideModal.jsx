@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 import { createPortal } from 'react-dom';
 import { X, Ruler } from 'lucide-react';
 
@@ -8,11 +9,11 @@ export default function SizeGuideModal({ isOpen, onClose, category = 'Denim' }) 
       if (e.key === 'Escape') onClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
+      unlockScroll();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

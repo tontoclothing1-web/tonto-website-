@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Bookmark, Search, ShoppingBag, Menu, X, ArrowUpRight, Shield } from 'lucide-react';
 import Logo from './Logo';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 
 export default function Header({
   activeView,
@@ -129,7 +130,7 @@ export default function Header({
           {/* Account */}
           <button
             onClick={onOpenAccount}
-            className="p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label="Customer Account"
           >
             <User size={19} strokeWidth={1.75} />
@@ -138,7 +139,7 @@ export default function Header({
           {/* Saved Items */}
           <button
             onClick={onOpenSaved}
-            className="relative p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="relative p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label={`Saved Items (${savedCount})`}
           >
             <Bookmark size={19} strokeWidth={1.75} />
@@ -152,7 +153,7 @@ export default function Header({
           {/* Search */}
           <button
             onClick={onOpenSearch}
-            className="p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label="Search Catalog"
           >
             <Search size={19} strokeWidth={1.75} />
@@ -161,7 +162,7 @@ export default function Header({
           {/* Bag */}
           <button
             onClick={onOpenBag}
-            className="relative p-1.5 hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
+            className="relative p-2 sm:p-1.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             aria-label={`Shopping Bag (${bagCount})`}
           >
             <ShoppingBag size={19} strokeWidth={1.75} />
@@ -175,7 +176,7 @@ export default function Header({
           {/* Mobile Hamburger Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-1.5 hover:opacity-70 transition-opacity focus:outline-none"
+            className="lg:hidden p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:opacity-70 transition-opacity focus:outline-none cursor-pointer"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}

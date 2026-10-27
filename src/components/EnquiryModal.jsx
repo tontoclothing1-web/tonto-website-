@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 import { X, Copy, Check, ExternalLink, Send, MessageSquare, Sparkles, MapPin, Ruler, Package, Scissors, HelpCircle } from 'lucide-react';
 import { BRAND_INFO } from '../data/products';
 import { submitEnquiry, mirror } from '../lib/capture';
@@ -87,11 +88,11 @@ export default function EnquiryModal({ product: initialProduct = null, initialSi
       if (e.key === 'Escape') onClose?.();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
+      unlockScroll();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose]);

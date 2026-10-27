@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { lockScroll, unlockScroll } from '../lib/scrollLock';
 import { X, Check, Copy, ArrowRight, Sparkles } from 'lucide-react';
 import { submitOfferClaim, mirror, readList } from '../lib/capture';
 
@@ -59,11 +60,11 @@ export default function OfferModal({ isOpen, onClose, onNavigateCollection, onCr
       if (e.key === 'Escape') handleSmoothClose();
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      lockScroll();
       window.addEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.body.style.overflow = '';
+      unlockScroll();
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, isClosing]);
