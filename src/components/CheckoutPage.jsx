@@ -963,6 +963,9 @@ export default function CheckoutPage({
                   <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] text-[12px] text-[#4B5563]">
                     <strong className="block text-[#003F25] font-bold mb-1">Honest Sourcing & Reservation Notice</strong>
                     Submitting this form reserves your selected archive items. The TONTO team will confirm measurement fit with you before issuing final payment details.
+                    <span className="block mt-2 text-[11px] text-[#79867D]">
+                      By proceeding, you agree to our <a href="#/policy/terms" className="underline hover:text-[#003F25]">Terms</a> and <a href="#/policy/privacy" className="underline hover:text-[#003F25]">Privacy Policy</a>. Personal data is used solely for order delivery and customer support in accordance with the DPDP Act 2023.
+                    </span>
                   </div>
 
                   <div className="flex gap-3">

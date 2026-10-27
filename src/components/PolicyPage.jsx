@@ -186,16 +186,28 @@ export default function PolicyPage({
 
           {/* TAB: PRIVACY */}
           {activeTab === 'privacy' && (
-            <div className="space-y-4">
+            <div className="space-y-4 text-[13px] leading-relaxed">
               <h2 className="text-lg font-bold text-[#003F25] uppercase tracking-wide mb-2">
-                Privacy & Data Integrity
+                Privacy & Data Integrity (DPDP Act Compliance)
               </h2>
               <p>
-                At TONTO Clothing, we value your privacy. We collect customer contact details (such as your phone number, email, and shipping address) strictly to coordinate order holds, shipping dispatch, and opt-in drop alerts.
+                At TONTO Clothing, we value your privacy. We collect customer personal data (such as name, phone number, email, and postal delivery address) strictly for specified, lawful purposes: coordinating garment measurement fit, reserving archive pieces, processing courier dispatch, and sending opt-in drop alerts.
               </p>
               <p>
-                We do not sell, rent, or trade your contact information with external marketing third parties.
+                We do not sell, rent, or trade your personal data with any external marketing third parties. Data is processed through our secure encrypted backend and trusted courier partners (such as BlueDart) solely for order fulfillment.
               </p>
+              <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-2 mt-4">
+                <strong className="block text-[#003F25] font-bold text-[12px] uppercase tracking-wider">
+                  Data Subject Rights & Grievance Redressal (India DPDP Act 2023)
+                </strong>
+                <p className="text-[12px] text-[#4B5563]">
+                  Under India's Digital Personal Data Protection Act, 2023, you have the right to access, correct, or request erasure of your personal data, and to withdraw consent at any time.
+                </p>
+                <p className="text-[12px] text-[#4B5563]">
+                  <strong>Grievance Officer:</strong> Customer Care & Grievance Desk, TONTO Clothing, Coimbatore, Tamil Nadu, India.<br />
+                  <strong>Direct Inquiries:</strong> <a href="mailto:care@tontoclothing.com" className="text-[#003F25] underline">care@tontoclothing.com</a> | WhatsApp Concierge: +91 82483 21214.
+                </p>
+              </div>
             </div>
           )}
 
