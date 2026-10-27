@@ -258,13 +258,25 @@ export default function CheckoutPage({
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.trim() || !formData.email.includes('@')) newErrors.email = 'Valid email is required';
-    if (!formData.phone.trim() || formData.phone.length < 8) newErrors.phone = 'Valid phone / WhatsApp number is required';
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
+      newErrors.email = 'Valid email address is required (e.g. name@domain.com)';
+    }
+
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      newErrors.phone = 'Valid 10-digit mobile / WhatsApp number is required';
+    }
     
     if (deliveryMethod === 'shipping') {
       if (!formData.address.trim()) newErrors.address = 'Street address is required';
       if (!formData.city.trim()) newErrors.city = 'City is required';
-      if (!formData.postalCode.trim() || formData.postalCode.length < 5) newErrors.postalCode = 'Valid PIN / postal code is required';
+      
+      const cleanPin = formData.postalCode.replace(/\D/g, '');
+      if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+        newErrors.postalCode = 'Valid 6-digit Indian PIN code is required';
+      }
     }
 
     setErrors(newErrors);
