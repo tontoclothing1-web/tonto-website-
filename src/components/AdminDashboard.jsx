@@ -47,6 +47,7 @@ import {
   Check,
   X,
   Clock,
+  Bell,
   PhoneCall,
   Mail,
   MessageSquare,
@@ -921,26 +922,164 @@ export default function AdminDashboard({
    * while the store was unreachable stay listed (flagged device-only) until a
    * successful load returns the same address.
    */
-  const subscribers = useMemo(() => {
-    const fromServer = leads.filter(isSubscriber).map(fromApiSubscriber);
-    const seen = new Set(fromServer.map((s) => String(s.email).toLowerCase()));
-    let mirrored = [];
+  const [remoteWaitlist, setRemoteWaitlist] = useState([]);
+  const [waitlistSearchQuery, setWaitlistSearchQuery] = useState('');
+  const [waitlistDropFilter, setWaitlistDropFilter] = useState('All');
+  const [showAddWaitlistModal, setShowAddWaitlistModal] = useState(false);
+  const [waitlistForm, setWaitlistForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    dropName: 'TONTO Drop 01',
+    size: 'M',
+    notes: '',
+  });
+
+  const loadWaitlist = React.useCallback(async () => {
     try {
-      const saved = JSON.parse(localStorage.getItem('tonto_admin_subscribers') || '[]');
-      if (Array.isArray(saved)) mirrored = saved;
+      const res = await leadsApi.listWaitlist();
+      if (Array.isArray(res?.data)) {
+        setRemoteWaitlist(res.data);
+      }
+    } catch {
+      // Offline fallback
+    }
+  }, []);
+
+  const subscribers = useMemo(() => {
+    const list = [];
+    const seen = new Set();
+
+    // 1. Remote waitlist entries table
+    for (const w of remoteWaitlist) {
+      const em = String(w?.email || '').trim().toLowerCase();
+      if (em && !seen.has(em)) {
+        seen.add(em);
+        list.push({
+          id: w.id || 'WAIT-' + em,
+          name: w.name || em.split('@')[0],
+          email: em,
+          phone: w.phone || '',
+          dropName: w.dropName || 'TONTO Drop 01',
+          size: w.size || 'M',
+          source: 'Storefront Banner (Drop 01)',
+          priority: '1-Hour Priority Early Access',
+          date: w.createdAt ? w.createdAt.slice(0, 10) : '',
+          recordedBy: 'storefront-api'
+        });
+      }
+    }
+
+    // 2. Leads book
+    const fromLeads = leads.filter(isSubscriber).map(fromApiSubscriber);
+    for (const sub of fromLeads) {
+      const em = String(sub?.email || '').trim().toLowerCase();
+      if (em && !seen.has(em)) {
+        seen.add(em);
+        list.push(sub);
+      }
+    }
+
+    // 3. On-device waitlist mirror
+    try {
+      const savedWait = JSON.parse(localStorage.getItem('tonto_admin_waitlist') || '[]');
+      if (Array.isArray(savedWait)) {
+        for (const w of savedWait) {
+          const em = String(w?.email || '').trim().toLowerCase();
+          if (em && !seen.has(em)) {
+            seen.add(em);
+            list.push({
+              id: w.id || 'WAIT-' + em,
+              name: w.name || em.split('@')[0],
+              email: em,
+              phone: w.phone || '',
+              dropName: w.dropName || 'TONTO Drop 01',
+              size: w.size || 'M',
+              source: w.source || 'TONTO MADE Waitlist (Drop 01)',
+              priority: w.priority || '1-Hour Priority Early Access',
+              date: w.date || '',
+              recordedBy: 'device-mirror'
+            });
+          }
+        }
+      }
     } catch (e) {
       console.error(e);
     }
-    const offline = mirrored
-      .filter((s) => s?.email && !seen.has(String(s.email).toLowerCase()))
-      .map((s) => ({
-        email: s.email,
-        source: s.source || 'Other',
-        date: s.date || '',
-        recordedBy: 'device-only'
-      }));
-    return [...fromServer, ...offline];
-  }, [leads]);
+
+    // 4. On-device subscribers mirror
+    try {
+      const savedSubs = JSON.parse(localStorage.getItem('tonto_admin_subscribers') || '[]');
+      if (Array.isArray(savedSubs)) {
+        for (const s of savedSubs) {
+          const em = String(s?.email || '').trim().toLowerCase();
+          if (em && !seen.has(em)) {
+            seen.add(em);
+            list.push({
+              id: s.id || 'SUB-' + em,
+              name: s.name || em.split('@')[0],
+              email: em,
+              phone: s.phone || '',
+              dropName: s.dropName || (String(s.source || '').toLowerCase().includes('drop 01') ? 'TONTO Drop 01' : 'General Drop Alerts'),
+              size: s.size || 'M',
+              source: s.source || 'Other',
+              priority: s.priority || (String(s.source || '').toLowerCase().includes('drop 01') ? '1-Hour Priority Early Access' : 'Standard VIP Alert'),
+              date: s.date || '',
+              recordedBy: 'device-mirror'
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    return list;
+  }, [leads, remoteWaitlist]);
+
+  const waitlistStats = useMemo(() => {
+    const total = subscribers.length;
+    const drop01 = subscribers.filter((s) =>
+      String(s.dropName || '').toLowerCase().includes('drop 01') ||
+      String(s.source || '').toLowerCase().includes('drop 01') ||
+      String(s.source || '').toLowerCase().includes('waitlist')
+    ).length;
+    const welcome = subscribers.filter((s) =>
+      s.promoClaimed ||
+      String(s.source || '').toLowerCase().includes('welcome') ||
+      String(s.source || '').toLowerCase().includes('15%')
+    ).length;
+    const footer = subscribers.filter((s) =>
+      String(s.source || '').toLowerCase().includes('footer')
+    ).length;
+    return { total, drop01, welcome, footer };
+  }, [subscribers]);
+
+  const filteredSubscribers = useMemo(() => {
+    return subscribers.filter((sub) => {
+      const q = waitlistSearchQuery.trim().toLowerCase();
+      if (q) {
+        const matchesEmail = String(sub.email || '').toLowerCase().includes(q);
+        const matchesName = String(sub.name || '').toLowerCase().includes(q);
+        const matchesPhone = String(sub.phone || '').toLowerCase().includes(q);
+        if (!matchesEmail && !matchesName && !matchesPhone) return false;
+      }
+      if (waitlistDropFilter === 'drop01') {
+        return (
+          String(sub.dropName || '').toLowerCase().includes('drop 01') ||
+          String(sub.source || '').toLowerCase().includes('drop 01') ||
+          String(sub.source || '').toLowerCase().includes('waitlist')
+        );
+      }
+      if (waitlistDropFilter === 'welcome') {
+        return sub.promoClaimed || String(sub.source || '').toLowerCase().includes('welcome') || String(sub.source || '').toLowerCase().includes('15%');
+      }
+      if (waitlistDropFilter === 'footer') {
+        return String(sub.source || '').toLowerCase().includes('footer');
+      }
+      return true;
+    });
+  }, [subscribers, waitlistSearchQuery, waitlistDropFilter]);
 
   // Promo Codes State — GET /api/promos is the book. The three invented codes
   // with hand-written redemption counts are gone: `uses` is the store's number,
@@ -1183,8 +1322,9 @@ export default function AdminDashboard({
     loadSettings();
     loadEnquiries();
     loadLeads();
+    loadWaitlist();
     loadPromos();
-  }, [isAuthenticated, loadCms, loadSettings, loadEnquiries, loadLeads, loadPromos]);
+  }, [isAuthenticated, loadCms, loadSettings, loadEnquiries, loadLeads, loadWaitlist, loadPromos]);
 
   // Bi-directional live synchronization with storefront events
   useEffect(() => {
@@ -1894,27 +2034,129 @@ export default function AdminDashboard({
   };
 
 
-  // Export Subscribers to CSV
+  // Export Waitlist & Subscribers to CSV
   const handleExportSubscribersCSV = () => {
     const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      ['Email,Source,Date Joined', ...subscribers.map((s) => `"${s.email}","${s.source}","${s.date}"`)].join(
-        '\n'
-      );
+      "data:text/csv;charset=utf-8," +
+      [
+        "Name,Email,Phone,Target Drop,Size Preference,Access Priority,Source Channel,Date Registered",
+        ...subscribers.map(
+          (s) =>
+            `"${s.name || ''}","${s.email || ''}","${s.phone || ''}","${s.dropName || 'TONTO Drop 01'}","${s.size || 'M'}","${s.priority || '1-Hour Priority Early Access'}","${s.source || ''}","${s.date || ''}"`
+        ),
+      ].join("\n");
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `tonto_subscribers_${new Date().toISOString().slice(0, 10)}.csv`);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `tonto_drop01_waitlist_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast('Subscribers CSV exported');
+    showToast("Waitlist CSV exported");
   };
 
   const handleCopySubscribers = () => {
-    const emails = subscribers.map((s) => s.email).join(', ');
+    const emails = subscribers.map((s) => s.email).filter(Boolean).join(", ");
     navigator.clipboard.writeText(emails);
-    showToast('Copied all email addresses to clipboard');
+    showToast(`Copied ${subscribers.length} email addresses to clipboard`);
+  };
+
+  const handleCopyDrop01Emails = () => {
+    const drop01Emails = subscribers
+      .filter((s) =>
+        String(s.dropName || "").toLowerCase().includes("drop 01") ||
+        String(s.source || "").toLowerCase().includes("drop 01") ||
+        String(s.source || "").toLowerCase().includes("waitlist")
+      )
+      .map((s) => s.email)
+      .filter(Boolean);
+
+    if (drop01Emails.length === 0) {
+      showToast("No Drop 01 waitlist emails found to copy");
+      return;
+    }
+    navigator.clipboard.writeText(drop01Emails.join(", "));
+    showToast(`Copied ${drop01Emails.length} Drop 01 early access email addresses`);
+  };
+
+  const handleDeleteWaitlistEntry = (emailToDelete) => {
+    if (!window.confirm(`Remove ${emailToDelete} from the waiting list?`)) return;
+    try {
+      const wait = JSON.parse(localStorage.getItem("tonto_admin_waitlist") || "[]");
+      const filteredWait = wait.filter((w) => String(w.email).toLowerCase() !== String(emailToDelete).toLowerCase());
+      localStorage.setItem("tonto_admin_waitlist", JSON.stringify(filteredWait));
+
+      const subs = JSON.parse(localStorage.getItem("tonto_admin_subscribers") || "[]");
+      const filteredSubs = subs.filter((s) => String(s.email).toLowerCase() !== String(emailToDelete).toLowerCase());
+      localStorage.setItem("tonto_admin_subscribers", JSON.stringify(filteredSubs));
+
+      setLeads((prev) => prev.filter((l) => String(l.email).toLowerCase() !== String(emailToDelete).toLowerCase()));
+      setRemoteWaitlist((prev) => prev.filter((w) => String(w.email).toLowerCase() !== String(emailToDelete).toLowerCase()));
+      showToast(`Removed ${emailToDelete} from waitlist`);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    const email = waitlistForm.email.trim().toLowerCase();
+    if (!email) {
+      showToast("Email address is required");
+      return;
+    }
+    const name = waitlistForm.name.trim() || email.split("@")[0];
+    const phone = waitlistForm.phone.trim();
+    const dropName = waitlistForm.dropName || "TONTO Drop 01";
+    const size = waitlistForm.size || "M";
+
+    try {
+      await leadsApi.waitlist({
+        dropName,
+        name,
+        email,
+        phone,
+        size
+      });
+    } catch {
+      // Offline fallback
+    }
+
+    const record = {
+      id: "WAIT-" + Date.now().toString(36).toUpperCase().slice(-6),
+      name,
+      email,
+      phone: phone || "Awaiting WhatsApp",
+      dropName,
+      size,
+      source: "Walk-In Showroom Register",
+      sourceToken: "waitlist",
+      priority: "1-Hour Priority Early Access",
+      stage: "New",
+      date: new Date().toISOString().split("T")[0],
+      createdAt: new Date().toISOString(),
+      notes: waitlistForm.notes || "Manually registered via Admin Dashboard"
+    };
+
+    const wait = JSON.parse(localStorage.getItem("tonto_admin_waitlist") || "[]");
+    localStorage.setItem("tonto_admin_waitlist", JSON.stringify([record, ...wait.filter((w) => w.email !== email)]));
+
+    const subs = JSON.parse(localStorage.getItem("tonto_admin_subscribers") || "[]");
+    localStorage.setItem("tonto_admin_subscribers", JSON.stringify([record, ...subs.filter((s) => s.email !== email)]));
+
+    setLeads((prev) => [record, ...prev.filter((l) => l.email !== email)]);
+    setRemoteWaitlist((prev) => [record, ...prev.filter((w) => w.email !== email)]);
+
+    setShowAddWaitlistModal(false);
+    setWaitlistForm({
+      name: "",
+      email: "",
+      phone: "",
+      dropName: "TONTO Drop 01",
+      size: "M",
+      notes: "",
+    });
+    showToast(`Added ${name} to ${dropName} waitlist`);
   };
 
   // Reset the browser's catalogue copy
@@ -2217,10 +2459,10 @@ export default function AdminDashboard({
               }`}
             >
               <div className="flex items-center gap-2.5 sm:gap-3">
-                <Users size={16} className="shrink-0" />
-                <span>Drop List & VIPs</span>
+                <Bell size={16} className="shrink-0" />
+                <span>Drop 01 Waitlist</span>
               </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${activeTab === 'subscribers' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'}`}>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${activeTab === 'subscribers' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
                 {subscribers.length}
               </span>
             </button>
@@ -2365,20 +2607,19 @@ export default function AdminDashboard({
                 <div 
                   onClick={() => setActiveTab('subscribers')}
                   className="p-4 bg-[#F9FAF9] hover:bg-[#F3F6F4] border border-[#E0E5E1] hover:border-[#003F25] rounded-xs cursor-pointer transition-all group"
-                  title="View Drop Subscribers"
+                  title="View Drop 01 Waitlist"
                 >
                   <div className="flex items-center justify-between text-[#79867D] mb-1">
-                    <span className="text-[11px] font-bold uppercase tracking-wider group-hover:text-[#003F25] transition-colors">Drop VIPs</span>
-                    <Tag size={16} className="text-[#003F25]" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider group-hover:text-[#003F25] transition-colors">Drop 01 Waitlist</span>
+                    <Bell size={16} className="text-[#003F25]" />
                   </div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-[#111111]">
                     {subscribers.length}
                   </div>
                   <div className="text-[11px] text-[#003F25] mt-1 font-medium truncate">
-                    Subscribed to drop alerts
+                    {waitlistStats.drop01} early access • {waitlistStats.welcome + waitlistStats.footer} VIPs
                   </div>
                 </div>
-
               </div>
 
               {/* Quick Actions & Recent Activity Split */}
@@ -3595,32 +3836,48 @@ export default function AdminDashboard({
 
 
           {/* TAB 5: DROP SUBSCRIBERS */}
+          {/* TAB 5: TONTO DROP 01 WAITLIST & VIP REGISTER */}
           {activeTab === 'subscribers' && (
-            <div className="space-y-5 animate-fade-in">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+            <div className="space-y-6 animate-fade-in">
+              {/* Header with Title and Actions */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-gray-100">
                 <div>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-[#003F25]/10 text-[#003F25] text-[10.5px] font-bold uppercase tracking-wider rounded-xs mb-1.5 border border-[#003F25]/20">
+                    <Bell size={12} className="text-[#003F25]" />
+                    <span>PRIVATE DROP REGISTER</span>
+                  </div>
                   <h2 className="text-2xl font-bold uppercase tracking-tight text-[#111111] font-['Futura_PT_Book',sans-serif]">
-                    DROP ALERTS & EMAIL REGISTER
+                    TONTO DROP 01 WAITLIST & VIP REGISTER
                   </h2>
-                  <p className="text-[13px] text-[#767676] mt-0.5">
-                    Customer emails captured from the 15% discount popup, TONTO Made waitlist, and footer drops.
+                  <p className="text-[13px] text-[#5A665E] mt-0.5 max-w-2xl">
+                    Exclusive early-access customer register for TONTO Drop 01 (Inaugural Waffle & Washed Denim Capsule). Members receive lookbook previews and 1-hour private checkout access before public release.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
-                    onClick={handleCopySubscribers}
-                    className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-[11.5px] font-bold uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    onClick={() => setShowAddWaitlistModal(true)}
+                    className="px-3.5 py-2 bg-[#003F25] hover:bg-[#002e1b] text-white text-[11.5px] font-bold uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                  >
+                    <Plus size={14} />
+                    <span>+ Add Walk-In</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyDrop01Emails}
+                    className="px-3.5 py-2 bg-[#F9FAF9] hover:bg-gray-100 text-[#111111] border border-[#E0E5E1] text-[11.5px] font-bold uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Copy emails of Drop 01 registered customers"
                   >
                     <Copy size={14} />
-                    <span>Copy All</span>
+                    <span>Copy Drop 01 Emails</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleExportSubscribersCSV}
-                    className="px-3.5 py-2 bg-[#003F25] hover:bg-[#002e1b] text-white text-[11.5px] font-bold uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+                    className="px-3.5 py-2 bg-[#F9FAF9] hover:bg-gray-100 text-[#111111] border border-[#E0E5E1] text-[11.5px] font-bold uppercase tracking-wider rounded-xs flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Download size={14} />
                     <span>Export CSV</span>
@@ -3628,46 +3885,399 @@ export default function AdminDashboard({
                 </div>
               </div>
 
-              <div className="border border-[#E0E5E1] rounded-xs overflow-hidden">
-                <table className="w-full text-left text-[12.5px]">
-                  <thead className="bg-[#F9FAF9] border-b border-[#E0E5E1] text-[11px] font-bold uppercase tracking-wider text-[#79867D]">
-                    <tr>
-                      <th className="py-3 px-4">Email Address</th>
-                      <th className="py-3 px-4">Source Channel</th>
-                      <th className="py-3 px-4">Date Joined</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {subscribers.length === 0 && (
-                      <tr>
-                        <td colSpan={3} className="py-10 px-4 text-center">
-                          <p className="text-[13px] font-bold uppercase tracking-wider text-[#111111]">
-                            No drop-alert addresses yet
-                          </p>
-                          <p className="text-[12px] text-gray-500 mt-1">
-                            Signups land here from the welcome offer, the drop waitlist and the footer box.
-                          </p>
-                        </td>
-                      </tr>
-                    )}
-                    {subscribers.map((sub) => (
-                      <tr key={sub.email} className="hover:bg-gray-50/80">
-                        <td className="py-3 px-4 font-mono font-medium text-[#111111]">
-                          {sub.email}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 bg-gray-100 rounded text-[11px] font-medium text-gray-700">
-                            {sub.source}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-gray-500 font-mono text-xs">
-                          {sub.date}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* 4 Metric KPI Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+                <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs">
+                  <div className="flex items-center justify-between text-[#79867D] mb-1">
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider">Total Registrants</span>
+                    <Users size={14} className="text-[#003F25]" />
+                  </div>
+                  <div className="text-2xl font-extrabold text-[#111111]">
+                    {waitlistStats.total}
+                  </div>
+                  <p className="text-[11px] text-[#5A665E] mt-0.5">All captured contacts</p>
+                </div>
+
+                <div className="p-4 bg-[#003F25]/5 border border-[#003F25]/20 rounded-xs">
+                  <div className="flex items-center justify-between text-[#003F25] mb-1">
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider">Drop 01 Early Access</span>
+                    <Sparkles size={14} className="text-[#003F25]" />
+                  </div>
+                  <div className="text-2xl font-extrabold text-[#003F25]">
+                    {waitlistStats.drop01}
+                  </div>
+                  <p className="text-[11px] text-[#003F25] font-semibold mt-0.5">1-Hr Priority Window</p>
+                </div>
+
+                <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs">
+                  <div className="flex items-center justify-between text-[#79867D] mb-1">
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider">Welcome 15% VIPs</span>
+                    <Tag size={14} className="text-emerald-700" />
+                  </div>
+                  <div className="text-2xl font-extrabold text-[#111111]">
+                    {waitlistStats.welcome}
+                  </div>
+                  <p className="text-[11px] text-[#5A665E] mt-0.5">Privilege code unlocked</p>
+                </div>
+
+                <div className="p-4 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs">
+                  <div className="flex items-center justify-between text-[#79867D] mb-1">
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider">Release Status</span>
+                    <Clock size={14} className="text-amber-700" />
+                  </div>
+                  <div className="text-[13px] font-bold uppercase tracking-wider text-amber-800 mt-2">
+                    In Production
+                  </div>
+                  <p className="text-[11px] text-[#5A665E] mt-0.5">Coimbatore Atelier</p>
+                </div>
               </div>
+
+              {/* Search & Filter Controls */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-md">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={waitlistSearchQuery}
+                    onChange={(e) => setWaitlistSearchQuery(e.target.value)}
+                    placeholder="Search by email, name or phone..."
+                    className="w-full pl-9 pr-3.5 py-2 text-[12.5px] border border-[#E0E5E1] rounded-xs focus:outline-none focus:border-[#003F25] bg-white text-[#111111]"
+                  />
+                  {waitlistSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setWaitlistSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black cursor-pointer text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+                  <button
+                    type="button"
+                    onClick={() => setWaitlistDropFilter('All')}
+                    className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-colors cursor-pointer shrink-0 ${
+                      waitlistDropFilter === 'All'
+                        ? 'bg-[#003F25] text-white'
+                        : 'bg-gray-100 text-[#5A665E] hover:bg-gray-200'
+                    }`}
+                  >
+                    All ({subscribers.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWaitlistDropFilter('drop01')}
+                    className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-colors cursor-pointer shrink-0 ${
+                      waitlistDropFilter === 'drop01'
+                        ? 'bg-[#003F25] text-white'
+                        : 'bg-gray-100 text-[#5A665E] hover:bg-gray-200'
+                    }`}
+                  >
+                    Drop 01 Only ({waitlistStats.drop01})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWaitlistDropFilter('welcome')}
+                    className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-colors cursor-pointer shrink-0 ${
+                      waitlistDropFilter === 'welcome'
+                        ? 'bg-[#003F25] text-white'
+                        : 'bg-gray-100 text-[#5A665E] hover:bg-gray-200'
+                    }`}
+                  >
+                    Welcome 15% ({waitlistStats.welcome})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWaitlistDropFilter('footer')}
+                    className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-xs transition-colors cursor-pointer shrink-0 ${
+                      waitlistDropFilter === 'footer'
+                        ? 'bg-[#003F25] text-white'
+                        : 'bg-gray-100 text-[#5A665E] hover:bg-gray-200'
+                    }`}
+                  >
+                    Footer Alerts ({waitlistStats.footer})
+                  </button>
+                </div>
+              </div>
+
+              {/* High-End Waitlist Data Table */}
+              <div className="border border-[#E0E5E1] rounded-xs overflow-hidden bg-white shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-[12.5px]">
+                    <thead className="bg-[#F9FAF9] border-b border-[#E0E5E1] text-[11px] font-bold uppercase tracking-wider text-[#5A665E]">
+                      <tr>
+                        <th className="py-3 px-4">Customer Details</th>
+                        <th className="py-3 px-4">Target Drop & Size</th>
+                        <th className="py-3 px-4">Access Priority</th>
+                        <th className="py-3 px-4">Channel</th>
+                        <th className="py-3 px-4">Date Registered</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {filteredSubscribers.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="py-12 px-4 text-center">
+                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto text-gray-400 mb-2">
+                              <Bell size={20} />
+                            </div>
+                            <p className="text-[13px] font-bold uppercase tracking-wider text-[#111111]">
+                              No waitlist registrants found
+                            </p>
+                            <p className="text-[12px] text-[#5A665E] mt-1 max-w-md mx-auto">
+                              Customers who submit their email on the storefront "BE FIRST FOR TONTO DROP 01" banner appear here in real time.
+                            </p>
+                          </td>
+                        </tr>
+                      )}
+                      {filteredSubscribers.map((sub) => {
+                        const isDrop01Entry =
+                          String(sub.dropName || '').toLowerCase().includes('drop 01') ||
+                          String(sub.source || '').toLowerCase().includes('drop 01') ||
+                          String(sub.source || '').toLowerCase().includes('waitlist');
+
+                        return (
+                          <tr key={sub.email + (sub.id || '')} className="hover:bg-gray-50/70 transition-colors">
+                            <td className="py-3.5 px-4">
+                              <div className="font-bold text-[#111111] text-[13px] capitalize">
+                                {sub.name || sub.email.split('@')[0]}
+                              </div>
+                              <div className="font-mono text-xs text-[#5A665E] mt-0.5 flex items-center gap-1.5">
+                                <span>{sub.email}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(sub.email);
+                                    showToast(`Copied ${sub.email}`);
+                                  }}
+                                  className="text-gray-400 hover:text-[#003F25] transition-colors cursor-pointer"
+                                  title="Copy Email"
+                                >
+                                  <Copy size={11} />
+                                </button>
+                              </div>
+                              {sub.phone && sub.phone !== 'Awaiting WhatsApp' && (
+                                <div className="text-[11px] text-emerald-700 font-medium mt-0.5 flex items-center gap-1">
+                                  <span>📞 {sub.phone}</span>
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xs text-[11px] font-bold uppercase tracking-wider ${
+                                  isDrop01Entry
+                                    ? 'bg-[#003F25] text-white shadow-xs'
+                                    : 'bg-gray-100 text-[#111111]'
+                                }`}
+                              >
+                                {isDrop01Entry && <Sparkles size={10} />}
+                                <span>{sub.dropName || 'TONTO Drop 01'}</span>
+                              </span>
+                              <div className="text-[11px] text-[#5A665E] mt-1 font-medium">
+                                Size: <span className="text-[#111111] font-bold">{sub.size || 'M'}</span>
+                              </div>
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              {isDrop01Entry ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xs text-[10.5px] font-bold uppercase tracking-wider">
+                                  <Clock size={11} />
+                                  <span>1-Hour Priority</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-[#5A665E] rounded-xs text-[10.5px] font-medium uppercase">
+                                  <span>Standard VIP</span>
+                                </span>
+                              )}
+                            </td>
+
+                            <td className="py-3.5 px-4">
+                              <span className="px-2 py-0.5 bg-gray-100 text-[#4B5563] rounded text-[11px] font-medium">
+                                {sub.source}
+                              </span>
+                            </td>
+
+                            <td className="py-3.5 px-4 font-mono text-xs text-[#5A665E]">
+                              {sub.date || 'Recent'}
+                            </td>
+
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {sub.phone && sub.phone !== 'Awaiting WhatsApp' && (
+                                  <a
+                                    href={`https://wa.me/${sub.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                                      `Hi ${sub.name}! Your exclusive early access to TONTO Drop 01 is now open: https://www.tontoclothing.com`
+                                    )}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded transition-colors"
+                                    title="Send WhatsApp Early Access Link"
+                                  >
+                                    <MessageSquare size={14} />
+                                  </a>
+                                )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(sub.email);
+                                    showToast(`Copied ${sub.email}`);
+                                  }}
+                                  className="p-1.5 text-[#5A665E] hover:text-[#003F25] hover:bg-gray-100 rounded transition-colors cursor-pointer"
+                                  title="Copy Email"
+                                >
+                                  <Copy size={14} />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteWaitlistEntry(sub.email)}
+                                  className="p-1.5 text-[#5A665E] hover:text-red-700 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                                  title="Remove from Waitlist"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modal for adding Walk-in customer to Waitlist */}
+              {showAddWaitlistModal && (
+                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in backdrop-blur-xs">
+                  <div className="bg-white rounded-xs max-w-md w-full border border-[#E0E5E1] p-6 shadow-2xl animate-scale-up">
+                    <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold uppercase tracking-tight text-[#111111] font-['Futura_PT_Book',sans-serif]">
+                          Add Customer to Drop 01 Waitlist
+                        </h3>
+                        <p className="text-xs text-[#5A665E]">
+                          Manually register a showroom walk-in or phone enquiry for early access.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddWaitlistModal(false)}
+                        className="text-gray-400 hover:text-black cursor-pointer p-1"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleAddWaitlistSubmit} className="space-y-3.5 text-left text-[12.5px]">
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#111111] mb-1">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={waitlistForm.name}
+                          onChange={(e) => setWaitlistForm({ ...waitlistForm, name: e.target.value })}
+                          placeholder="e.g. Arun Kumar"
+                          className="w-full px-3 py-2 border border-[#E0E5E1] rounded-xs focus:outline-none focus:border-[#003F25]"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#111111] mb-1">
+                          Email Address *
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={waitlistForm.email}
+                          onChange={(e) => setWaitlistForm({ ...waitlistForm, email: e.target.value })}
+                          placeholder="e.g. arun@gmail.com"
+                          className="w-full px-3 py-2 border border-[#E0E5E1] rounded-xs focus:outline-none focus:border-[#003F25]"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-[#111111] mb-1">
+                            WhatsApp / Phone
+                          </label>
+                          <input
+                            type="tel"
+                            value={waitlistForm.phone}
+                            onChange={(e) => setWaitlistForm({ ...waitlistForm, phone: e.target.value })}
+                            placeholder="e.g. 9876543210"
+                            className="w-full px-3 py-2 border border-[#E0E5E1] rounded-xs focus:outline-none focus:border-[#003F25]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold uppercase tracking-wider text-[#111111] mb-1">
+                            Preferred Size
+                          </label>
+                          <select
+                            value={waitlistForm.size}
+                            onChange={(e) => setWaitlistForm({ ...waitlistForm, size: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#E0E5E1] rounded-xs focus:outline-none focus:border-[#003F25] bg-white"
+                          >
+                            <option value="S">S - Small</option>
+                            <option value="M">M - Medium</option>
+                            <option value="L">L - Large</option>
+                            <option value="XL">XL - Extra Large</option>
+                            <option value="XXL">XXL</option>
+                            <option value="Any">Any / Free Size</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#111111] mb-1">
+                          Target Drop
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={waitlistForm.dropName}
+                          className="w-full px-3 py-2 border border-[#E0E5E1] rounded-xs bg-gray-50 text-gray-700 font-medium"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold uppercase tracking-wider text-[#111111] mb-1">
+                          Showroom Notes
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={waitlistForm.notes}
+                          onChange={(e) => setWaitlistForm({ ...waitlistForm, notes: e.target.value })}
+                          placeholder="Walk-in at Coimbatore store, interested in waffle thermal..."
+                          className="w-full px-3 py-2 border border-[#E0E5E1] rounded-xs focus:outline-none focus:border-[#003F25]"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                        <button
+                          type="button"
+                          onClick={() => setShowAddWaitlistModal(false)}
+                          className="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider rounded-xs cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-[#003F25] hover:bg-[#002e1b] text-white text-xs font-bold uppercase tracking-wider rounded-xs cursor-pointer shadow-sm"
+                        >
+                          Register Customer
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -292,6 +292,7 @@ async function loadAllProducts() {
 export const leads = {
   claimOffer: (body) => api.post('/leads/claim-offer', body, { auth: false }),
   waitlist: (body) => api.post('/leads/waitlist', body, { auth: false }),
+  listWaitlist: (query) => api.get('/leads/waitlist', { query }),
   subscribe: (email) =>
     api.post('/leads/claim-offer', { email, source: 'Footer Drop Alerts' }, { auth: false }),
   // Admin desk. ?source=&stage=&search=&page=&limit= — the API stores source as a

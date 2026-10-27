@@ -35,19 +35,39 @@ export default function DropWaitlistBanner({ onOpenOffer }) {
       return;
     }
 
-    // Device mirror so the Admin Dashboard CRM still shows it (offline fallback).
-    mirror('tonto_admin_leads', {
-      id: `LEAD-${Date.now().toString(36).toUpperCase().slice(-6)}`,
-      name: email.split('@')[0],
+    // Device mirror so the Admin Dashboard CRM and Waitlist register update instantly
+    const waitlistEntry = {
+      id: `WAIT-${Date.now().toString(36).toUpperCase().slice(-6)}`,
+      name: email.split('@')[0].replace(/[._-]/g, ' '),
       phone: 'Awaiting WhatsApp',
       email,
+      dropName: DROP_NAME,
       source: 'TONTO MADE Waitlist (Drop 01)',
+      sourceToken: 'waitlist',
       interest: 'In-House Debut Capsule (Waffle & Washed Denim)',
+      priority: '1-Hour Priority Early Access',
+      size: 'M',
       estimatedValue: 4500,
       stage: 'New',
       date: new Date().toISOString().split('T')[0],
+      createdAt: new Date().toISOString(),
       notes: 'Submitted email directly from storefront Drop 01 waitlist banner.'
+    };
+
+    mirror('tonto_admin_leads', waitlistEntry);
+    mirror('tonto_admin_subscribers', {
+      id: waitlistEntry.id,
+      name: waitlistEntry.name,
+      email: waitlistEntry.email,
+      phone: waitlistEntry.phone,
+      dropName: DROP_NAME,
+      size: waitlistEntry.size,
+      source: waitlistEntry.source,
+      priority: waitlistEntry.priority,
+      date: waitlistEntry.date,
+      createdAt: waitlistEntry.createdAt
     });
+    mirror('tonto_admin_waitlist', waitlistEntry);
 
     setIsSubmitting(false);
     setIsJoined(true);

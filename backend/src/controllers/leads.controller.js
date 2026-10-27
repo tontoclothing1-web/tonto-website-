@@ -24,7 +24,7 @@ import {
   listLeads as queryLeads,
   normaliseStage,
 } from '../models/Lead.js';
-import { createWaitlistEntry, findWaitlistEntry } from '../models/WaitlistEntry.js';
+import { createWaitlistEntry, findWaitlistEntry, listWaitlistEntries } from '../models/WaitlistEntry.js';
 
 // Frontend labels → canonical source token (OfferModal, DropWaitlistBanner,
 // Footer, EnquiryModal, and the Studio Admin desk's own <select> values).
@@ -190,6 +190,13 @@ export const joinWaitlist = asyncHandler(async (req, res) => {
   }
 
   res.status(201).json({ success: true, alreadyJoined: false, data: entry });
+});
+
+export const getWaitlist = asyncHandler(async (req, res) => {
+  requireSupabase();
+  const { dropName } = req.query;
+  const entries = await listWaitlistEntries({ dropName: dropName ? String(dropName).trim() : undefined });
+  res.json({ success: true, data: entries });
 });
 
 export const listLeads = asyncHandler(async (req, res) => {

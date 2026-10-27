@@ -109,16 +109,51 @@ export const toApiLead = (form = {}) => {
  * from an email capture. Anything the owner filed by hand without an address
  * belongs in the CRM tab, not the mailing list.
  */
-export const isSubscriber = (lead = {}) =>
-  Boolean(lead.email) && (lead.promoClaimed || ['offer-modal', 'waitlist', 'newsletter', 'concierge'].includes(lead.sourceToken));
+export const isSubscriber = (lead = {}) => {
+  if (!lead?.email) return false;
+  if (lead.promoClaimed) return true;
+  const token = String(lead.sourceToken || '').toLowerCase();
+  if (['offer-modal', 'waitlist', 'newsletter', 'concierge'].includes(token)) return true;
+  const src = String(lead.source || '').toLowerCase();
+  return (
+    src.includes('waitlist') ||
+    src.includes('drop') ||
+    src.includes('modal') ||
+    src.includes('newsletter') ||
+    src.includes('offer') ||
+    src.includes('concierge')
+  );
+};
 
-export const fromApiSubscriber = (row = {}) => ({
-  email: row.email,
-  source: row.sourceLabel || row.source || 'Other',
-  date: deskDate(row.createdAt).slice(0, 10),
-  promoClaimed: row.promoClaimed === true,
-  recordedBy: 'storefront-api',
-});
+export const fromApiSubscriber = (row = {}) => {
+  const rawSource = String(row.sourceLabel || row.source || 'Other');
+  const rawInterest = String(row.interest || '');
+  const rawNotes = String(row.notes || '');
+  const isDrop01 =
+    rawSource.toLowerCase().includes('drop 01') ||
+    rawSource.toLowerCase().includes('waitlist') ||
+    rawInterest.toLowerCase().includes('drop 01') ||
+    rawNotes.toLowerCase().includes('drop 01') ||
+    String(row.dropName || '').toLowerCase().includes('drop 01');
+
+  const dropName = row.dropName || (isDrop01 ? 'TONTO Drop 01' : 'General Drop Alerts');
+
+  return {
+    id: row.id || 'SUB-' + String(row.email || '').toLowerCase(),
+    name: row.name || (row.email ? row.email.split('@')[0] : 'Drop Member'),
+    email: String(row.email || '').trim().toLowerCase(),
+    phone: row.phone && row.phone !== 'Awaiting WhatsApp' ? row.phone : '',
+    dropName,
+    size: row.size || 'M',
+    source: rawSource,
+    sourceToken: row.sourceToken || (isDrop01 ? 'waitlist' : 'newsletter'),
+    priority: isDrop01 ? '1-Hour Priority Early Access' : 'Standard VIP Alert',
+    date: row.date || (row.createdAt ? deskDate(row.createdAt).slice(0, 10) : ''),
+    promoClaimed: row.promoClaimed === true,
+    notes: row.notes || '',
+    recordedBy: row.recordedBy || 'storefront-api',
+  };
+};
 
 /** API promo row → the card the PROMOTIONS tab renders. */
 export const fromApiPromo = (row = {}) => ({

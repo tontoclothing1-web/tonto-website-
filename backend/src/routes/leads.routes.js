@@ -20,6 +20,7 @@ import { LEAD_STAGES } from '../models/Lead.js';
 import {
   claimOffer,
   joinWaitlist,
+  getWaitlist,
   listLeads,
   addLead,
   editLead,
@@ -68,6 +69,8 @@ router.post(
   validate,
   joinWaitlist
 );
+
+router.get('/waitlist', requireAdmin, getWaitlist);
 
 router.get(
   '/',
