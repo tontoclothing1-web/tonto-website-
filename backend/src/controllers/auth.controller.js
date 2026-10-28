@@ -159,11 +159,7 @@ export const forgotPassword = async (req, res, next) => {
 // POST /api/auth/admin/login — { email?, passcode } → admin JWT
 export const adminLogin = async (req, res, next) => {
   try {
-    requireSupabase();
     const { email = 'admin@tonto.local', passcode } = req.body;
-    // Constant-time compare (the passcode is the only thing between the public
-    // internet and the whole back office) and a hard refusal when no passcode is
-    // configured at all, instead of matching against an empty string.
     if (!authConfig.adminPasscode) {
       throw ApiError.unauthorized('Admin login is disabled — ADMIN_PASSCODE is not configured');
     }
@@ -171,25 +167,45 @@ export const adminLogin = async (req, res, next) => {
       throw ApiError.unauthorized('Invalid admin passcode');
     }
     const normalizedEmail = String(email).toLowerCase().trim();
-    let admin = await findUserByEmail(normalizedEmail);
+    let admin = null;
+    try {
+      if (isSupabaseConnected()) {
+        admin = await findUserByEmail(normalizedEmail);
+        if (!admin) {
+          const password_hash = await bcrypt.hash(randomBytes(32).toString('base64url'), SALT_ROUNDS);
+          admin = await createUser({
+            name: 'TONTO Admin',
+            email: normalizedEmail,
+            phone: '',
+            password_hash,
+            role: 'admin',
+            credentials_submitted: true,
+          });
+        } else if (admin.role !== 'admin') {
+          admin = await updateUser(admin.id, { role: 'admin' });
+        }
+      }
+    } catch (dbErr) {
+      console.warn(`[auth] Supabase admin sync skipped: ${dbErr.message}`);
+    }
+
     if (!admin) {
-      // Random, unknowable password: the passcode is the shared secret here, and
-      // deriving this row's password from it (`admin:<passcode>`) would leave a
-      // second, undocumented way to sign in through POST /api/auth/login.
-      const password_hash = await bcrypt.hash(randomBytes(32).toString('base64url'), SALT_ROUNDS);
-      admin = await createUser({
+      admin = {
+        id: 'admin-director',
         name: 'TONTO Admin',
         email: normalizedEmail,
-        phone: '',
-        password_hash,
         role: 'admin',
         credentials_submitted: true,
-      });
-    } else if (admin.role !== 'admin') {
-      admin = await updateUser(admin.id, { role: 'admin' });
+      };
     }
+
     const token = issueToken(admin);
-    const safe = await withAddresses(admin);
+    let safe = admin;
+    try {
+      safe = await withAddresses(admin);
+    } catch {
+      safe = admin;
+    }
     console.log(`[auth] admin session issued for ${normalizedEmail} from ${req.ip}`);
     return res.status(200).json({ success: true, token, user: safe });
   } catch (err) {
