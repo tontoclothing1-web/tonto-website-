@@ -11,7 +11,7 @@
  * the shared `validate` middleware, so the handlers below can assume a shaped
  * body (they still clip defensively — validation caps length, it doesn't trim).
  */
-import { requireSupabase } from '../config/supabase.js';
+import { requireSupabase, isSupabaseConnected } from '../config/supabase.js';
 import { asyncHandler } from '../middleware/auth.js';
 import ApiError from '../utils/ApiError.js';
 import { WELCOME_PROMO_CODE, validatePromoByCode } from '../utils/promos.js';

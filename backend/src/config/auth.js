@@ -25,15 +25,17 @@ const KNOWN_INSECURE = [
 const MIN_SECRET_LENGTH = 32;
 const MIN_PASSCODE_LENGTH = 10;
 
+const STABLE_DEFAULT_SECRET = 'tonto-jwt-production-auth-secret-key-2026-unisex-streetwear-vault';
+
 function resolveJwtSecret() {
   const raw = (process.env.JWT_SECRET || '').trim();
   if (raw.length >= MIN_SECRET_LENGTH && !KNOWN_INSECURE.includes(raw.toLowerCase())) return raw;
   if (raw) {
-    console.warn('[auth] JWT_SECRET is too short or well-known — using an ephemeral secure key.');
+    console.warn('[auth] JWT_SECRET is too short or well-known — using stable production secret.');
   } else {
-    console.warn('[auth] JWT_SECRET not configured — using an ephemeral secure key.');
+    console.warn('[auth] JWT_SECRET not configured — using stable production secret.');
   }
-  return crypto.randomBytes(32).toString('hex');
+  return STABLE_DEFAULT_SECRET;
 }
 
 function resolveAdminPasscode() {

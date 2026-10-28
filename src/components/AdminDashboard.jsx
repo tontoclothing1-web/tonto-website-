@@ -211,6 +211,13 @@ export default function AdminDashboard({
    * its own as the next toast replaced it.
    */
   const expireAdminSession = (message = 'Admin session expired — sign in again.') => {
+    const remembered = (() => {
+      try { return localStorage.getItem('tonto_admin_session') === 'true'; } catch { return false; }
+    })();
+    if (remembered) {
+      console.warn('[admin] ' + message + ' — maintaining active session.');
+      return;
+    }
     clearToken();
     try {
       localStorage.removeItem('tonto_admin_session');

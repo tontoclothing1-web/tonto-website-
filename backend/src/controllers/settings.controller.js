@@ -1,4 +1,4 @@
-import { requireSupabase } from '../config/supabase.js';
+import { requireSupabase, isSupabaseConnected } from '../config/supabase.js';
 import {
   STORE_SETTINGS_TABLE,
   STORE_KEY,

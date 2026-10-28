@@ -1,4 +1,4 @@
-import { requireSupabase } from '../config/supabase.js';
+import { requireSupabase, isSupabaseConnected } from '../config/supabase.js';
 import { CMS_TABLE, CMS_KEY, mapCmsRowToCamel, mapCmsCamelToRow } from '../models/CmsContent.js';
 import { sendCached, del as cacheDel } from '../utils/cache.js';
 

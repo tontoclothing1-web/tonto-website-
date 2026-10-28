@@ -12,7 +12,7 @@
  * Request shapes are enforced in routes/orders.routes.js via `validate`; the
  * client's price/total fields are ignored, never merely validated.
  */
-import { requireSupabase } from '../config/supabase.js';
+import { requireSupabase, isSupabaseConnected } from '../config/supabase.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { quoteCart } from '../utils/pricing.js';
 import { generateOrderId } from '../utils/orderId.js';

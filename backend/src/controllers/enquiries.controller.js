@@ -7,7 +7,7 @@
  *
  * Shape validation lives in routes/enquiries.routes.js (+ `validate`).
  */
-import { requireSupabase } from '../config/supabase.js';
+import { requireSupabase, isSupabaseConnected } from '../config/supabase.js';
 import { asyncHandler } from '../middleware/auth.js';
 import { buildWhatsAppLink, buildPieceEnquiryText, normalizePhone } from '../utils/whatsapp.js';
 import {
