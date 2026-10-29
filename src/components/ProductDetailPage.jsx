@@ -91,34 +91,47 @@ export default function ProductDetailPage({
     <div className="w-full bg-white text-[#111827] pb-36 lg:pb-24">
       
       {/* Breadcrumb Navigation matching reference */}
-      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
-        <div className="flex items-center gap-1.5 overflow-hidden">
-          <button
-            onClick={onBack}
-            className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1"
-          >
-            <ArrowLeft size={14} />
-            <span>back</span>
-          </button>
-          <span className="text-[#D1D5DB]">/</span>
-          <button
-            onClick={() => onNavigateCategory('All')}
-            className="hover:text-[#003F25] transition-colors cursor-pointer"
-          >
-            collection
-          </button>
-          <span className="text-[#D1D5DB]">/</span>
-          <button
-            onClick={() => onNavigateCategory(product.category)}
-            className="hover:text-[#003F25] transition-colors cursor-pointer lowercase"
-          >
-            {product.category}
-          </button>
-          <span className="text-[#D1D5DB]">/</span>
-          <span className="text-[#003F25] font-semibold truncate lowercase">
-            {product.title}
-          </span>
-        </div>
+      <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
+        <ol className="flex items-center gap-1.5 overflow-hidden list-none p-0 m-0" itemscope itemtype="https://schema.org/BreadcrumbList">
+          <li className="flex items-center gap-1">
+            <button
+              onClick={onBack}
+              className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <ArrowLeft size={14} />
+              <span>back</span>
+            </button>
+            <span className="text-[#D1D5DB]">/</span>
+          </li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+            <button
+              onClick={() => onNavigateCategory('All')}
+              className="hover:text-[#003F25] transition-colors cursor-pointer"
+              itemprop="item"
+            >
+              <span itemprop="name">collection</span>
+            </button>
+            <meta itemprop="position" content="1" />
+            <span className="text-[#D1D5DB]">/</span>
+          </li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+            <button
+              onClick={() => onNavigateCategory(product.category)}
+              className="hover:text-[#003F25] transition-colors cursor-pointer lowercase"
+              itemprop="item"
+            >
+              <span itemprop="name">{product.category}</span>
+            </button>
+            <meta itemprop="position" content="2" />
+            <span className="text-[#D1D5DB]">/</span>
+          </li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="truncate">
+            <span className="text-[#003F25] font-semibold truncate lowercase" itemprop="name">
+              {product.title}
+            </span>
+            <meta itemprop="position" content="3" />
+          </li>
+        </ol>
 
         <button
           onClick={handleShare}
@@ -127,7 +140,7 @@ export default function ProductDetailPage({
           <Share2 size={13} />
           <span>{copiedShare ? 'link copied' : 'share'}</span>
         </button>
-      </div>
+      </nav>
 
       {/* Main Product Container */}
       <div className="max-w-[1600px] mx-auto px-5 sm:px-8 pt-8 pb-16">
@@ -164,7 +177,12 @@ export default function ProductDetailPage({
             >
               <img
                 src={currentImage}
-                alt={product.title}
+                alt={product.alt || `${product.title} in ${product.colour || ''}`}
+                width="800"
+                height="1093"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 onClick={() => setIsZoomModalOpen(true)}
                 className="w-full h-full object-cover object-center transition-all duration-300 cursor-zoom-in group-hover:scale-[1.02]"
                 draggable="false"
@@ -456,11 +474,38 @@ export default function ProductDetailPage({
                 {activeAccordion === 'shipping' && (
                   <div className="pb-4 text-[#4B5563] text-[12px] space-y-2 leading-relaxed">
                     <p>
-                      <strong>Showroom:</strong> Coimbatore, Tamil Nadu, India. In-person fitting appointments available by request.
+                      <strong>Showroom:</strong> Opposite to Prozone Mall, Sathy Road, Coimbatore, Tamil Nadu, India.
                     </p>
                     <p>
-                      <strong>Domestic & Global Shipping:</strong> Dispatched within 24–48 hours from Coimbatore. Express delivery available across India and international regions.
+                      <strong>Domestic Shipping:</strong> Dispatched within 24–48 hours from Coimbatore. Express delivery across Tamil Nadu in 2–4 business days, rest of India in 3–6 business days.
                     </p>
+                  </div>
+                )}
+              </div>
+
+              {/* FAQs & Product Care Accordion */}
+              <div>
+                <button
+                  onClick={() => toggleAccordion('faq')}
+                  className="w-full py-3.5 flex items-center justify-between font-bold text-[#003F25] uppercase tracking-wider text-left cursor-pointer"
+                >
+                  <span>Piece FAQs & Garment Care</span>
+                  {activeAccordion === 'faq' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {activeAccordion === 'faq' && (
+                  <div className="pb-4 text-[#4B5563] text-[12px] space-y-3 leading-relaxed">
+                    <div>
+                      <strong className="block text-[#003F25] mb-0.5">Washing & Maintenance:</strong>
+                      <p>Cold wash inside-out on gentle cycle or hand wash. Lay flat to dry out of harsh direct sun. Do not iron directly on graphics or embroidery.</p>
+                    </div>
+                    <div>
+                      <strong className="block text-[#003F25] mb-0.5">Authenticity & Quality:</strong>
+                      <p>Every piece is individually inspected for seam integrity, structural fabric weight, and verified provenance at our Coimbatore atelier.</p>
+                    </div>
+                    <div>
+                      <strong className="block text-[#003F25] mb-0.5">Size Exchange:</strong>
+                      <p>Unworn pieces with intact tags can be exchanged for an alternate size or archive credit within 4 days of delivery.</p>
+                    </div>
                   </div>
                 )}
               </div>

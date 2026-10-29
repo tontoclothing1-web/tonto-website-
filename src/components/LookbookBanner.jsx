@@ -12,7 +12,7 @@ export default function LookbookBanner({ onExploreLookbook, lookbookMedia }) {
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         <img
           src={image}
-          alt="TONTO Made"
+          alt="TONTO Made — Bespoke Streetwear Collection and Cut & Sew Denim"
           className="w-full h-full object-cover object-[center_12%] transition-transform duration-700 ease-out hover:scale-[1.01]"
           loading="lazy"
           decoding="async"

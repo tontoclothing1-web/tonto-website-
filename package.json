@@ -11,6 +11,7 @@
     "postinstall": "npm --prefix backend install",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "npm --prefix backend test",
     "start": "npm --prefix backend run start"
   },
   "dependencies": {

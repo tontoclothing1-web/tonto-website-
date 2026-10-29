@@ -325,7 +325,15 @@ function ProductCard({
                 }`}
                 title={`View variant ${i + 1}`}
               >
-                <img src={img} alt="swatch" className="w-full h-full object-cover pointer-events-none" />
+                <img
+                  src={img}
+                  alt={`${product.title} color swatch ${i + 1}`}
+                  width="21"
+                  height="25"
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover pointer-events-none"
+                />
               </button>
             );
           })}

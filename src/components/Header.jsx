@@ -23,12 +23,12 @@ export default function Header({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'FEATURED', view: 'featured' },
-    { label: 'NEW ARRIVALS', view: 'new-arrivals' },
-    { label: 'SHOP', view: 'collection', filter: 'All' },
-    { label: 'TONTO MADE', view: 'lookbook' },
-    { label: 'ABOUT US', view: 'about' },
-    { label: 'VISIT US', action: 'visit' }
+    { label: 'FEATURED', view: 'featured', href: '#/featured' },
+    { label: 'NEW ARRIVALS', view: 'new-arrivals', href: '#/new-arrivals' },
+    { label: 'SHOP', view: 'collection', filter: 'All', href: '#/collection' },
+    { label: 'TONTO MADE', view: 'lookbook', href: '#/lookbook' },
+    { label: 'ABOUT US', view: 'about', href: '#/about' },
+    { label: 'VISIT US', action: 'visit', href: '#/visit' }
   ];
 
   const handleNavClick = (link) => {
@@ -96,23 +96,27 @@ export default function Header({
             className="flex items-center gap-2 group cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded p-0.5"
             aria-label="TONTO Clothing Home"
           >
-            <Logo variant="header" alt="TONTO Clothing" />
+            <Logo variant="header" alt="TONTO Clothing — Curated Streetwear Drops Coimbatore" />
           </button>
         </div>
 
         {/* Center: Desktop Navigation matching MNML uppercase category typography */}
         <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-[12.5px] font-bold tracking-[0.06em] text-[#111111]" aria-label="Main Navigation">
           {navLinks.map((link) => (
-            <button
+            <a
               key={link.label}
-              onClick={() => handleNavClick(link)}
+              href={link.href}
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavClick(link);
+              }}
               className="relative py-2 hover:text-[#003F25] transition-colors cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#003F25] rounded"
             >
               {link.label}
               {activeView === link.view && !link.targetId && (
                 <span className="absolute bottom-1 left-0 w-full h-[1.5px] bg-[#111111] rounded-full" />
               )}
-            </button>
+            </a>
           ))}
         </nav>
 
@@ -189,14 +193,18 @@ export default function Header({
         <div className="lg:hidden border-t border-[#E0E5E1] bg-white px-6 py-6 animate-fade-in">
           <nav className="flex flex-col gap-4 text-[13px] font-bold tracking-wider text-[#003F25]">
             {navLinks.map((link) => (
-              <button
+              <a
                 key={link.label}
-                onClick={() => handleNavClick(link)}
+                href={link.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavClick(link);
+                }}
                 className="text-left py-2 border-b border-gray-100 flex items-center justify-between"
               >
                 <span>{link.label}</span>
                 <ArrowUpRight size={16} className="text-[#79867D]" />
-              </button>
+              </a>
             ))}
             <div className="pt-2 flex items-center justify-between text-xs text-[#79867D]">
               <button onClick={() => { setMobileMenuOpen(false); onOpenRegion(); }} className="hover:text-[#003F25] font-semibold">

@@ -32,6 +32,13 @@ function fromPostgREST(err) {
   }
 }
 
+function sanitizeLogMessage(msg) {
+  if (typeof msg !== 'string') return msg;
+  return msg
+    .replace(/(password|passcode|secret|token|authorization|apiKey|key)=([^&\s]+)/gi, '$1=[REDACTED]')
+    .replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]');
+}
+
 const PG_ERROR_CODE = /^[0-4]\d{4}$/;
 
 // eslint-disable-next-line no-unused-vars
@@ -57,10 +64,10 @@ export const errorHandler = (err, req, res, _next) => {
   const message = exposeMessage ? error.message || 'Request failed' : 'Internal Server Error';
 
   if (statusCode >= 500) {
-    console.error(`[error] ${req.method} ${req.originalUrl} → ${statusCode}: ${error.message}`);
-    if (!isProd && error.stack) console.error(error.stack.split('\n').slice(1, 6).join('\n'));
+    console.error(`[error] ${req.method} ${sanitizeLogMessage(req.originalUrl)} → ${statusCode}: ${sanitizeLogMessage(error.message)}`);
+    if (!isProd && error.stack) console.error(sanitizeLogMessage(error.stack.split('\n').slice(1, 6).join('\n')));
   } else if (!isProd) {
-    console.warn(`[warn] ${req.method} ${req.originalUrl} → ${statusCode}: ${error.message}`);
+    console.warn(`[warn] ${req.method} ${sanitizeLogMessage(req.originalUrl)} → ${statusCode}: ${sanitizeLogMessage(error.message)}`);
   }
 
   return res.status(statusCode).json({

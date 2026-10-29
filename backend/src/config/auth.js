@@ -17,6 +17,7 @@ const KNOWN_INSECURE = [
   'jwt-secret',
   'tonto',
   'tonto2026',
+  'tonto-admin-2026',
   'admin',
   'password',
   '1234',

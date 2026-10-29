@@ -31,6 +31,7 @@ Tonto-20260927T114534Z-1-001/
 
 # Temporary files & verification screenshots
 admin-*.png
+scratch_*.png
 backend/supabase/.temp/
 .temp/
 .vercel

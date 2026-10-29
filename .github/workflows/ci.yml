@@ -1,0 +1,40 @@
+name: CI & Security Hardening Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  audit-and-test:
+    name: Security Audit, Test & Production Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Root Dependencies
+        run: npm ci
+
+      - name: Install Backend Dependencies
+        run: npm --prefix backend ci
+
+      - name: Dependency Security Audit (Frontend)
+        run: npm audit --audit-level=high
+
+      - name: Dependency Security Audit (Backend)
+        run: npm --prefix backend audit --audit-level=high
+
+      - name: Run Automated Security & Integration Tests
+        run: npm test
+
+      - name: Build Production Frontend
+        run: npm run build

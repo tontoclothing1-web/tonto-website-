@@ -131,18 +131,25 @@ export default function AboutUsPage({
     <div className="w-full bg-white text-[#111111] pb-24 text-left font-['Futura_PT_Book',sans-serif]">
       
       {/* 1. Breadcrumb Navigation */}
-      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-3 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#EAEAEA]">
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={onNavigateHome}
-            className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1 font-medium lowercase"
-          >
-            <ArrowLeft size={13} />
-            <span>home</span>
-          </button>
-          <span className="text-[#D1D5DB]">/</span>
-          <span className="text-[#003F25] font-semibold lowercase">about us</span>
-        </div>
+      <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-5 sm:px-8 py-3 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#EAEAEA]">
+        <ol className="flex items-center gap-1.5 list-none p-0 m-0" itemscope itemtype="https://schema.org/BreadcrumbList">
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1">
+            <button
+              onClick={onNavigateHome}
+              className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1 font-medium lowercase"
+              itemprop="item"
+            >
+              <ArrowLeft size={13} />
+              <span itemprop="name">home</span>
+            </button>
+            <meta itemprop="position" content="1" />
+            <span className="text-[#D1D5DB]">/</span>
+          </li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <span className="text-[#003F25] font-semibold lowercase" itemprop="name">about us</span>
+            <meta itemprop="position" content="2" />
+          </li>
+        </ol>
 
         <button
           onClick={onNavigateCollection}
@@ -150,7 +157,7 @@ export default function AboutUsPage({
         >
           View Collection
         </button>
-      </div>
+      </nav>
 
       {/* 2. Simple Page Title Header */}
       <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 pt-10 sm:pt-14 pb-8 text-center">
@@ -495,6 +502,61 @@ export default function AboutUsPage({
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* 6.5. Section: Frequently Asked Questions (SEO & Customer Confidence) */}
+      <section className="max-w-[1600px] mx-auto px-5 sm:px-8 py-12 sm:py-16 border-t border-b border-[#EAEAEA]">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <span className="text-[11px] font-bold tracking-[0.2em] text-[#003F25] uppercase block mb-2 font-mono">
+              CURATION & TEXTILES
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-black">
+              FREQUENTLY ASKED QUESTIONS
+            </h2>
+            <p className="text-[13px] sm:text-[14px] text-[#666666] mt-2">
+              Learn about our textile origins, curation ethos, and South Indian streetwear atelier.
+            </p>
+          </div>
+
+          <div className="divide-y divide-[#EAEAEA] border border-[#EAEAEA] bg-[#FDFDFD] rounded-xs">
+            <div className="p-5 sm:p-6 space-y-2">
+              <h3 className="text-[14.5px] font-bold text-[#003F25] uppercase tracking-wide">
+                Where is TONTO Clothing based and where are pieces crafted?
+              </h3>
+              <p className="text-[13px] sm:text-[14px] text-[#444444] leading-relaxed">
+                TONTO is headquartered in Coimbatore, Tamil Nadu—globally celebrated as the textile engine of South India. Our physical showroom is situated Opposite Prozone Mall on Sathy Road, where every garment is inspected, hand-measured, and finished with custom woven trims.
+              </p>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-2">
+              <h3 className="text-[14.5px] font-bold text-[#003F25] uppercase tracking-wide">
+                What makes TONTO heavyweight garments different from typical streetwear?
+              </h3>
+              <p className="text-[13px] sm:text-[14px] text-[#444444] leading-relaxed">
+                While standard market streetwear relies on thin 160–180 GSM fabrics, TONTO crafts garments using 240 to 450 GSM combed cottons and substantial thermal waffle knits. This ensures an architectural boxy drape that retains its structure wear after wear.
+              </p>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-2">
+              <h3 className="text-[14.5px] font-bold text-[#003F25] uppercase tracking-wide">
+                Are your pieces thrift, surplus, or original brand drops?
+              </h3>
+              <p className="text-[13px] sm:text-[14px] text-[#444444] leading-relaxed">
+                We operate on a hybrid model: our curated archive contains hand-authenticated imported surplus and vintage thrift finds, while our TONTO Made collection features original cut-and-sew garments produced in limited batches.
+              </p>
+            </div>
+
+            <div className="p-5 sm:p-6 space-y-2">
+              <h3 className="text-[14.5px] font-bold text-[#003F25] uppercase tracking-wide">
+                How do I choose the right size for the relaxed unisex fit?
+              </h3>
+              <p className="text-[13px] sm:text-[14px] text-[#444444] leading-relaxed">
+                Our silhouettes feature intentional drop shoulders and relaxed room through the chest. We recommend choosing your normal size for the signature relaxed look, or sizing down one step if you prefer a standard tailored fit. Flat measurements are listed on every product page.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

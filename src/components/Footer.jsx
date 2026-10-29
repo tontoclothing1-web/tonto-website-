@@ -79,7 +79,7 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
           
           {/* Col 1: Brand Info */}
           <div className="space-y-4">
-            <Logo variant="footer" alt="TONTO Clothing" />
+            <Logo variant="footer" alt="TONTO Clothing — Coimbatore Streetwear Studio" />
             <p className="text-[12px] text-white/80 leading-relaxed max-w-xs">
               Curated unisex streetwear, washed denim, oversized graphics, and surplus finds. Based in Coimbatore, Tamil Nadu.
             </p>
@@ -96,52 +96,58 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
             </h3>
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
-                <button
-                  onClick={() => onNavigate('new-arrivals')}
+                <a
+                  href="#/new-arrivals"
+                  onClick={(e) => { e.preventDefault(); onNavigate('new-arrivals'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   New Arrivals
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('featured')}
+                <a
+                  href="#/featured"
+                  onClick={(e) => { e.preventDefault(); onNavigate('featured'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Featured Styles
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('collection', 'All')}
+                <a
+                  href="#/collection"
+                  onClick={(e) => { e.preventDefault(); onNavigate('collection', 'All'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   The Full Collection
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('collection', 'Denim')}
+                <a
+                  href="#/collection?category=Denim"
+                  onClick={(e) => { e.preventDefault(); onNavigate('collection', 'Denim'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Washed & Wide Denim
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('lookbook')}
+                <a
+                  href="#/lookbook"
+                  onClick={(e) => { e.preventDefault(); onNavigate('lookbook'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   TONTO Made
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('about')}
+                <a
+                  href="#/about"
+                  onClick={(e) => { e.preventDefault(); onNavigate('about'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   About TONTO
-                </button>
+                </a>
               </li>
             </ul>
           </div>
@@ -153,52 +159,58 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
             </h3>
             <ul className="space-y-2.5 text-[13px] text-white/80">
               <li>
-                <button
-                  onClick={() => onOpenAccount ? onOpenAccount() : onNavigate('account')}
+                <a
+                  href="#/account"
+                  onClick={(e) => { e.preventDefault(); onOpenAccount ? onOpenAccount() : onNavigate('account'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Sign In / Member Access
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('visit')}
+                <a
+                  href="#/visit"
+                  onClick={(e) => { e.preventDefault(); onNavigate('visit'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Coimbatore Location & Map
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('policy', 'shipping')}
+                <a
+                  href="#/policy/shipping"
+                  onClick={(e) => { e.preventDefault(); onNavigate('policy', 'shipping'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Shipping & Dispatch
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('policy', 'returns')}
+                <a
+                  href="#/policy/returns"
+                  onClick={(e) => { e.preventDefault(); onNavigate('policy', 'returns'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Archive Returns & Exchanges
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('policy', 'size-guide')}
+                <a
+                  href="#/policy/size-guide"
+                  onClick={(e) => { e.preventDefault(); onNavigate('policy', 'size-guide'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Garment Measuring Guide
-                </button>
+                </a>
               </li>
               <li>
-                <button
-                  onClick={() => onNavigate('policy', 'privacy')}
+                <a
+                  href="#/policy/privacy"
+                  onClick={(e) => { e.preventDefault(); onNavigate('policy', 'privacy'); }}
                   className="hover:text-white transition-colors cursor-pointer"
                 >
                   Privacy & Terms
-                </button>
+                </a>
               </li>
               <li>
                 <a

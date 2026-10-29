@@ -30,6 +30,7 @@ import accountRoutes from './routes/account.routes.js';
 import policiesRoutes from './routes/policies.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import storeRoutes from './routes/store.routes.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
@@ -38,7 +39,39 @@ app.set('trust proxy', 1);
 // Smaller responses + less fingerprinting.
 app.disable('x-powered-by');
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        mediaSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        fontSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https:', 'http://localhost:*', 'ws://localhost:*'],
+        frameSrc: ["'self'", 'https://maps.google.com', 'https://www.google.com'],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        frameAncestors: ["'none'"],
+      },
+    },
+    hsts: {
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  })
+);
+
+// Standard Permissions-Policy matching Vercel edge deployment
+app.use((_req, res, next) => {
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
+  next();
+});
+
 // Gzip JSON/static before anything else touches the body.
 app.use(compression({ threshold: 1024 }));
 
@@ -126,6 +159,5 @@ app.use('/api', (_req, res) => {
 
 // Centralized error formatter for all /api routes
 app.use(errorHandler);
-// (server.js adds express.static(dist), the SPA catch-all, then notFound + errorHandler last)
 
 export default app;

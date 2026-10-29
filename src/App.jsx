@@ -19,6 +19,7 @@ import LookbookView from './components/LookbookView';
 import CartPage from './components/CartPage';
 import CheckoutPage from './components/CheckoutPage';
 import SavedItemsPage from './components/SavedItemsPage';
+import SEO from './components/SEO';
 
 // Secondary routes code-split with React.lazy + Suspense for lean mobile initial chunk
 const AccountPage = React.lazy(() => import('./components/AccountPage'));
@@ -381,18 +382,30 @@ export default function App() {
   // URL Routing Listener (Pathname + Hash)
   useEffect(() => {
     const handleRouting = () => {
-      const pathname = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+      const rawPathname = (window.location.pathname || '').replace(/\/+$/, '') || '/';
       const hash = window.location.hash || '';
 
       // Direct /admin in URL pathname or hash
-      if (pathname === '/admin' || pathname.endsWith('/admin') || hash === '#/admin' || hash === '#admin') {
+      if (rawPathname === '/admin' || rawPathname.endsWith('/admin') || hash === '#/admin' || hash === '#admin') {
         setActiveView('admin');
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         return;
       }
 
-      const [path, queryString] = (hash || '#/').split('?');
-      const searchParams = new URLSearchParams(queryString || '');
+      // Resolve effective route from hash (if present) or pathname
+      let path = '#/';
+      let queryString = '';
+
+      if (hash && hash !== '#' && hash !== '#/') {
+        const [hPath, hQuery] = hash.split('?');
+        path = hPath;
+        queryString = hQuery || '';
+      } else if (rawPathname !== '/') {
+        path = '#' + rawPathname;
+        queryString = (window.location.search || '').replace(/^\?/, '');
+      }
+
+      const searchParams = new URLSearchParams(queryString);
 
       if (path === '' || path === '#' || path === '#/') {
         setActiveView('home');
@@ -689,6 +702,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white text-[#111827] flex flex-col font-sans selection:bg-[#003F25] selection:text-white relative">
+      <SEO
+        view={activeView}
+        category={collectionCategory}
+        product={selectedProduct}
+        look={selectedLook}
+        policyTab={policyTab}
+      />
       
       {/* Slim White Sticky Header (76px) - only for storefront */}
       {activeView !== 'admin' && (

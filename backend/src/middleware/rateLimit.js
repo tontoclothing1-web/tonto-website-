@@ -50,6 +50,22 @@ export const publicWriteLimiter = rateLimit({
   message: jsonMessage('Too many submissions from this device. Please try again shortly.'),
 });
 
+/** Promo code validation: 30 attempts / 15 min / IP stops coupon brute-forcing. */
+export const promoLimiter = rateLimit({
+  ...base,
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  message: jsonMessage('Too many coupon code validation attempts. Try again later.'),
+});
+
+/** Cart synchronization: 60 sync requests / 10 min / IP is ample for active shopping. */
+export const cartSyncLimiter = rateLimit({
+  ...base,
+  windowMs: 10 * 60 * 1000,
+  limit: 60,
+  message: jsonMessage('Cart sync limit reached. Please slow down.'),
+});
+
 /** Uploads are expensive (storage + egress) — 30 files / hour / IP. */
 export const uploadLimiter = rateLimit({
   ...base,
@@ -58,4 +74,12 @@ export const uploadLimiter = rateLimit({
   message: jsonMessage('Upload limit reached. Try again later.'),
 });
 
-export default { authLimiter, adminLoginLimiter, checkoutLimiter, publicWriteLimiter, uploadLimiter };
+export default {
+  authLimiter,
+  adminLoginLimiter,
+  checkoutLimiter,
+  publicWriteLimiter,
+  promoLimiter,
+  cartSyncLimiter,
+  uploadLimiter,
+};

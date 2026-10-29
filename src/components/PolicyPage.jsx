@@ -21,18 +21,25 @@ export default function PolicyPage({
     <div className="w-full bg-white text-[#111827] pb-24">
       
       {/* Breadcrumb Navigation */}
-      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={onNavigateHome}
-            className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1"
-          >
-            <ArrowLeft size={14} />
-            <span>home</span>
-          </button>
-          <span className="text-[#D1D5DB]">/</span>
-          <span className="text-[#003F25] font-semibold">client care & policies</span>
-        </div>
+      <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
+        <ol className="flex items-center gap-1.5 list-none p-0 m-0" itemscope itemtype="https://schema.org/BreadcrumbList">
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1">
+            <button
+              onClick={onNavigateHome}
+              className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1"
+              itemprop="item"
+            >
+              <ArrowLeft size={14} />
+              <span itemprop="name">home</span>
+            </button>
+            <meta itemprop="position" content="1" />
+            <span className="text-[#D1D5DB]">/</span>
+          </li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <span className="text-[#003F25] font-semibold" itemprop="name">client care & policies</span>
+            <meta itemprop="position" content="2" />
+          </li>
+        </ol>
 
         <button
           onClick={onNavigateCollection}
@@ -40,7 +47,7 @@ export default function PolicyPage({
         >
           View Collection
         </button>
-      </div>
+      </nav>
 
       <div className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-10">
         
@@ -84,7 +91,7 @@ export default function PolicyPage({
                   Showroom Dispatch & Transit Timelines
                 </h2>
                 <p>
-                  Every order is inspected, steam-prepped, and hand-packaged directly at the TONTO showroom in <strong>Cross Cut Road, Gandhipuram, Coimbatore, Tamil Nadu</strong>.
+                  Every order is inspected, steam-prepped, and hand-packaged directly at the TONTO showroom in <strong>Opposite to Prozone Mall, Sathy Road, Coimbatore, Tamil Nadu</strong>.
                 </p>
               </div>
 

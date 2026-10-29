@@ -14,18 +14,25 @@ export default function VisitUsPage({ onNavigateHome, onNavigateCollection }) {
     <div className="w-full bg-white text-[#111111] pb-24 selection:bg-[#003F25] selection:text-white">
       
       {/* 1. Breadcrumb Navigation */}
-      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={onNavigateHome}
-            className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1 font-medium"
-          >
-            <ArrowLeft size={14} />
-            <span>home</span>
-          </button>
-          <span className="text-[#D1D5DB]">/</span>
-          <span className="text-[#003F25] font-semibold tracking-wider uppercase">visit us</span>
-        </div>
+      <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
+        <ol className="flex items-center gap-1.5 list-none p-0 m-0" itemscope itemtype="https://schema.org/BreadcrumbList">
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+            <button
+              onClick={onNavigateHome}
+              className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1 font-medium"
+              itemprop="item"
+            >
+              <ArrowLeft size={14} />
+              <span itemprop="name">home</span>
+            </button>
+            <meta itemprop="position" content="1" />
+            <span className="text-[#D1D5DB]">/</span>
+          </li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <span className="text-[#003F25] font-semibold tracking-wider uppercase" itemprop="name">visit us</span>
+            <meta itemprop="position" content="2" />
+          </li>
+        </ol>
 
         <button
           onClick={onNavigateCollection}
@@ -33,7 +40,7 @@ export default function VisitUsPage({ onNavigateHome, onNavigateCollection }) {
         >
           View Collection
         </button>
-      </div>
+      </nav>
 
       {/* 2. Page Header */}
       <div className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-10 sm:pt-14 pb-8 text-center sm:text-left">
@@ -195,8 +202,58 @@ export default function VisitUsPage({ onNavigateHome, onNavigateCollection }) {
 
             </div>
           </div>
-
         </div>
+
+        {/* Store Visitor FAQs Section */}
+        <div className="mt-16 pt-12 border-t border-[#E0E5E1] text-left">
+          <div className="text-center sm:text-left mb-8">
+            <span className="text-[11px] font-bold tracking-[0.2em] text-[#003F25] uppercase block mb-1 font-mono">
+              STORE INFORMATION
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight text-[#111111]">
+              FREQUENTLY ASKED STORE QUESTIONS
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-5 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-2">
+              <h3 className="text-[14px] font-bold text-[#003F25] uppercase tracking-wide">
+                What are your daily showroom hours?
+              </h3>
+              <p className="text-[13px] text-[#4B5563] leading-relaxed">
+                Our Coimbatore store is open 7 days a week from 10:00 AM to 9:30 PM. Walk-ins are always welcome, and size fitting rooms are ready for trying any silhouettes.
+              </p>
+            </div>
+
+            <div className="p-5 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-2">
+              <h3 className="text-[14px] font-bold text-[#003F25] uppercase tracking-wide">
+                Is parking available near Prozone Mall?
+              </h3>
+              <p className="text-[13px] text-[#4B5563] leading-relaxed">
+                Yes, our store is located directly opposite Prozone Mall on Sathy Road with dedicated ground parking for two-wheelers and four-wheelers.
+              </p>
+            </div>
+
+            <div className="p-5 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-2">
+              <h3 className="text-[14px] font-bold text-[#003F25] uppercase tracking-wide">
+                Can I pick up online orders in person?
+              </h3>
+              <p className="text-[13px] text-[#4B5563] leading-relaxed">
+                Yes! You can reserve pieces online and choose showroom pickup at checkout. We will steam-prep and hold your order for 48 hours.
+              </p>
+            </div>
+
+            <div className="p-5 bg-[#F9FAF9] border border-[#E0E5E1] rounded-xs space-y-2">
+              <h3 className="text-[14px] font-bold text-[#003F25] uppercase tracking-wide">
+                What payment methods are accepted at the store?
+              </h3>
+              <p className="text-[13px] text-[#4B5563] leading-relaxed">
+                We accept all major UPI apps (Google Pay, PhonePe, Paytm), Visa/Mastercard/RuPay credit and debit cards, and cash.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
     </div>

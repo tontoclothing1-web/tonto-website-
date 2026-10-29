@@ -144,28 +144,41 @@ export default function FeaturedPage({
   return (
     <div className="w-full bg-white pb-20 text-[#111111] animate-fade-in text-left">
       {/* Breadcrumb Navigation - Simple & Clean */}
-      <div className="max-w-[1600px] mx-auto px-5 sm:px-8 py-3 text-[12px] text-[#79867D] flex items-center gap-1.5">
-        <button
-          onClick={onNavigateHome}
-          className="hover:text-[#003F25] transition-colors cursor-pointer"
-        >
-          home
-        </button>
-        <span className="text-[#D1D5DB]">/</span>
-        <span className="text-[#003F25] font-medium">featured</span>
-        {selectedCategory !== 'All' && (
-          <>
+      <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-5 sm:px-8 py-3 text-[12px] text-[#79867D]">
+        <ol className="flex items-center gap-1.5 list-none p-0 m-0" itemscope itemtype="https://schema.org/BreadcrumbList">
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+            <button
+              onClick={onNavigateHome}
+              className="hover:text-[#003F25] transition-colors cursor-pointer"
+              itemprop="item"
+            >
+              <span itemprop="name">home</span>
+            </button>
+            <meta itemprop="position" content="1" />
             <span className="text-[#D1D5DB]">/</span>
-            <span className="text-[#003F25] font-medium capitalize">{selectedCategory}</span>
-          </>
-        )}
-      </div>
+          </li>
+          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+            <span className="text-[#003F25] font-medium" itemprop="name">featured</span>
+            <meta itemprop="position" content="2" />
+          </li>
+          {selectedCategory !== 'All' && (
+            <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+              <span className="text-[#D1D5DB]">/</span>
+              <span className="text-[#003F25] font-semibold capitalize" itemprop="name">{selectedCategory}</span>
+              <meta itemprop="position" content="3" />
+            </li>
+          )}
+        </ol>
+      </nav>
 
-      {/* Clean Centered Header: FEATURED Title & Category Boxes (Exact Match to Shop Page) */}
-      <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 pt-8 sm:pt-10 pb-4 text-center">
-        <h1 className="text-2xl sm:text-[30px] font-bold tracking-[0.06em] text-black uppercase mb-4 font-['Futura_PT_Book',sans-serif]">
-          FEATURED
+      {/* Clean Centered Header: FEATURED Title & Category Boxes */}
+      <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 pt-6 sm:pt-8 pb-4 text-center">
+        <h1 className="text-2xl sm:text-[32px] font-extrabold tracking-[0.06em] text-black uppercase mb-2 font-['Futura_PT_Book',sans-serif]">
+          Featured Streetwear & TONTO Made
         </h1>
+        <p className="text-[12.5px] sm:text-[13.5px] text-[#767676] max-w-xl mx-auto mb-4 font-normal leading-relaxed">
+          Curated signature waffle knits, custom chain-graffiti denim, and bespoke garments handcrafted in Coimbatore.
+        </p>
 
         {/* Minimal Category Filter Boxes */}
         <div className="flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto pb-4">

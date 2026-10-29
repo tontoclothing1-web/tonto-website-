@@ -9,6 +9,7 @@ import {
 } from '../controllers/promos.controller.js';
 import { protect, requireAdmin } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
+import { promoLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
@@ -36,6 +37,7 @@ const promoPatch = [...promoFields, body('percent').optional().isInt({ min: 1, m
 // Public: CheckoutPage validates the entered code.
 router.post(
   '/validate',
+  promoLimiter,
   body('code').notEmpty().withMessage('code is required.').isString(),
   validate,
   validatePromo
