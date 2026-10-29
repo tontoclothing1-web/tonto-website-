@@ -30,7 +30,6 @@ import accountRoutes from './routes/account.routes.js';
 import policiesRoutes from './routes/policies.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import storeRoutes from './routes/store.routes.js';
-import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
