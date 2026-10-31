@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import Logo from './Logo';
 import { createPortal } from 'react-dom';
 import {
   auth,
@@ -2335,7 +2336,7 @@ export default function AdminDashboard({
               className="flex items-center gap-2 group cursor-pointer shrink-0"
               title="Click to visit live store"
             >
-              <img src="/assets/tonto-lockup.svg" alt="TONTO Clothing" className="h-6 sm:h-7 w-auto object-contain" />
+              <Logo variant="admin" alt="TONTO Clothing" className="h-6 sm:h-7 w-auto object-contain" />
               <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.18em] bg-white/15 px-1.5 sm:px-2 py-0.5 rounded-xs text-[#E0E5E1] whitespace-nowrap">
                 ADMIN DESK
               </span>
