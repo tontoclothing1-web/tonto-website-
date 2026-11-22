@@ -810,7 +810,7 @@ export const SHOPPABLE_LOOKS = [
         colour: "sun-bleached blue",
         defaultSize: "32",
         variants: ["30", "32", "34"],
-        image: "/assets/products/couch-jeans-flat.jpg"
+        image: "/assets/products/black-denim-shirt-flared-jeans.jpg"
       },
       {
         id: "item-5-acc",

@@ -49,7 +49,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
 
   const isPlayingHighlight = isVideoPlaying && isSectionVisible && isDocVisible;
 
-  // Hook for native centered scroll snap & GPU scale interpolation
+  // Hook for native centered scroll snap & GPU continuous positioning
   const {
     containerRef,
     cardMediaRefs,
@@ -71,8 +71,8 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
     initialIndex,
     isPaused: isHovered || !isSectionVisible || !isDocVisible,
     isCenterPlaying: isPlayingHighlight,
-    activeHighlightScale: 1.16,
-    sideScale: 0.85
+    activeHighlightScale: 1.0,
+    sideScale: 1.0
   });
 
   const { cardWidth, gap, paddingLeft } = measurements;
@@ -244,7 +244,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
       </div>
 
       {/* FULL-BLEED NATIVE SCROLL-SNAP STRIP WITH MOMENTUM DRAG */}
-      <div className="relative w-full overflow-hidden py-8 sm:py-14">
+      <div className="relative w-full overflow-hidden py-4 sm:py-8">
         <div
           ref={containerRef}
           onMouseDown={handleMouseDown}
@@ -253,7 +253,7 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
           onTouchEnd={handleTouchEnd}
           onKeyDown={handleKeyDown}
           tabIndex={0}
-          className={`relative w-full overflow-x-auto flex items-center no-scrollbar select-none outline-none ${
+          className={`relative w-full overflow-x-auto flex items-start no-scrollbar select-none outline-none ${
             isDragging ? 'cursor-grabbing' : 'cursor-grab'
           }`}
           style={{
@@ -294,7 +294,6 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                   width: `${cardWidth}px`,
                   scrollSnapAlign: 'center',
                   flexShrink: 0,
-                  transformOrigin: 'center center',
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden'
                 }}
@@ -302,20 +301,14 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                   isCenter ? 'z-20' : 'z-10'
                 }`}
               >
-                {/* Upper Media Box - Bottom-anchored GPU scale interpolation */}
+                {/* Upper Media Box - Static vertical height, center-highlighted */}
                 <div
                   ref={(el) => (cardMediaRefs.current[idx] = el)}
                   data-card-media="true"
-                  style={{
-                    transformOrigin: 'center center',
-                    willChange: isScrolling || isDragging ? 'transform, opacity' : 'auto'
-                  }}
-                  className={`relative w-full aspect-[380/500] sm:aspect-[380/530] overflow-hidden bg-[#111111] border transition-[box-shadow,border-color] duration-500 ${
-                    isCenter && isPlayingHighlight
-                      ? 'border-black/30 shadow-[0_22px_48px_rgba(0,0,0,0.28)] ring-2 ring-black/15'
-                      : isCenter
-                      ? 'border-black/20 shadow-lg ring-1 ring-black/10'
-                      : 'border-gray-200 shadow-xs'
+                  className={`relative w-full aspect-[380/500] sm:aspect-[380/530] overflow-hidden bg-[#111111] border transition-[box-shadow,border-color,ring-color] duration-300 ${
+                    isCenter
+                      ? 'border-black ring-2 ring-black shadow-[0_20px_48px_rgba(0,0,0,0.28)]'
+                      : 'border-gray-200 ring-0 shadow-xs'
                   }`}
                 >
                   {isVideo && videoSrc ? (
@@ -345,6 +338,14 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                       draggable={false}
                       className="w-full h-full object-cover object-center pointer-events-none select-none transition-transform duration-700 ease-out group-hover:scale-[1.02]"
                     />
+                  )}
+
+                  {/* Center Card Featured Indicator */}
+                  {isCenter && (
+                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-black/80 text-white text-[10px] font-bold uppercase tracking-wider rounded-full backdrop-blur-xs shadow-md pointer-events-none">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#003F25] animate-pulse" />
+                      <span>FEATURED LOOK</span>
+                    </div>
                   )}
 
                   {/* mnml.la Style Video Text Overlay */}
@@ -400,8 +401,8 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
                     e.stopPropagation();
                     handleLookClick(look);
                   }}
-                  className={`mt-2 p-2 sm:p-2.5 bg-white border flex items-center justify-between transition-colors cursor-pointer ${
-                    isCenter ? 'border-black/25 shadow-md' : 'border-gray-200 shadow-xs hover:border-gray-400'
+                  className={`mt-2 p-2 sm:p-2.5 bg-white border flex items-center justify-between transition-all duration-300 cursor-pointer ${
+                    isCenter ? 'border-black ring-1 ring-black/30 shadow-md' : 'border-gray-200 shadow-xs hover:border-gray-400'
                   }`}
                 >
                   <div className="flex items-center gap-2.5 overflow-hidden">

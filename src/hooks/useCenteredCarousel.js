@@ -58,8 +58,8 @@ export function useCenteredCarousel({
   onActiveChange,
   isPaused = false,
   isCenterPlaying = true,
-  activeHighlightScale = 1.16,
-  sideScale = 0.85
+  activeHighlightScale = 1.0,
+  sideScale = 1.0
 }) {
   const containerRef = useRef(null);
   const cardMediaRefs = useRef([]);
@@ -133,15 +133,8 @@ export function useCenteredCarousel({
     }
 
     const isMoving = isDraggingRef.current || isScrollingRef.current;
-    // On mobile: 1.08x highlight / 1.04x center, 0.88x sides. Fits phone screen vertically without clipping!
-    // On desktop: 1.16x highlight / 1.10x center, 0.85x sides.
-    const targetCenterScale = isMobile 
-      ? (isCenterPlayingRef.current ? 1.08 : 1.04) 
-      : (isCenterPlayingRef.current ? activeHighlightScale : 1.10);
-    const centerScale = targetCenterScale;
-    const minScale = isMobile ? 0.88 : sideScale;
 
-    // Apply continuous GPU scale and opacity to card wrapper
+    // Apply continuous opacity and zIndex to card wrapper without vertical scaling
     const wrappers = cardWrapperRefs.current;
     const len = wrappers.length;
 
@@ -150,9 +143,10 @@ export function useCenteredCarousel({
       if (!wrapperEl) continue;
 
       if (isReducedMotion) {
-        wrapperEl.style.transform = 'scale(1)';
+        wrapperEl.style.transform = 'none';
         wrapperEl.style.opacity = '1';
         wrapperEl.style.transition = 'none';
+        wrapperEl.style.zIndex = '10';
         continue;
       }
 
@@ -163,21 +157,19 @@ export function useCenteredCarousel({
       // Interpolation progress: 0 at center, 1 at 1 card away or further
       const progress = Math.min(1, dist / itemStep);
 
-      // Smooth cosine easing curve for continuous organic scaling
+      // Smooth cosine easing curve for continuous focus: 1 at center, 0 at >= 1 card away
       const ease = 0.5 * (1 + Math.cos(Math.PI * progress));
 
-      // Continuous scale from centerScale at center down to minScale on sides
-      const targetScale = minScale + ease * (centerScale - minScale);
+      // Continuous opacity: 1.0 at center, smoothly dropping to 0.65 on side cards
+      const opacity = 0.65 + ease * (1.0 - 0.65);
 
-      // Opacity between 1.0 (active center) and 0.78 (side cards)
-      const opacity = 0.78 + ease * (1.0 - 0.78);
-
-      wrapperEl.style.transition = isMoving ? 'none' : 'transform 450ms cubic-bezier(0.16, 1, 0.3, 1), opacity 450ms ease';
-      wrapperEl.style.transform = `scale3d(${targetScale.toFixed(4)}, ${targetScale.toFixed(4)}, 1)`;
+      // Keep vertical alignment strictly static: NO vertical transform / scaling!
+      wrapperEl.style.transform = 'none';
+      wrapperEl.style.transition = isMoving ? 'none' : 'opacity 350ms ease';
       wrapperEl.style.opacity = opacity.toFixed(3);
       wrapperEl.style.zIndex = Math.round(10 + ease * 20);
     }
-  }, [totalItems, onActiveChange, activeHighlightScale, sideScale]);
+  }, [totalItems, onActiveChange]);
 
   // Sync isCenterPlaying state
   useEffect(() => {
