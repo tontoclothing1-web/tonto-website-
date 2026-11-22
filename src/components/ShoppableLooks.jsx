@@ -30,11 +30,18 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
   }, [rawLooks]);
 
   const totalBase = baseLooks.length;
-  // 3-set buffer for seamless infinite rotation
-  const extendedLooks = useMemo(() => [...baseLooks, ...baseLooks, ...baseLooks], [baseLooks]);
+  // 5-set buffer for completely seamless infinite looping in both directions
+  const extendedLooks = useMemo(() => [
+    ...baseLooks,
+    ...baseLooks,
+    ...baseLooks,
+    ...baseLooks,
+    ...baseLooks
+  ], [baseLooks]);
   const totalItems = extendedLooks.length;
 
-  const initialIndex = totalBase + Math.min(2, Math.floor(totalBase / 2));
+  // Center set is Set 2 (starts at Look 1: totalBase * 2)
+  const initialIndex = totalBase * 2;
 
   // State
   const [isMuted, setIsMuted] = useState(true);
@@ -451,7 +458,13 @@ export default function ShoppableLooks({ products = PRODUCTS, onSelectProduct, o
           <button
             key={i}
             type="button"
-            onClick={() => scrollToIndex(totalBase + i)}
+            onClick={() => {
+              const currentLook = ((activeIndex % totalBase) + totalBase) % totalBase;
+              let diff = i - currentLook;
+              if (diff > totalBase / 2) diff -= totalBase;
+              if (diff < -totalBase / 2) diff += totalBase;
+              scrollToIndex(activeIndex + diff);
+            }}
             className={`h-1.5 rounded-full transition-all duration-350 cursor-pointer focus-visible:ring-2 focus-visible:ring-[#003F25] ${
               i === normalizedActive ? 'w-6 bg-black' : 'w-1.5 bg-gray-300 hover:bg-gray-400'
             }`}

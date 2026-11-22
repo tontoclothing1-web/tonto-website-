@@ -183,30 +183,38 @@ export function useCenteredCarousel({
     if (!container || !totalBase || isDraggingRef.current || isNormalizingRef.current) return;
 
     const { itemStep } = measurementsRef.current;
-    const setSpan = totalBase * itemStep;
-    const scrollLeft = container.scrollLeft;
+    if (!itemStep) return;
 
-    // If drifted too far left or right, adjust scroll position seamlessly
-    if (scrollLeft < setSpan * 0.4) {
+    const setSpan = totalBase * itemStep;
+    const currentScroll = container.scrollLeft;
+
+    // Set 2 is the center set: from setSpan * 2 to setSpan * 3
+    const baseOffset = Math.floor((currentScroll - setSpan * 2) / setSpan);
+
+    if (baseOffset !== 0) {
+      const shift = baseOffset * setSpan;
       isNormalizingRef.current = true;
+
+      const prevBehavior = container.style.scrollBehavior;
+      const prevSnap = container.style.scrollSnapType;
+
+      container.style.scrollSnapType = 'none';
       container.style.scrollBehavior = 'auto';
-      container.scrollLeft += setSpan;
+      container.scrollLeft -= shift;
+
+      const newIdx = activeIndexRef.current - baseOffset * totalBase;
+      activeIndexRef.current = newIdx;
+      setActiveIndex(newIdx);
+      onActiveChange?.(newIdx);
+
       requestAnimationFrame(() => {
-        container.style.scrollBehavior = '';
-        isNormalizingRef.current = false;
-        applyTransforms();
-      });
-    } else if (scrollLeft > setSpan * 2.2) {
-      isNormalizingRef.current = true;
-      container.style.scrollBehavior = 'auto';
-      container.scrollLeft -= setSpan;
-      requestAnimationFrame(() => {
-        container.style.scrollBehavior = '';
+        container.style.scrollSnapType = prevSnap || '';
+        container.style.scrollBehavior = prevBehavior || '';
         isNormalizingRef.current = false;
         applyTransforms();
       });
     }
-  }, [totalBase, applyTransforms]);
+  }, [totalBase, onActiveChange, applyTransforms]);
 
   // Scroll listener
   useEffect(() => {
@@ -222,7 +230,7 @@ export function useCenteredCarousel({
         setIsScrolling(false);
         applyTransforms();
         checkInfiniteLoop();
-      }, 120);
+      }, 90);
 
       if (scrollRafRef.current) return;
       scrollRafRef.current = requestAnimationFrame(() => {
@@ -249,6 +257,10 @@ export function useCenteredCarousel({
 
     const ro = new ResizeObserver(() => {
       updateMeasurements();
+      const c = containerRef.current;
+      if (c && measurementsRef.current?.itemStep) {
+        c.scrollLeft = activeIndexRef.current * measurementsRef.current.itemStep;
+      }
       applyTransforms();
     });
 
@@ -261,15 +273,39 @@ export function useCenteredCarousel({
     const container = containerRef.current;
     if (!container) return;
 
-    const { paddingLeft, itemStep, isReducedMotion } = measurementsRef.current;
-    const targetScrollLeft = Math.max(0, paddingLeft + index * itemStep - paddingLeft);
+    const { itemStep, isReducedMotion } = measurementsRef.current;
+    if (!itemStep) return;
 
+    const setSpan = totalBase * itemStep;
+    let targetIndex = index;
+
+    // If targetIndex approaches either boundary, normalize first seamlessly
+    if (targetIndex >= totalBase * 4) {
+      const prevSnap = container.style.scrollSnapType;
+      container.style.scrollSnapType = 'none';
+      container.style.scrollBehavior = 'auto';
+      container.scrollLeft -= setSpan;
+      targetIndex -= totalBase;
+      activeIndexRef.current -= totalBase;
+      container.style.scrollSnapType = prevSnap || '';
+    } else if (targetIndex < totalBase) {
+      const prevSnap = container.style.scrollSnapType;
+      container.style.scrollSnapType = 'none';
+      container.style.scrollBehavior = 'auto';
+      container.scrollLeft += setSpan;
+      targetIndex += totalBase;
+      activeIndexRef.current += totalBase;
+      container.style.scrollSnapType = prevSnap || '';
+    }
+
+    const targetScrollLeft = Math.max(0, targetIndex * itemStep);
     const useSmooth = smooth && !isReducedMotion;
+
     container.scrollTo({
       left: targetScrollLeft,
       behavior: useSmooth ? 'smooth' : 'auto'
     });
-  }, []);
+  }, [totalBase]);
 
   // Initialize initial scroll position on mount
   useEffect(() => {
@@ -277,15 +313,15 @@ export function useCenteredCarousel({
     if (!container) return;
 
     updateMeasurements();
-    const { paddingLeft, itemStep } = measurementsRef.current;
-    const initialTarget = Math.max(0, paddingLeft + (initialIndex || 0) * itemStep - paddingLeft);
-    container.scrollLeft = initialTarget;
+    const { itemStep } = measurementsRef.current;
+    const startIdx = initialIndex || 0;
+    container.scrollLeft = startIdx * itemStep;
 
     requestAnimationFrame(() => {
       updateMeasurements();
       applyTransforms();
     });
-  }, []);
+  }, [initialIndex, updateMeasurements, applyTransforms]);
 
   // Touch Swipe Handlers for Mobile Devices
   const handleTouchStart = useCallback((e) => {
