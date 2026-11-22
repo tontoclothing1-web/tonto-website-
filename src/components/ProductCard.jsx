@@ -7,7 +7,8 @@ function ProductCard({
   onToggleSave,
   onQuickView,
   onOpenProduct,
-  showBrandSubtitle = false
+  showBrandSubtitle = false,
+  priority = false
 }) {
   const images = (product.images && product.images.length > 0)
     ? product.images
@@ -190,8 +191,8 @@ function ProductCard({
                     className="w-full h-full object-cover object-center pointer-events-none select-none"
                     // First view is the one the shopper actually sees (and the LCP
                     // candidate); the alternates wait until they are needed.
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                    fetchPriority={i === 0 ? 'high' : 'auto'}
+                    loading={i === 0 && priority ? 'eager' : 'lazy'}
+                    fetchPriority={i === 0 && priority ? 'high' : 'auto'}
                     decoding="async"
                     draggable={false}
                   />

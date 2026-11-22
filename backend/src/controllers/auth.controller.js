@@ -94,6 +94,31 @@ export const login = async (req, res, next) => {
 // GET /api/auth/me — protect
 export const getMe = async (req, res, next) => {
   try {
+    if (req.user?.role === 'admin') {
+      if (isSupabaseConnected() && req.user.id !== 'admin-director') {
+        try {
+          const user = await findUserById(req.user.id);
+          if (user) {
+            const safe = await withAddresses(user);
+            return res.status(200).json({ success: true, user: safe });
+          }
+        } catch {
+          // Fall through to standard admin object
+        }
+      }
+      return res.status(200).json({
+        success: true,
+        user: {
+          id: req.user.id || 'admin-director',
+          name: 'TONTO Admin',
+          email: req.user.email || 'admin@tonto.local',
+          role: 'admin',
+          credentials_submitted: true,
+          addresses: [],
+        },
+      });
+    }
+
     requireSupabase();
     const user = await findUserById(req.user.id);
     if (!user) throw ApiError.notFound('User not found');

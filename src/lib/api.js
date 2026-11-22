@@ -17,7 +17,14 @@
 //   import { api, wishlist, looks, storeInfo } from './lib/api.js';
 //   const { data } = await wishlist.list();
 
-export const API_BASE = (import.meta.env?.VITE_API_URL || '/api').replace(/\/+$/, '');
+export const API_BASE = (() => {
+  const envUrl = import.meta.env?.VITE_API_URL;
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && envUrl?.startsWith('http://localhost')) {
+    return '/api';
+  }
+  if (!envUrl) return '/api';
+  return envUrl.replace(/\/+$/, '');
+})();
 const TOKEN_KEY = 'tonto_auth_token';
 const DEVICE_KEY = 'tonto_device_id';
 
@@ -57,7 +64,7 @@ export function getDeviceId() {
 }
 
 // ---------- core request ----------
-export async function request(path, { method = 'GET', body, auth = true, query } = {}) {
+export async function request(path, { method = 'GET', body, auth = true, query, timeout = 5000 } = {}) {
   let url = `${API_BASE}${path.startsWith('/') ? path : `/${path}`}`;
   if (query && typeof query === 'object') {
     const qs = new URLSearchParams();
@@ -73,15 +80,23 @@ export async function request(path, { method = 'GET', body, auth = true, query }
     const token = getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
   }
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller && timeout > 0 ? setTimeout(() => controller.abort(), timeout) : null;
   let res;
   try {
     res = await fetch(url, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      signal: controller?.signal,
     });
   } catch (err) {
+    if (err?.name === 'AbortError') {
+      throw new Error(`Timeout reaching ${url} after ${timeout}ms`);
+    }
     throw new Error(`Network error reaching ${url}: ${err.message}`);
+  } finally {
+    if (timer) clearTimeout(timer);
   }
   const contentType = res.headers.get('content-type') || '';
   if (contentType.includes('text/html')) {

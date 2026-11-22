@@ -439,6 +439,17 @@ export default function AccountPage({
 
             {/* Security note: the customer portal has one way in — a real
                 account on POST /api/auth/login. No preview bypass. */}
+            {onNavigateAdmin && (
+              <div className="pt-4 text-center border-t border-gray-100 mt-4">
+                <button
+                  type="button"
+                  onClick={onNavigateAdmin}
+                  className="text-[11px] text-[#79867D] hover:text-[#003F25] transition-colors cursor-pointer"
+                >
+                  Store Staff &amp; Director Admin Desk &rarr;
+                </button>
+              </div>
+            )}
 
           </div>
         ) : (
@@ -507,6 +518,14 @@ export default function AccountPage({
               >
                 Log Out of Account
               </button>
+              {onNavigateAdmin && (
+                <button
+                  onClick={onNavigateAdmin}
+                  className="w-full py-1.5 text-center text-[11px] text-[#003F25] font-semibold hover:underline cursor-pointer"
+                >
+                  Admin Desk Access &rarr;
+                </button>
+              )}
             </div>
 
             {/* Right Content Area (9 cols) */}

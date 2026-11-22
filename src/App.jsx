@@ -499,25 +499,10 @@ export default function App() {
     };
   }, [products]);
 
-  // Idle prefetch of AdminDashboard so even the back office opens in 0ms
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(() => {
-          import('./components/AdminDashboard');
-        });
-      } else {
-        setTimeout(() => {
-          import('./components/AdminDashboard');
-        }, 1500);
-      }
-    }
-  }, []);
-
   // View Navigation Helper — synchronous immediate state update + instant scroll reset
   const handleNavigate = (view, param = '') => {
     // If currently on /admin URL path and navigating back to storefront, clean up pathname
-    if (typeof window !== 'undefined' && (window.location.pathname === '/admin' || window.location.pathname.endsWith('/admin'))) {
+    if (view !== 'admin' && typeof window !== 'undefined' && (window.location.pathname === '/admin' || window.location.pathname.endsWith('/admin'))) {
       window.history.pushState(null, '', '/');
     }
 

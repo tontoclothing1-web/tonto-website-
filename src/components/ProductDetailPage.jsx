@@ -92,7 +92,7 @@ export default function ProductDetailPage({
       
       {/* Breadcrumb Navigation matching reference */}
       <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
-        <ol className="flex items-center gap-1.5 overflow-hidden list-none p-0 m-0" itemscope itemtype="https://schema.org/BreadcrumbList">
+        <ol className="flex items-center gap-1.5 overflow-hidden list-none p-0 m-0" itemScope itemType="https://schema.org/BreadcrumbList">
           <li className="flex items-center gap-1">
             <button
               onClick={onBack}
@@ -103,33 +103,33 @@ export default function ProductDetailPage({
             </button>
             <span className="text-[#D1D5DB]">/</span>
           </li>
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" className="flex items-center gap-1.5">
             <button
               onClick={() => onNavigateCategory('All')}
               className="hover:text-[#003F25] transition-colors cursor-pointer"
-              itemprop="item"
+              itemProp="item"
             >
-              <span itemprop="name">collection</span>
+              <span itemProp="name">collection</span>
             </button>
-            <meta itemprop="position" content="1" />
+            <meta itemProp="position" content="1" />
             <span className="text-[#D1D5DB]">/</span>
           </li>
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" className="flex items-center gap-1.5">
             <button
               onClick={() => onNavigateCategory(product.category)}
               className="hover:text-[#003F25] transition-colors cursor-pointer lowercase"
-              itemprop="item"
+              itemProp="item"
             >
-              <span itemprop="name">{product.category}</span>
+              <span itemProp="name">{product.category}</span>
             </button>
-            <meta itemprop="position" content="2" />
+            <meta itemProp="position" content="2" />
             <span className="text-[#D1D5DB]">/</span>
           </li>
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="truncate">
-            <span className="text-[#003F25] font-semibold truncate lowercase" itemprop="name">
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" className="truncate">
+            <span className="text-[#003F25] font-semibold truncate lowercase" itemProp="name">
               {product.title}
             </span>
-            <meta itemprop="position" content="3" />
+            <meta itemProp="position" content="3" />
           </li>
         </ol>
 

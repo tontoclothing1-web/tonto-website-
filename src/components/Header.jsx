@@ -210,6 +210,17 @@ export default function Header({
               <button onClick={() => { setMobileMenuOpen(false); onOpenRegion(); }} className="hover:text-[#003F25] font-semibold">
                 REGION: {selectedRegion?.display || 'INDIA'} ({selectedRegion?.currency || 'INR'})
               </button>
+              {onNavigateAdmin && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onNavigateAdmin();
+                  }}
+                  className="hover:text-[#003F25] font-semibold text-gray-500"
+                >
+                  ADMIN DESK
+                </button>
+              )}
             </div>
 
             <button

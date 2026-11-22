@@ -15,22 +15,22 @@ export default function VisitUsPage({ onNavigateHome, onNavigateCollection }) {
       
       {/* 1. Breadcrumb Navigation */}
       <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-5 sm:px-8 py-4 text-[12px] text-[#79867D] flex items-center justify-between border-b border-[#E0E5E1]">
-        <ol className="flex items-center gap-1.5 list-none p-0 m-0" itemscope itemtype="https://schema.org/BreadcrumbList">
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" className="flex items-center gap-1.5">
+        <ol className="flex items-center gap-1.5 list-none p-0 m-0" itemScope itemType="https://schema.org/BreadcrumbList">
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem" className="flex items-center gap-1.5">
             <button
               onClick={onNavigateHome}
               className="hover:text-[#003F25] transition-colors cursor-pointer flex items-center gap-1 font-medium"
-              itemprop="item"
+              itemProp="item"
             >
               <ArrowLeft size={14} />
-              <span itemprop="name">home</span>
+              <span itemProp="name">home</span>
             </button>
-            <meta itemprop="position" content="1" />
+            <meta itemProp="position" content="1" />
             <span className="text-[#D1D5DB]">/</span>
           </li>
-          <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-            <span className="text-[#003F25] font-semibold tracking-wider uppercase" itemprop="name">visit us</span>
-            <meta itemprop="position" content="2" />
+          <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+            <span className="text-[#003F25] font-semibold tracking-wider uppercase" itemProp="name">visit us</span>
+            <meta itemProp="position" content="2" />
           </li>
         </ol>
 

@@ -271,6 +271,18 @@ export default function Footer({ onNavigate, onOpenVisit, onOpenOffer, onOpenAcc
           <div className="flex items-center gap-6">
             <span>Coimbatore, India</span>
             <span>Unisex Streetwear</span>
+            {onNavigateAdmin && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigateAdmin();
+                }}
+                className="text-white/50 hover:text-white transition-colors cursor-pointer"
+              >
+                Admin Desk
+              </button>
+            )}
           </div>
         </div>
 

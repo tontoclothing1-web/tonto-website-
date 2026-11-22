@@ -36,11 +36,13 @@ function noteSuccess() {
   cooldownUntil = 0;
 }
 
-async function call(path, { method = 'POST', body, headers = {} } = {}) {
+async function call(path, { method = 'POST', body, headers = {}, timeout = 5000 } = {}) {
   if (backendLikelyDown()) {
     return { ok: false, skipped: true, error: 'Backend in cooldown — using on-device storage.' };
   }
   const token = getToken();
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller && timeout > 0 ? setTimeout(() => controller.abort(), timeout) : null;
   let res;
   try {
     res = await fetch(`${API_BASE}${path}`, {
@@ -51,10 +53,13 @@ async function call(path, { method = 'POST', body, headers = {} } = {}) {
         ...headers,
       },
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal: controller?.signal,
     });
   } catch (err) {
     noteFailure();
     return { ok: false, offline: true, error: `Cannot reach the store API: ${err.message}` };
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 
   const contentType = res.headers.get('content-type') || '';

@@ -34,7 +34,7 @@ export default function TrendingStyles({
 
         {/* 5-Product Row for Desktop, Responsive Grid / Scroll for smaller viewports */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-          {trendingProducts.map((product) => (
+          {trendingProducts.map((product, idx) => (
             <ProductCard
               key={product.id}
               product={product}
@@ -43,6 +43,7 @@ export default function TrendingStyles({
               onQuickView={onQuickView}
               onOpenProduct={onOpenProduct}
               showBrandSubtitle={false}
+              priority={idx < 2}
             />
           ))}
         </div>

@@ -2,8 +2,14 @@
 // and migration_004 (the admin desk's CRM columns) against the live project.
 // Nothing here writes: every query is a select or a call against a name that
 // cannot exist. Run with `node backend/scripts/check-migration-003.mjs`.
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createClient } from '@supabase/supabase-js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const url = process.env.SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
